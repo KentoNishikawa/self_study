@@ -3,11 +3,12 @@ from django.db import models
 
 
 class Book(models.Model):
-    # ※ここはあなたの今の定義に合わせてOK（例として一般的な形）
     title = models.CharField("タイトル", max_length=200)
     author = models.CharField("著者", max_length=200)
     isbn = models.CharField("ISBN", max_length=13, blank=True)
     published_year = models.IntegerField("出版年", null=True, blank=True)
+    
+    description = models.TextField("概要", blank=True)
 
     created_at = models.DateTimeField("作成日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
