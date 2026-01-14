@@ -18,7 +18,7 @@ class ReviewForm(forms.ModelForm):
         choices=[(i, f"★{i}") for i in range(1, 6)],
         label="評価",
     )
-    # ★ここが重要：comment じゃなくて text
+    # ★text
     text = forms.CharField(
         widget=forms.Textarea(attrs={"rows": 3}),
         required=False,
