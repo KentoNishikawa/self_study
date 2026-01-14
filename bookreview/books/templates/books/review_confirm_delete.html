@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>レビュー削除</title>
+</head>
+
+<body>
+
+    <p>
+        <a href="{% url 'books:list' %}">← 本一覧へ</a>
+    </p>
+
+    <h2>レビュー削除</h2>
+    <p>このレビューを削除しますか？</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">削除する</button>
+        <a href="{% url 'books:detail' object.book_id %}">キャンセル</a>
+    </form>
+</body>
+
+</html>

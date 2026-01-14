@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ book.title }}</title>
+</head>
+
+<body>
+    <p>
+        <a href="{% url 'books:list' %}">← 本一覧へ</a>
+    </p>
+
+    <h1>{{ book.title }}</h1>
+    <p>
+        <a href="{% url 'books:edit' book.pk %}">編集</a>
+        | <a href="{% url 'books:delete' book.pk %}">削除</a>
+    </p>
+
+    <p>著者：{{ book.author }}</p>
+    <p>出版年：{{ book.published_year }}</p>
+    <p>ISBN：{{ book.isbn }}</p>
+
+    <h2>概要</h2>
+    <p>{{ book.description|linebreaksbr }}</p>
+    <hr>
+
+    <h2>レビュー投稿</h2>
+
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'books:review_add' book.pk %}">
+        {% csrf_token %}
+        {{ review_form.as_p }}
+        <button type="submit">レビュー投稿</button>
+    </form>
+    {% else %}
+    <p>
+        レビュー投稿するにはログインが必要です：
+        <a href="{% url 'login' %}?next={{ request.path }}">ログイン</a>
+    </p>
+    {% endif %}
+
+    <hr>
+
+    <h2>レビュー一覧</h2>
+    {% if reviews %}
+    <ul>
+        {% for r in reviews %}
+        <div style="border:1px solid #ddd; padding:10px; margin:10px 0;">
+            <div>評価：★{{ r.rating }}</div>
+            <div>コメント：{{ r.text|default:"（コメントなし）" }}</div>
+            {% if user.is_authenticated and r.user_id == user.id %}
+            <div style="margin-top:8px;">
+                <a href="{% url 'books:review_edit' r.id %}">編集</a>
+                |
+                <a href="{% url 'books:review_delete' r.id %}">削除</a>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>まだレビューがありません。</p>
+    {% endif %}
+    {% if r.user == request.user %}
+    | <a href="{% url 'books:review_edit' r.pk %}">編集</a>
+    | <a href="{% url 'books:review_delete' r.pk %}">削除</a>
+    {% endif %}
+
+</body>
+
+</html>

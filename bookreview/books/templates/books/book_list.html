@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本一覧</title>
+</head>
+
+<body>
+    <h1>本一覧</h1>
+
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'logout' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit">ログアウト</button>
+    </form>
+    {% else %}
+    <a href="{% url 'login' %}">ログイン</a>
+    {% endif %}
+
+    <form method="get" style="margin: 12px 0;">
+        <label>検索（タイトル/著者）</label><br>
+        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="例：ハリーポッター">
+
+        <input type="text" name="year_from" value="{{ request.GET.year_from }}" placeholder="以上" style="width:80px;">
+        ～
+        <input type="text" name="year_to" value="{{ request.GET.year_to }}" placeholder="以下" style="width:80px;">
+
+
+        <label style="margin-left:12px;">評価</label>
+        <select name="rating">
+            <option value="">--</option>
+            <option value="1" {% if request.GET.rating == "1" %}selected{% endif %}>★1</option>
+            <option value="2" {% if request.GET.rating == "2" %}selected{% endif %}>★2</option>
+            <option value="3" {% if request.GET.rating == "3" %}selected{% endif %}>★3</option>
+            <option value="4" {% if request.GET.rating == "4" %}selected{% endif %}>★4</option>
+            <option value="5" {% if request.GET.rating == "5" %}selected{% endif %}>★5</option>
+
+
+        </select>
+
+        <button type="submit">絞り込み</button>
+        <a href="{% url 'books:list' %}" style="margin-left:8px;">リセット</a>
+    </form>
+
+
+    <p>
+        <a href="{% url 'books:add' %}">本を追加</a>
+    </p>
+
+    <ul>
+        {% for book in books %}
+        <li>
+            <a href="{% url 'books:detail' book.pk %}">
+                {{ book.title }} / {{ book.author }}（{{ book.published_year }}）
+            </a>
+            | <a href="{% url 'books:edit' book.pk %}">編集</a>
+            | <a href="{% url 'books:delete' book.pk %}">削除</a>
+        </li>
+
+        {% empty %}
+        <li>まだ本が登録されていません。</li>
+        {% endfor %}
+    </ul>
+</body>
+
+</html>

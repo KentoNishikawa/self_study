@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本を削除</title>
+</head>
+
+<body>
+
+    <p>
+        <a href="{% url 'books:list' %}">← 本一覧へ</a>
+    </p>
+
+    <p>
+        <a href="{% url 'books:detail' object.pk %}">← 詳細へ戻る</a>
+    </p>
+
+    <h1>本を削除</h1>
+    <p>「{{ object.title }}」を削除します。よろしいですか？</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">削除する</button>
+    </form>
+</body>
+
+</html>
