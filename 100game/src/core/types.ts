@@ -17,11 +17,15 @@ export type Rank =
   | "K"
   | "JOKER";
 
-export type Mode = "UP" | "DOWN"; // UP:100以上で負け / DOWN:0以下で負け
+export type Mode = "UP" | "DOWN"; // UP: target以上で負け / DOWN: 0以下で負け
 
 export type Difficulty = "SMART" | "CASUAL";
+
+// ゲームタイプ（上限値）
+export type GameType = 100 | 200 | 300 | 400 | 500 | "EXTRA";
+
 export type Card = {
-  id: string; // 一意ID（ログや同期で便利）
+  id: string;
   suit: Suit;
   rank: Rank;
 };
@@ -39,13 +43,15 @@ export type GameResult =
   | { status: "LOSE"; loserSeat: number; reason: string }
   | { status: "VOID"; reason: string };
 
+export type PlayOrigin = "HAND" | "DECK";
+
 export type PlayLog = {
-  origin: PlayOrigin; 
+  origin: PlayOrigin;
   seat: number; // 0..3
   card: Card;
 
-  value: number; // 確定値（ジョーカー宣言値 / J=10 / ♠3相殺で0など）
-  delta: number; // totalに与えた差分（相殺で0になる）
+  value: number;
+  delta: number;
 
   beforeTotal: number;
   afterTotal: number;
@@ -56,18 +62,29 @@ export type PlayLog = {
   note?: string;
 };
 
+export type SystemLog = {
+  id: number;                  // 連番（toastの既読管理に使う）
+  kind: "REDEAL";
+  afterPlayIndex: number;      // “何手目の直後”に発生したか（history.length を入れる）
+  message: string;             // 表示用
+};
 
 export type GameState = {
   seats: [Seat, Seat, Seat, Seat];
-  deck: Card[]; // 山札
-  turn: number; // 0..3
+
+  gameType: GameType;
+  target: number;
+
+  discard: Card[];
+
+  deck: Card[];
+  turn: number;
   total: number;
   mode: Mode;
   history: PlayLog[];
   result: GameResult;
-  lastCard: Card | null; // ♠3判定用（直前カード）
+
+  lastCard: Card | null;
+
+  systemLogs: SystemLog[];
 };
-
-export type PlayOrigin = "HAND" | "DECK";
-
-

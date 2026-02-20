@@ -39,8 +39,9 @@ function cardLabel(card: Card): string {
   return `${suitToSymbol(card.suit)}${card.rank}`;
 }
 
-function modeText(mode: GameState["mode"]): string {
-  return mode === "UP" ? "加算（100以上で負け）" : "減算（0以下で負け）";
+// ★変更：target表示を外から受け取る（EXTRAは???表示）
+function modeText(mode: GameState["mode"], targetLabel: string): string {
+  return mode === "UP" ? `加算（${targetLabel}以上で負け）` : "減算（0以下で負け）";
 }
 
 function modeShort(m: "UP" | "DOWN") {
@@ -86,7 +87,6 @@ if (!tip) {
   tip = document.createElement("div");
   tip.id = "cardTip";
   tip.className = "cardTip";
-  // 「左下に出ちゃう」対策：最低限 position を固定する（見た目はCSSでいじれる）
   tip.style.position = "fixed";
   tip.style.zIndex = "9999";
   tip.style.display = "none";
@@ -100,7 +100,7 @@ function cardTipTitle(card: Card) {
 
 function baseValue(card: Card, jokerValue?: number): number | null {
   if (card.rank === "JOKER") return jokerValue ?? null;
-  if (card.suit === "S" && card.rank === "3") return 0; // 相殺系は 0 表示に寄せる
+  if (card.suit === "S" && card.rank === "3") return 0;
   if (card.rank === "A") return 1;
   if (card.rank === "J" || card.rank === "Q" || card.rank === "K") return 10;
   const n = Number(card.rank);
@@ -122,14 +122,12 @@ function cardEffectText(card: Card): string {
 
 function currentDeltaHint(card: Card, mode: GameState["mode"], jokerValue?: number): string {
   const v = baseValue(card, jokerValue);
-  if (v == null) return ""; // ジョーカー未選択など
+  if (v == null) return "";
 
-  // ♠3相殺は0で固定
   if (card.suit === "S" && card.rank === "3") return "（今出すと ±0）";
 
   const delta = mode === "UP" ? v : -v;
 
-  // Jはモード反転の注釈を付ける
   if (card.rank === "J") {
     const arrow = mode === "UP" ? "（加算→減算）" : "（減算→加算）";
     return `（今出すと ${delta >= 0 ? "+" : ""}${delta}）${arrow}`;
@@ -198,7 +196,6 @@ if (!resultRoot) {
 
 function makeResultKey(state: GameState): string | null {
   if (state.result.status === "PLAYING") return null;
-  // 「同じ決着を1回だけ表示」するためのキー（雑でOKだが変化は拾う）
   return [
     state.result.status,
     state.result.status === "LOSE" ? String(state.result.loserSeat) : "x",
@@ -221,7 +218,6 @@ function renderResultModal(show: boolean, key: string, title: string, bodyHtml: 
     return;
   }
 
-  // “ポップアップ”に見せるため、ここは fixed のオーバーレイにする
   resultRoot.innerHTML = `
     <div id="rmOverlay"
       style="
@@ -268,7 +264,6 @@ function renderResultModal(show: boolean, key: string, title: string, bodyHtml: 
 
   closeBtn?.addEventListener("click", close);
 
-  // 背景クリックでも閉じる
   overlay?.addEventListener("click", (ev: MouseEvent) => {
     if (ev.target === overlay) close();
   });
@@ -280,7 +275,7 @@ function renderResultModal(show: boolean, key: string, title: string, bodyHtml: 
 export function render(
   app: HTMLDivElement,
   state: GameState,
-  difficulty: Difficulty, // ★追加
+  difficulty: Difficulty,
   uiLocked: boolean,
   handlers: {
     onPlayHand: (handIndex: number) => void;
@@ -288,11 +283,10 @@ export function render(
     onRestart: () => void;
     onGoHome: () => void;
   }
-){
+) {
   try {
-    hideTip(); // 描画でDOMが入れ替わるので、残ってたら消す
+    hideTip()
 
-    // 決着モーダル制御
     const resultKey = makeResultKey(state);
     if (state.result.status === "PLAYING") dismissedResultKey = null;
 
@@ -326,7 +320,6 @@ export function render(
     const showResultModal =
       !!resultKey && dismissedResultKey !== resultKey && state.result.status !== "PLAYING";
 
-    // 先にモーダルを描画（body直下なので app.innerHTML と干渉しない）
     if (resultKey) renderResultModal(showResultModal, resultKey, modalTitle, modalBodyHtml);
     else renderResultModal(false, "", "", "");
 
@@ -346,16 +339,20 @@ export function render(
     const lastValue = last ? last.value : undefined;
     const lastNote = last?.note ?? "";
 
+    // ★target表示（EXTRAはPLAYING中だけ???）
+    const targetLabel =
+      state.gameType === "EXTRA" && state.result.status === "PLAYING" ? "???" : String(state.target);
+
     const resultHtml =
       state.result.status === "PLAYING"
         ? `<span style="color:#22c55e;font-weight:900;">進行中</span>`
         : state.result.status === "LOSE"
-          ? `<span style="color:#ff4d6d;font-weight:950;">敗北：${
-              state.seats[state.result.loserSeat].name
-            }（${escapeHtml(state.result.reason ?? "")}）</span>`
-          : `<span style="color:#ff4d6d;font-weight:950;">無効試合：${escapeHtml(
-              state.result.reason ?? ""
-            )}</span>`;
+        ? `<span style="color:#ff4d6d;font-weight:950;">敗北：${
+            state.seats[state.result.loserSeat].name
+          }（${escapeHtml(state.result.reason ?? "")}）</span>`
+        : `<span style="color:#ff4d6d;font-weight:950;">無効試合：${escapeHtml(
+            state.result.reason ?? ""
+          )}</span>`;
 
     app.innerHTML = `
       <header class="appHeader">
@@ -366,7 +363,7 @@ export function render(
       <div class="panel">
         <div class="row kpiRow">
           <span class="badge ${state.mode === "UP" ? "up" : "down"}">
-            ${modeText(state.mode)}
+            ${modeText(state.mode, escapeHtml(targetLabel))}
           </span>
 
           <div class="kpi">
@@ -391,21 +388,17 @@ export function render(
 
           <div class="spacer"></div>
 
-          <!-- 右端は短いステータスだけ（進行中/決着） -->
           <div class="status">
-            ${state.result.status === "PLAYING"
-              ? `<span class="statusText playing">進行中</span>`
-              : `<span class="statusText ended">決着</span>`}
+            ${
+              state.result.status === "PLAYING"
+                ? `<span class="statusText playing">進行中</span>`
+                : `<span class="statusText ended">決着</span>`
+            }
           </div>
         </div>
-            
-        <!--「敗北：〜」専用行。空でも高さ確保 -->
-        <div class="resultRow">
-          ${
-            state.result.status === "PLAYING"
-              ? `<span class="resultPlaceholder"></span>`
-              : resultHtml
-          }
+
+        <div class="kpiResult" style="height:24px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:6px;">
+          ${state.result.status === "PLAYING" ? "" : resultHtml}
         </div>
       </div>
 
@@ -426,7 +419,9 @@ export function render(
               <div class="playMeta">
                 <div class="title">場の最新カード</div>
                 <div class="sub">${
-                  last ? `${escapeHtml(lastName)} / ${escapeHtml(cardLogLabel(last.card, last.value))}` : "—"
+                  last
+                    ? `${escapeHtml(lastName)} / ${escapeHtml(cardLogLabel(last.card, last.value))}`
+                    : "—"
                 }</div>
                 ${
                   lastNote
@@ -501,7 +496,7 @@ export function render(
       throw new Error("render.ts: required element not found");
     }
 
-    // ===== 場札アニメ：新しいプレイが増えた時だけ“確実に見える”発火 =====
+    // ===== 場札アニメ =====
     const playCardEl = app.querySelector<HTMLDivElement>(".playCard");
     const currentLen = state.history.length;
 
@@ -513,9 +508,7 @@ export function render(
 
         requestAnimationFrame(() => {
           const isUp = state.mode === "UP";
-          const outlineColor = isUp
-            ? "rgba(255, 77, 109, 0.45)"
-            : "rgba(59, 130, 246, 0.45)";
+          const outlineColor = isUp ? "rgba(255, 77, 109, 0.45)" : "rgba(59, 130, 246, 0.45)";
 
           playCardEl.style.outline = `4px solid ${outlineColor}`;
           playCardEl.style.outlineOffset = "4px";
@@ -553,7 +546,6 @@ export function render(
 
       prevHistoryLen = currentLen;
 
-      // 場札にもツールチップ
       if (lastCard) {
         const jokerValForLast = lastCard.rank === "JOKER" ? lastValue : undefined;
         playCardEl.onmouseenter = (ev) => showTip(ev as unknown as MouseEvent, lastCard, state.mode, jokerValForLast);
@@ -574,7 +566,6 @@ export function render(
 
       b.onclick = () => handlers.onPlayHand(idx);
 
-      // ツールチップ
       b.onmouseenter = (ev) => showTip(ev as unknown as MouseEvent, card, state.mode);
       b.onmousemove = (ev) => moveTip(ev as unknown as MouseEvent);
       b.onmouseleave = () => hideTip();
@@ -582,18 +573,15 @@ export function render(
       handDiv.appendChild(b);
     });
 
-    // 山札：勝負中＆あなたの手番＆山札あり で有効
     drawBtn.disabled = !canOperate || state.deck.length === 0;
     drawBtn.onclick = () => handlers.onDrawPlay();
 
-    // もう一度：決着後のみ有効
     restartBtn.disabled = isPlaying;
     restartBtn.onclick = () => {
       if (restartBtn.disabled) return;
       handlers.onRestart();
     };
 
-    // ホーム：常に有効。ただし勝負中だけ確認
     homeBtn.disabled = false;
     homeBtn.onclick = () => {
       if (isPlaying) {
@@ -603,15 +591,62 @@ export function render(
       handlers.onGoHome();
     };
 
-    // ログ
+    // =====================
+    // ログ（PLAY + SYSTEMを混ぜる）
+    // =====================
     logDiv.innerHTML = "";
-    const reversed = state.history.slice().reverse();
 
-    reversed.forEach((p, idx) => {
+    type PlayEntry = { type: "PLAY"; playNo: number; p: GameState["history"][number] };
+    type SysEntry = { type: "SYSTEM"; playNo: number; s: GameState["systemLogs"][number] };
+    type Entry = PlayEntry | SysEntry;
+
+    const sysByAfter = new Map<number, GameState["systemLogs"][number][]>();
+    for (const s of state.systemLogs ?? []) {
+      const key = s.afterPlayIndex;
+      const arr = sysByAfter.get(key) ?? [];
+      arr.push(s);
+      sysByAfter.set(key, arr);
+    }
+
+    const entries: Entry[] = [];
+    for (let i = 0; i < state.history.length; i++) {
+      const playNo = i + 1;
+      entries.push({ type: "PLAY", playNo, p: state.history[i] });
+
+      const sys = sysByAfter.get(playNo);
+      if (sys) {
+        for (const s of sys) entries.push({ type: "SYSTEM", playNo, s });
+      }
+    }
+
+    const reversed = entries.slice().reverse();
+
+    reversed.forEach((e, idx) => {
       const row = document.createElement("div");
       row.className = "logRow";
 
-      const originalNo = state.history.length - idx;
+      // SYSTEM行
+      if (e.type === "SYSTEM") {
+        row.classList.add("system");
+
+        const left = document.createElement("div");
+        left.className = "no";
+        left.textContent = "  ";
+
+        const main = document.createElement("div");
+        main.className = "main";
+        main.textContent = `🔄 再配布：${e.s.message}`;
+
+        row.appendChild(left);
+        row.appendChild(main);
+        logDiv.appendChild(row);
+        return;
+      }
+
+      // PLAY行（既存そのまま）
+      const p = e.p;
+
+      const originalNo = e.playNo;
       const name = state.seats[p.seat].name;
       const lbl = cardLogLabel(p.card, p.value);
       const d = p.delta >= 0 ? `+${p.delta}` : `${p.delta}`;
@@ -623,8 +658,7 @@ export function render(
 
       const isJ = p.card.rank === "J";
       const isCancel =
-        (p.card.suit === "S" && p.card.rank === "3" && p.value === 0) ||
-        (p.note?.includes("相殺") ?? false);
+        (p.card.suit === "S" && p.card.rank === "3" && p.value === 0) || (p.note?.includes("相殺") ?? false);
 
       const isLosingPlay =
         idx === 0 && state.result.status === "LOSE" && state.result.loserSeat === p.seat;
@@ -653,13 +687,8 @@ export function render(
       main.style.gap = "8px";
       main.style.alignItems = "baseline";
 
-      // 出どころアイコン（HAND/DECK）
       const origin =
-        (p as any).origin === "HAND"
-          ? "HAND"
-          : (p as any).origin === "DECK"
-            ? "DECK"
-            : undefined;
+        (p as any).origin === "HAND" ? "HAND" : (p as any).origin === "DECK" ? "DECK" : undefined;
 
       const originImg = document.createElement("img");
       originImg.className = "logIcon";
@@ -694,7 +723,7 @@ export function render(
       logDiv.appendChild(row);
     });
 
-    if (state.history.length === 0) {
+    if (entries.length === 0) {
       const empty = document.createElement("div");
       empty.style.color = "rgba(255,255,255,0.65)";
       empty.textContent = "まだログはありません";

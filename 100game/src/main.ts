@@ -5,7 +5,7 @@ import type { Difficulty, GameState } from "./core/types";
 import { createInitialState } from "./core/game";
 import { reducer } from "./core/reducer";
 import { chooseNpcAction } from "./ai/npc";
-import { renderHome } from "./ui/home";
+import { renderHome, type HomeConfig } from "./ui/home";
 import { render } from "./ui/render";
 import { pickJokerValue } from "./ui/jokerPicker";
 
@@ -16,7 +16,11 @@ let screen: Screen = "HOME";
 let state: GameState | null = null;
 
 let difficulty: Difficulty = "CASUAL";
-let homeConfig = { playerName: "プレイヤー", difficulty: "CASUAL" as Difficulty };
+let homeConfig: HomeConfig = {
+  playerName: "プレイヤー",
+  difficulty: "CASUAL",
+  gameType: 100,
+};
 
 const appEl = document.querySelector<HTMLDivElement>("#app");
 if (!appEl) throw new Error("#app not found");
@@ -29,48 +33,47 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 // ==============================
 // NPCがDECKからJOKERを引いた時の値
-// 「バーストしない範囲の境界値」を選ぶ
+// 「バーストしない範囲の境界値」を選ぶ（target参照）
 // ==============================
 function pickNpcJokerValueNoBust(s: GameState, d: Difficulty): number {
   const total = s.total;
 
   const safeMax =
     s.mode === "UP"
-      ? Math.min(49, 99 - total) // total+v<100
+      ? Math.min(49, (s.target - 1) - total) // total+v<target
       : Math.min(49, total - 1); // total-v>0
 
   if (safeMax < 1) return 1;
 
-  if (d === "SMART") {
-    return safeMax; // 境界値＝最善
-  }
+  if (d === "SMART") return safeMax;
 
-  // CASUAL：安全域の中からランダム（詰ませにくくする）
+  // CASUAL：安全域の中からランダム
   const min = 1;
   const max = safeMax;
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-
 // ===== 描画 =====
 function draw() {
-  renderHome(app, homeConfig, {
-  onStart: (cfg) => startGame(cfg),
-  onChange: (cfg) => {
-    homeConfig = cfg;
-    difficulty = cfg.difficulty;
-    draw();
-  },
-});
+  if (screen === "HOME") {
+    renderHome(app, homeConfig, {
+      onStart: (cfg) => startGame(cfg),
+      onChange: (cfg) => {
+        homeConfig = cfg;
+        difficulty = cfg.difficulty;
+      },
+    });
+    return;
+  }
 
   if (!state) return;
 
   render(app, state, difficulty, uiLocked, {
-  onPlayHand: (handIndex) => void stepHumanPlayHandAsync(handIndex),
-  onDrawPlay: () => void stepHumanDrawPlayAsync(),
-  onRestart: () => restartGame(),
-  onGoHome: () => goHome(),
-});
+    onPlayHand: (handIndex) => void stepHumanPlayHandAsync(handIndex),
+    onDrawPlay: () => void stepHumanDrawPlayAsync(),
+    onRestart: () => restartGame(),
+    onGoHome: () => goHome(),
+  });
 }
 
 // ===== 画面遷移 =====
@@ -83,7 +86,7 @@ function goHome() {
   draw();
 }
 
-function startGame(cfg: typeof homeConfig) {
+function startGame(cfg: HomeConfig) {
   npcRunToken++; // 前のループ中断
   uiLocked = false;
 
@@ -91,11 +94,10 @@ function startGame(cfg: typeof homeConfig) {
   homeConfig = { ...cfg, playerName: name };
   difficulty = cfg.difficulty;
 
-  state = createInitialState(name);
+  state = createInitialState(name, cfg.gameType);
   screen = "GAME";
   draw();
 
-  // 念のため（turnが0ならすぐ帰る）
   void runNpcTurnsAnimated();
 }
 
@@ -103,9 +105,11 @@ function restartGame() {
   if (!state) return;
   npcRunToken++;
   uiLocked = false;
-  state = createInitialState(homeConfig.playerName);
+
+  state = createInitialState(homeConfig.playerName, homeConfig.gameType);
   screen = "GAME";
   draw();
+
   void runNpcTurnsAnimated();
 }
 
@@ -120,16 +124,16 @@ async function stepDrawPlayAsync(seatIndex: number) {
 
   if (peek?.rank === "JOKER") {
     if (seatIndex === 0) {
-      // HUMAN：選ばせる
       const v = await pickJokerValue({
         mode: state.mode,
         total: state.total,
         allowCancel: false, // 山札JOKERはキャンセル不可
+        target: state.target,
+        isExtra: state.gameType === "EXTRA",
       });
       if (v == null) return;
       jokerValue = v;
     } else {
-      // NPC：バーストしない境界値（できる範囲で）
       jokerValue = pickNpcJokerValueNoBust(state, difficulty);
     }
   }
@@ -154,6 +158,8 @@ async function stepHumanPlayHandAsync(handIndex: number) {
       mode: state.mode,
       total: state.total,
       allowCancel: true, // 手札JOKERはキャンセル可
+      target: state.target,
+      isExtra: state.gameType === "EXTRA",
     });
     if (v == null) return;
     jokerValue = v;
@@ -161,11 +167,9 @@ async function stepHumanPlayHandAsync(handIndex: number) {
 
   state = reducer(state, { type: "PLAY_HAND", handIndex, jokerValue });
 
-  // プレイヤーの一手を見せる
   draw();
   await sleep(250);
 
-  // NPCを1手ずつ見せる
   await runNpcTurnsAnimated();
   draw();
 }
@@ -179,11 +183,9 @@ async function stepHumanDrawPlayAsync() {
 
   await stepDrawPlayAsync(0);
 
-  // プレイヤーの一手を見せる
   draw();
   await sleep(250);
 
-  // NPCを1手ずつ見せる
   await runNpcTurnsAnimated();
   draw();
 }
@@ -194,7 +196,6 @@ async function runNpcTurnsAnimated() {
 
   const token = ++npcRunToken;
 
-  // HUMAN手番なら何もしない
   if (state.turn === 0) return;
 
   uiLocked = true;
@@ -202,14 +203,12 @@ async function runNpcTurnsAnimated() {
 
   try {
     while (state && state.result.status === "PLAYING" && state.turn !== 0) {
-      if (token !== npcRunToken) return; // 中断
+      if (token !== npcRunToken) return;
 
       const seatIndex = state.turn;
-
       const action = chooseNpcAction(state, difficulty);
 
       if (action.type === "PLAY_HAND") {
-        // NPCが手札JOKERを出す時に jokerValue が無いなら「同じ境界値ロジック」で補完して固まらないようにする
         let jokerValue = (action as any).jokerValue as number | undefined;
         const card = state.seats[seatIndex].hand[action.handIndex];
 
@@ -223,7 +222,6 @@ async function runNpcTurnsAnimated() {
           jokerValue,
         });
       } else if (action.type === "DRAW_PLAY") {
-        // NPCも共通関数で処理（JOKERなら自動値を入れる）
         await stepDrawPlayAsync(seatIndex);
       }
 
@@ -231,7 +229,6 @@ async function runNpcTurnsAnimated() {
       await sleep(250);
     }
   } finally {
-    // 途中 return/例外でも必ず解除
     uiLocked = false;
     draw();
   }

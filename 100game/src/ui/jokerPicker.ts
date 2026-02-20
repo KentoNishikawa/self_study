@@ -5,25 +5,30 @@ type JokerPickerParams = {
   mode: Mode;
   total: number;
   allowCancel: boolean;
+
+  // ★ステージ2
+  target: number;   // UPの上限（EXTRAでも内部確定済み）
+  isExtra: boolean; // EXTRAかどうか
 };
 
 export async function pickJokerValue(
   params: JokerPickerParams
 ): Promise<number | undefined> {
-  const { mode, total, allowCancel } = params;
+  const { mode, total, allowCancel, target, isExtra } = params;
 
-  // 安全に出せる最大値（B仕様：アウト値は決定不可）
-  const safeMax = mode === "UP"
-    ? Math.min(49, 99 - total)
-    : Math.min(49, total - 1);
+  // 通常時のみ：安全に出せる最大値（アウト値は決定不可）
+  const safeMax =
+    mode === "UP"
+      ? Math.min(49, (target - 1) - total)
+      : Math.min(49, total - 1);
 
-  // 山札JOKERで詰みならキャンセルできないので、1で確定（結果として負けるだけ）
-  if (!allowCancel && safeMax < 1) {
+  // 山札JOKERで詰みならキャンセルできないので、1で確定（通常時だけ）
+  if (!isExtra && !allowCancel && safeMax < 1) {
     alert("どの値を選んでもアウトです。ジョーカー値=1で確定します。");
     return 1;
   }
 
-  const initial = safeMax >= 1 ? safeMax : 1;
+  const initial = isExtra ? 49 : safeMax >= 1 ? safeMax : 1;
 
   return new Promise<number | undefined>((resolve) => {
     const overlay = document.createElement("div");
@@ -130,15 +135,33 @@ export async function pickJokerValue(
 
     const clamp = (v: number) => Math.max(1, Math.min(49, Math.floor(v || 1)));
     const afterTotal = (v: number) => (mode === "UP" ? total + v : total - v);
-    const isOut = (v: number) => (mode === "UP" ? afterTotal(v) >= 100 : afterTotal(v) <= 0);
+    const isOut = (v: number) =>
+      mode === "UP" ? afterTotal(v) >= target : afterTotal(v) <= 0;
 
     const render = (v: number) => {
-      info.textContent = `現在：合計 ${total} / ${mode === "UP" ? "加算" : "減算"} / セーフ上限：${safeMax}`;
+      const safeText = isExtra ? "???" : String(safeMax);
+      info.textContent = `現在：合計 ${total} / ${mode === "UP" ? "加算" : "減算"} / セーフ上限：${safeText}`;
+
       const after = afterTotal(v);
+
+      if (isExtra) {
+        // ★EXTRA：アウト/セーフを出さない & 決定は常に可能
+        result.textContent = `反映後：合計 ${after}`;
+
+        okBtn.disabled = false;
+        okBtn.style.opacity = "1";
+        okBtn.style.cursor = "pointer";
+
+        result.style.color = "white";
+        result.style.borderColor = "rgba(255,255,255,0.12)";
+        result.style.background = "rgba(255,255,255,0.05)";
+        return;
+      }
+
       const out = isOut(v);
       result.textContent = `反映後：合計 ${after}（${out ? "アウト" : "セーフ"}）`;
 
-      okBtn.disabled = out; // ★B仕様
+      okBtn.disabled = out; // ★通常のみ：アウト値は決定不可
       okBtn.style.opacity = out ? "0.45" : "1";
       okBtn.style.cursor = out ? "not-allowed" : "pointer";
       result.style.color = out ? "#ff4d6d" : "white";
@@ -160,7 +183,7 @@ export async function pickJokerValue(
 
     okBtn.onclick = () => {
       const v = clamp(Number(num.value));
-      if (isOut(v)) return;
+      if (!isExtra && isOut(v)) return; // ★通常のみブロック
       overlay.remove();
       resolve(v);
     };

@@ -13,8 +13,8 @@ function toggleMode(mode: Mode): Mode {
   return mode === "UP" ? "DOWN" : "UP";
 }
 
-function wouldLose(mode: Mode, total: number): boolean {
-  return (mode === "UP" && total >= 100) || (mode === "DOWN" && total <= 0);
+function wouldLose(mode: Mode, total: number, target: number): boolean {
+  return (mode === "UP" && total >= target) || (mode === "DOWN" && total <= 0);
 }
 
 function baseValue(card: Card, jokerValue?: number): number {
@@ -40,7 +40,7 @@ function baseValue(card: Card, jokerValue?: number): number {
  *
  * ここでは state を更新しない。
  * 「このカードを出した結果（ログ/合計/モード/負け/直前ログ差し替え）」を返す。
- */ 
+ */
 export function applyCardEffects(
   state: GameState,
   seatIndex: number,
@@ -53,62 +53,58 @@ export function applyCardEffects(
   const lastPlay = state.history.length ? state.history[state.history.length - 1] : null;
 
   // =========================
-// ♠3 相殺（直前がJOKERのみ）
-// =========================
-if (
-  card.suit === "S" &&
-  card.rank === "3" &&
-  lastPlay &&
-  lastPlay.card.rank === "JOKER"
-) {
-  const prev = lastPlay;
+  // ♠3 相殺（直前がJOKERのみ）
+  // =========================
+  if (
+    card.suit === "S" &&
+    card.rank === "3" &&
+    lastPlay &&
+    lastPlay.card.rank === "JOKER"
+  ) {
+    const prev = lastPlay;
 
-  // ★直前(JOKER)は「元のログ」を残す（+41/合計64のまま）
-  // ただし補足だけ付ける（"相殺"という文字を入れないとJOKER行が🛡️扱いにならない）
-  const patchedPrev: PlayLog = {
-    ...prev,
-    note: prev.note ? `${prev.note} / ♠3で無効化` : "♠3で無効化",
-  };
+    // 直前(JOKER)ログには「♠3で無効化」を付ける（相殺表記の扱い用）
+    const patchedPrev: PlayLog = {
+      ...prev,
+      note: prev.note ? `${prev.note} / ♠3で無効化` : "♠3で無効化",
+    };
 
-  // ★♠3のターンで「JOKER分を打ち消した」ことをログに出す
-  const canceled = prev.value; // 例: 41
-  const delta = beforeMode === "UP" ? -canceled : +canceled; // UPなら -41 / DOWNなら +41
-  const afterTotal = beforeTotal + delta; // ここで restoredTotal に戻るはず
-  const restoredTotal = prev.beforeTotal;
+    const canceled = prev.value;
+    const deltaSigned = beforeMode === "UP" ? -canceled : +canceled;
+    const afterTotal = beforeTotal + deltaSigned;
+    const restoredTotal = prev.beforeTotal;
 
-  const log: PlayLog = {
-    seat: seatIndex,
-    origin,
-    card,
-    value: 0,
-    delta: -prev.value,              // ここが「-41」になる肝
-    beforeTotal: prev.afterTotal,     // ここは 65
-    afterTotal: restoredTotal,        // ここは 24
-    beforeMode,
-    afterMode: beforeMode,
-    note: `ジョーカー相殺（🃏(${prev.value})を打ち消し）`,
-  };
+    const log: PlayLog = {
+      seat: seatIndex,
+      origin,
+      card,
+      value: 0,
+      delta: -prev.value,
+      beforeTotal: prev.afterTotal,
+      afterTotal: restoredTotal,
+      beforeMode,
+      afterMode: beforeMode,
+      note: `ジョーカー相殺（🃏(${prev.value})を打ち消し）`,
+    };
 
-  return {
-    log,
-    afterTotal,
-    afterMode: beforeMode,
-    lose: false,
-    patchedPrev,
-  };
-}
-
+    return {
+      log,
+      afterTotal,
+      afterMode: beforeMode,
+      lose: false,
+      patchedPrev,
+    };
+  }
 
   // =========================
-  // J（トグル） ※バグ修正点
+  // J（トグル）
   // =========================
   if (card.rank === "J") {
-    // ★今のモードに従う（DOWNなら -10）
     const delta = beforeMode === "UP" ? +10 : -10;
     const afterTotal = beforeTotal + delta;
 
-    // ★判定が先。負けるなら反転しない
-    const lose = wouldLose(beforeMode, afterTotal);
+    // ★target参照
+    const lose = wouldLose(beforeMode, afterTotal, state.target);
     const afterMode = lose ? beforeMode : toggleMode(beforeMode);
 
     const log: PlayLog = {
@@ -134,7 +130,8 @@ if (
   const delta = beforeMode === "UP" ? +value : -value;
   const afterTotal = beforeTotal + delta;
 
-  const lose = wouldLose(beforeMode, afterTotal);
+  // ★target参照
+  const lose = wouldLose(beforeMode, afterTotal, state.target);
 
   const log: PlayLog = {
     seat: seatIndex,

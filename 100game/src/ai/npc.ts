@@ -5,8 +5,8 @@ type NpcAction =
   | { type: "PLAY_HAND"; handIndex: number; jokerValue?: number }
   | { type: "DRAW_PLAY"; jokerValue?: number };
 
-function wouldLose(mode: GameState["mode"], total: number): boolean {
-  return (mode === "UP" && total >= 100) || (mode === "DOWN" && total <= 0);
+function wouldLose(mode: GameState["mode"], total: number, target: number): boolean {
+  return (mode === "UP" && total >= target) || (mode === "DOWN" && total <= 0);
 }
 
 function baseValue(card: Card, jokerValue?: number): number {
@@ -29,8 +29,8 @@ function safeMaxNoBust(state: GameState): number {
   const total = state.total;
 
   if (state.mode === "UP") {
-    // total + v < 100  => v <= 99 - total
-    return Math.min(49, 99 - total);
+    // total + v < target  => v <= (target-1) - total
+    return Math.min(49, (state.target - 1) - total);
   } else {
     // total - v > 0 => v <= total - 1
     return Math.min(49, total - 1);
@@ -40,11 +40,9 @@ function safeMaxNoBust(state: GameState): number {
 // CASUAL/SMART の2段階でJOKER値を決める（必ず1..49に収める）
 function pickNpcJokerValue(state: GameState, difficulty: Difficulty): number {
   const maxSafe = safeMaxNoBust(state);
-  if (maxSafe < 1) return 1; // 安全域なし（どうせ負けるが固まらせない）
+  if (maxSafe < 1) return 1;
 
-  if (difficulty === "SMART") {
-    return maxSafe; // 境界値（最善）
-  }
+  if (difficulty === "SMART") return maxSafe;
 
   // CASUAL：安全域の中からランダム
   return Math.floor(Math.random() * maxSafe) + 1; // 1..maxSafe
@@ -52,8 +50,6 @@ function pickNpcJokerValue(state: GameState, difficulty: Difficulty): number {
 
 // 指定カードを出した時の afterTotal を計算（JOKERはjokerValue想定）
 function simulateAfterTotal(state: GameState, card: Card, jokerValue?: number): number {
-  // Jは特殊（10を足してから反転…）だが、NPCの「今負ける/負けない」判定に必要なのは afterTotal だけ
-  // ※Jの反転可否は rules.ts 側が最終判断する
   const value = card.rank === "J" ? 10 : baseValue(card, jokerValue);
   const delta = state.mode === "UP" ? +value : -value;
   return state.total + delta;
@@ -82,9 +78,8 @@ export function chooseNpcAction(state: GameState, difficulty: Difficulty): NpcAc
 
     const afterTotal = simulateAfterTotal(state, c, jv);
 
-    // ★重要：Jは「足した結果で負けたら反転しない」仕様なので、
-    // ここでは「今のモードで負けるかどうか」だけ見ればOK
-    if (!wouldLose(state.mode, afterTotal)) {
+    // 「今のモードで負けるかどうか」だけ見れば良き
+    if (!wouldLose(state.mode, afterTotal, state.target)) {
       safeMoves.push({ handIndex: i, afterTotal, jokerValue: jv });
     }
   }
@@ -100,7 +95,7 @@ export function chooseNpcAction(state: GameState, difficulty: Difficulty): NpcAc
       return { type: "PLAY_HAND", handIndex: best.handIndex, jokerValue: best.jokerValue };
     }
 
-    // CASUAL：safeの中からランダム（たまに引くのもありにする）
+    // CASUAL：safeの中からランダム
     if (state.deck.length > 0 && Math.random() < 0.15) {
       const top = state.deck[state.deck.length - 1];
       if (top?.rank === "JOKER") {
@@ -122,7 +117,7 @@ export function chooseNpcAction(state: GameState, difficulty: Difficulty): NpcAc
     return { type: "DRAW_PLAY" };
   }
 
-  // 山札も無い → 仕方ないので手札からランダム
+  // 山札も無い → 手札からランダム
   const idx = Math.floor(Math.random() * me.hand.length);
   const card = me.hand[idx];
   if (card.rank === "JOKER") {
