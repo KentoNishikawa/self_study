@@ -1,0 +1,758 @@
+/* =========================
+   100game style.css (clean)
+   Dark UI + White Cards
+   ========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  background: #0f1115;
+  color: #e8e8ea;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  line-height: 1.45;
+}
+
+body {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+#app {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+html {
+  overflow-y: scroll;         /* 常に縦スクロールバー領域を確保 */
+  scrollbar-gutter: stable;   /* 対応ブラウザではより綺麗に安定 */
+}
+
+/* ---------- Layout helpers ---------- */
+.panel {
+  background: #161a22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+}
+
+.row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 860px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Badges / KPI ---------- */
+.badge {
+  width: 160px;
+  text-align: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  user-select: none;
+}
+
+.badge.up {
+  background: rgba(0, 180, 120, 0.16);
+}
+
+.badge.down {
+  background: rgba(120, 140, 255, 0.16);
+}
+
+/* KPI行は中央揃え（baselineだと微妙に上下ズレる） */
+.kpiRow {
+  align-items: center;
+}
+
+/* kpiブロック内：左右に分けて、数字の桁で動かないようにする */
+.kpi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  flex: 0 0 140px;
+  min-width: 140px;
+}
+
+/* 数字は等幅風（1と8で幅が変わらない） */
+.kpi .value {
+  font-size: 28px;
+  font-feature-settings: "tnum";
+  line-height: 1;
+  text-align: right;
+  min-width: 4ch;
+}
+
+.kpi .value.small {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+/* 右端の進行中/決着も幅固定して揺れない */
+.status {
+  min-width: 72px;
+  text-align: right;
+}
+
+.statusText.playing {
+  color: #22c55e;
+  font-weight: 900;
+}
+
+.statusText.ended {
+  color: rgba(255,255,255,0.85);
+  font-weight: 900;
+}
+
+/* 結果行：常にこの高さを確保（ここがキモ） */
+.resultRow {
+  min-height: 28px;      /* 好みで 24〜32px */
+  display: flex;
+  align-items: center;
+  padding-top: 6px;      /* KPI行との間隔。いらなければ0 */
+}
+
+/* 空行だけど高さは残す */
+.resultPlaceholder {
+  visibility: hidden;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #0b0d12;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.select {
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: #0b0d12;
+  color: #fff;
+  font-weight: 800;
+}
+
+.btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---------- Players ---------- */
+.playerList {
+  display: grid;
+  gap: 8px;
+}
+
+.playerRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #101522;
+}
+
+.playerRow .name {
+  font-weight: 900;
+}
+
+.playerRow .muted {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+}
+
+.playerRow .turn {
+  margin-left: auto;
+  font-weight: 950;
+  color: #22c55e;
+}
+
+/* ---------- Card visuals (played card) ---------- */
+.cardArea {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.playCard {
+  width: 112px;
+  height: 156px;
+  border-radius: 16px;
+  border: 1px solid #d9d9d9;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  position: relative;
+  overflow: hidden;
+}
+
+.playCard .corner {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.playCard .corner.br {
+  top: auto;
+  left: auto;
+  bottom: 10px;
+  right: 10px;
+  transform: rotate(180deg);
+}
+
+.playCard .center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.playCard .rank {
+  font-size: 40px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.playCard .suit {
+  margin-top: 4px;
+  font-size: 26px;
+  font-weight: 900;
+  opacity: 0.9;
+}
+
+.playCard.black {
+  color: #111;
+}
+
+.playCard.red {
+  color: #b00020;
+}
+
+.playCard.joker {
+  color: #111;
+  background: linear-gradient(135deg, #ffffff, #f1f4ff);
+}
+
+/* ---------- Card visuals (hand) ---------- */
+.handGrid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cardBtn {
+  width: 92px;
+  height: 128px;
+  border-radius: 14px;
+  border: 1px solid #d9d9d9;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.cardBtn:hover:not(:disabled) {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.30);
+  filter: brightness(1.02);
+}
+
+.cardBtn:active:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.cardBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.cardBtn .corner {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.cardBtn .corner.br {
+  top: auto;
+  left: auto;
+  bottom: 8px;
+  right: 8px;
+  transform: rotate(180deg);
+}
+
+.cardBtn .center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.cardBtn .rank {
+  font-size: 32px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.cardBtn .suit {
+  margin-top: 2px;
+  font-size: 20px;
+  font-weight: 900;
+  opacity: 0.9;
+}
+
+.cardBtn.black {
+  color: #111;
+}
+
+.cardBtn.red {
+  color: #b00020;
+}
+
+.cardBtn.joker {
+  color: #111;
+  background: linear-gradient(135deg, #ffffff, #f1f4ff);
+}
+
+
+/* ---------- Played card meta ---------- */
+.playMeta .title {
+  font-weight: 900;
+}
+
+.playMeta .sub {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* ---------- Log ---------- */
+.logBox {
+  background: #0b0d12;
+  color: #e8e8ea;
+  padding: 12px;
+  border-radius: 12px;
+  overflow: auto;
+  max-height: 280px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.logRow {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 7px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid transparent;
+  border-radius: 8px;
+}
+
+.logRow .no {
+  min-width: 44px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.logRow .main {
+  flex: 1;
+}
+
+.logRow .note {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+}
+
+.logRow.j {
+  border-left-color: #f0ad4e;
+  font-weight: 900;
+}
+
+.logRow.cancel {
+  border-left-color: #22c55e;
+  font-weight: 900;
+}
+
+.logRow.lose {
+  border-left-color: #ff4d6d;
+  font-weight: 950;
+}
+
+.logIcon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  transform: translateY(1px);
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.20));
+  opacity: 0.95;
+}
+
+.input {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: white;
+  font-weight: 800;
+}
+
+/* === Joker Picker Modal === */
+.jpOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.72);
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+  padding: 16px;
+}
+
+.jpModal {
+  width: min(520px, 100%);
+  background: rgba(15, 18, 26, 0.96);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+}
+
+.jpTitle {
+  font-weight: 950;
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.jpInfo {
+  color: rgba(255,255,255,0.75);
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.jpSafe {
+  color: rgba(255,255,255,0.7);
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.jpRow {
+  display: grid;
+  grid-template-columns: 1fr 100px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.jpRange {
+  width: 100%;
+}
+
+.jpNumber {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  font-weight: 900;
+}
+
+.jpPresets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.jpPresetBtn {
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.9);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.jpPresetBtn:hover {
+  transform: translateY(-1px);
+}
+
+.jpResult {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.92);
+  font-weight: 950;
+  margin-bottom: 12px;
+}
+
+.jpResult.jpOut {
+  border-color: rgba(255, 77, 109, 0.5);
+  background: rgba(255, 77, 109, 0.12);
+  color: #ff4d6d;
+}
+
+.jpBtnRow {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.jpBtn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.9);
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.jpBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.jpPrimary {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+/* ===== App Title (Logo-like) ===== */
+.appHeader{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  gap:8px;
+  margin: 18px 0 14px;
+}
+
+.appTitle{
+  margin: 0;
+  line-height: 1;
+  font-size: 44px;
+  font-weight: 1000;
+  letter-spacing: .10em;
+  padding: 8px 18px;
+  position: relative;
+
+    /* 縁取り（対応ブラウザではアウトラインが効く） */
+  -webkit-text-stroke: 1px rgba(0,0,0,0.55);
+
+  /* ロゴっぽいグラデ文字 */
+  background: linear-gradient(90deg, #ffffff, #c7d2fe, #ffffff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+
+  /* ほんのり浮かせる */
+  text-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+.appTitle::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  transform: translateX(-50%);
+  bottom:-10px;
+  width: 220px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0.9),
+    rgba(255,255,255,0)
+  );
+  opacity: .8;
+}
+
+.appTag{
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .28em;
+  color: rgba(255,255,255,0.65);
+}
+
+/* ===== カードホバー吹き出し ===== */
+.cardTip {
+  position: fixed;
+  z-index: 9999;
+  display: none;
+  max-width: 320px;
+
+  padding: 10px 12px;
+  border-radius: 12px;
+
+  background: rgba(15, 18, 26, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  line-height: 1.35;
+
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+}
+
+.cardTip .tTitle {
+  font-weight: 950;
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+
+.cardTip .tRow {
+  display: flex;
+  gap: 8px;
+}
+
+.cardTip .tKey {
+  width: 88px;
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 800;
+}
+
+.cardTip .tVal {
+  flex: 1 1 auto;
+}
+
+.cardTip .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+/* ===== カード効果ツールチップ ===== */
+.cardTip {
+  position: fixed;              /* ←これがないと left/top が効かない */
+  left: 0;
+  top: 0;
+  z-index: 9999;
+  display: none;
+
+  pointer-events: none;         /* hover邪魔しない */
+  max-width: min(360px, calc(100vw - 28px));
+  padding: 10px 12px;
+  border-radius: 12px;
+
+  background: rgba(10, 12, 18, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+
+  color: rgba(255,255,255,0.92);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.cardTip .tTitle {
+  font-weight: 900;
+  margin-bottom: 6px;
+  color: rgba(255,255,255,0.95);
+}
+
+.cardTip .tRow {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.cardTip .tKey {
+  min-width: 86px;
+  color: rgba(255,255,255,0.70);
+  font-weight: 800;
+}
+
+.cardTip .tVal {
+  flex: 1;
+}
+
+.cardTip .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* ===== Result Modal ===== */
+.rmOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(2px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index: 9999;
+}
+
+.rmModal{
+  width: min(520px, calc(100vw - 32px));
+  border-radius: 16px;
+  padding: 18px 18px 14px;
+  background: rgba(20, 24, 32, .95);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 20px 70px rgba(0,0,0,.55);
+}
+
+.rmTitle{
+  font-weight: 950;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.rmBody{
+  color: rgba(255,255,255,.85);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.rmActions{
+  display:flex;
+  justify-content:flex-end;
+  gap: 10px;
+}
