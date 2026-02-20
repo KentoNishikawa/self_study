@@ -161,7 +161,7 @@ async function stepHumanPlayHandAsync(handIndex: number) {
 
   state = reducer(state, { type: "PLAY_HAND", handIndex, jokerValue });
 
-  // あなたの一手を見せる
+  // プレイヤーの一手を見せる
   draw();
   await sleep(250);
 
@@ -179,7 +179,7 @@ async function stepHumanDrawPlayAsync() {
 
   await stepDrawPlayAsync(0);
 
-  // あなたの一手を見せる
+  // プレイヤーの一手を見せる
   draw();
   await sleep(250);
 
@@ -223,7 +223,7 @@ async function runNpcTurnsAnimated() {
           jokerValue,
         });
       } else if (action.type === "DRAW_PLAY") {
-        // ★ ここが重要：NPCも共通関数で処理（JOKERなら自動値を入れる）
+        // NPCも共通関数で処理（JOKERなら自動値を入れる）
         await stepDrawPlayAsync(seatIndex);
       }
 

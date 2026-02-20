@@ -86,7 +86,7 @@ html {
   background: rgba(120, 140, 255, 0.16);
 }
 
-/* KPI行は中央揃え（baselineだと微妙に上下ズレる） */
+/* KPI行は中央揃え */
 .kpiRow {
   align-items: center;
 }
@@ -102,7 +102,7 @@ html {
   min-width: 140px;
 }
 
-/* 数字は等幅風（1と8で幅が変わらない） */
+/* 数字は等幅風 */
 .kpi .value {
   font-size: 28px;
   font-feature-settings: "tnum";
@@ -132,12 +132,12 @@ html {
   font-weight: 900;
 }
 
-/* 結果行：常にこの高さを確保（ここがキモ） */
+/* 結果行：常にこの高さを確保 */
 .resultRow {
   min-height: 28px;      /* 好みで 24〜32px */
   display: flex;
   align-items: center;
-  padding-top: 6px;      /* KPI行との間隔。いらなければ0 */
+  padding-top: 6px;      /* KPI行との間隔 */
 }
 
 /* 空行だけど高さは残す */
@@ -583,7 +583,7 @@ html {
   padding: 8px 18px;
   position: relative;
 
-    /* 縁取り（対応ブラウザではアウトラインが効く） */
+    /* 縁取り */
   -webkit-text-stroke: 1px rgba(0,0,0,0.55);
 
   /* ロゴっぽいグラデ文字 */
@@ -672,13 +672,13 @@ html {
 
 /* ===== カード効果ツールチップ ===== */
 .cardTip {
-  position: fixed;              /* ←これがないと left/top が効かない */
+  position: fixed;              
   left: 0;
   top: 0;
   z-index: 9999;
   display: none;
 
-  pointer-events: none;         /* hover邪魔しない */
+  pointer-events: none;         
   max-width: min(360px, calc(100vw - 28px));
   padding: 10px 12px;
   border-radius: 12px;
