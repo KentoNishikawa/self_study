@@ -707,13 +707,6 @@ export function render(
 
       prevHistoryLen = currentLen;
 
-      if (lastCard) {
-        const jokerValForLast = lastCard.rank === "JOKER" ? lastValue : undefined;
-        playCardEl.onmouseenter = (ev) =>
-          showTip(ev as unknown as MouseEvent, lastCard, state.mode, jokerValForLast);
-        playCardEl.onmousemove = (ev) => moveTip(ev as unknown as MouseEvent);
-        playCardEl.onmouseleave = () => hideTip();
-      }
     }
     // ===== /場札アニメ =====
 
