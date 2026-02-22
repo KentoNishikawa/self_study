@@ -9,7 +9,6 @@ import { renderHome, type HomeConfig } from "./ui/home";
 import { render } from "./ui/render";
 import { pickJokerValue } from "./ui/jokerPicker";
 
-// ===== アプリ状態 =====
 type Screen = "HOME" | "GAME";
 
 let screen: Screen = "HOME";
@@ -26,47 +25,184 @@ const appEl = document.querySelector<HTMLDivElement>("#app");
 if (!appEl) throw new Error("#app not found");
 const app: HTMLDivElement = appEl;
 
-// ===== 追加：演出（NPCターンの見せ方） =====
-let uiLocked = false; // NPCが動いてる間など、操作を一時的に無効化
-let npcRunToken = 0; // 中断用トークン（ホーム戻り等でループを止める）
+// NPC演出
+let uiLocked = false;
+let npcRunToken = 0;
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 // ==============================
-// NPCがDECKからJOKERを引いた時の値
-// 「バーストしない範囲の境界値」を選ぶ（target参照）
+// 手番の時間制限（60秒）
+// ==============================
+const TURN_LIMIT_SEC = 60;
+
+let turnLimitKey = "";
+let turnDeadlineMs = 0;
+let turnTimeoutId: number | null = null;
+let turnTickId: number | null = null;
+
+function nowTurnKey(s: GameState) {
+  return `${s.turn}|${s.history.length}`;
+}
+
+function limitColor(rem: number): string {
+  if (rem >= 31) return "#22c55e"; // 緑
+  if (rem >= 11) return "#f59e0b"; // 橙
+  return "#ff4d6d"; // 赤
+}
+
+function updateLimitDom() {
+  const fill = document.querySelector<HTMLDivElement>("#limitFill");
+  const secEl = document.querySelector<HTMLDivElement>("#limitSec");
+  if (!fill || !secEl) return;
+
+  if (!state || screen !== "GAME" || state.result.status !== "PLAYING") {
+    fill.style.width = "0%";
+    fill.style.background = "rgba(255,255,255,0.18)";
+    secEl.textContent = "";
+    return;
+  }
+
+  const rem = Math.max(0, Math.ceil((turnDeadlineMs - Date.now()) / 1000));
+  const ratio = Math.max(0, Math.min(1, rem / TURN_LIMIT_SEC));
+  const pct = `${Math.round(ratio * 100)}%`;
+
+  const c = limitColor(rem);
+
+  fill.style.width = pct;
+  fill.style.background =
+    c === "#22c55e"
+      ? "rgba(34,197,94,0.65)"
+      : c === "#f59e0b"
+      ? "rgba(245,158,11,0.70)"
+      : "rgba(255,77,109,0.65)";
+
+  secEl.textContent = `${rem}s`;
+  secEl.style.color = c;
+  secEl.style.fontSize = rem <= 10 ? "16px" : "13px";
+}
+
+function stopTurnLimit() {
+  if (turnTimeoutId != null) {
+    window.clearTimeout(turnTimeoutId);
+    turnTimeoutId = null;
+  }
+  if (turnTickId != null) {
+    window.clearInterval(turnTickId);
+    turnTickId = null;
+  }
+  turnLimitKey = "";
+  turnDeadlineMs = 0;
+  updateLimitDom();
+}
+
+function pickAutoJokerValueNoBust(s: GameState): number {
+  const total = s.total;
+  const safeMax =
+    s.mode === "UP"
+      ? Math.min(49, (s.target - 1) - total)
+      : Math.min(49, total - 1);
+
+  if (safeMax < 1) return 1;
+  return safeMax;
+}
+
+async function forceTimeoutAction(capturedKey: string) {
+  if (!state) return;
+  if (state.result.status !== "PLAYING") return;
+
+  // もうターンが進んでたら何もしない
+  if (nowTurnKey(state) !== capturedKey) return;
+
+  // NPC演出中は割り込まない（実質、人間の番が対象になる）
+  if (uiLocked) return;
+
+  const seatIndex = state.turn;
+
+  // 原則：DECKから強制で出す
+  const top = state.deck[state.deck.length - 1];
+
+  if (top) {
+    let jokerValue: number | undefined;
+    if (top.rank === "JOKER") jokerValue = pickAutoJokerValueNoBust(state);
+    state = reducer(state, { type: "DRAW_PLAY", jokerValue });
+  } else {
+    // DECKが無い場合の保険：先頭手札を出す（フリーズ回避）
+    const hand = state.seats[seatIndex].hand;
+    if (hand.length === 0) return;
+
+    const card = hand[0];
+    let jokerValue: number | undefined;
+    if (card.rank === "JOKER") jokerValue = pickAutoJokerValueNoBust(state);
+    state = reducer(state, { type: "PLAY_HAND", handIndex: 0, jokerValue });
+  }
+
+  draw();
+  await sleep(250);
+  await runNpcTurnsAnimated();
+  draw();
+}
+
+function ensureTurnLimit() {
+  if (!state || screen !== "GAME" || state.result.status !== "PLAYING") {
+    stopTurnLimit();
+    return;
+  }
+
+  const key = nowTurnKey(state);
+  if (key !== turnLimitKey) {
+    turnLimitKey = key;
+    turnDeadlineMs = Date.now() + TURN_LIMIT_SEC * 1000;
+
+    if (turnTickId == null) {
+      turnTickId = window.setInterval(updateLimitDom, 200);
+    }
+    updateLimitDom();
+
+    if (turnTimeoutId != null) window.clearTimeout(turnTimeoutId);
+    const capturedKey = key;
+    turnTimeoutId = window.setTimeout(() => {
+      void forceTimeoutAction(capturedKey);
+    }, TURN_LIMIT_SEC * 1000);
+  } else {
+    updateLimitDom();
+  }
+}
+
+// ==============================
+// NPCがDECKからJOKERを引いた時の値（安全最大）
 // ==============================
 function pickNpcJokerValueNoBust(s: GameState, d: Difficulty): number {
   const total = s.total;
-
   const safeMax =
     s.mode === "UP"
-      ? Math.min(49, (s.target - 1) - total) // total+v<target
-      : Math.min(49, total - 1); // total-v>0
+      ? Math.min(49, (s.target - 1) - total)
+      : Math.min(49, total - 1);
 
   if (safeMax < 1) return 1;
-
   if (d === "SMART") return safeMax;
 
-  // CASUAL：安全域の中からランダム
-  const min = 1;
-  const max = safeMax;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.floor(Math.random() * safeMax) + 1;
 }
 
 // ===== 描画 =====
 function draw() {
   if (screen === "HOME") {
+    stopTurnLimit();
     renderHome(app, homeConfig, {
       onStart: (cfg) => startGame(cfg),
       onChange: (cfg) => {
         homeConfig = cfg;
         difficulty = cfg.difficulty;
+        // ★入力欄の再生成でフォーカスが飛ぶのを防ぐため、ここでdraw()しない
       },
     });
     return;
   }
 
-  if (!state) return;
+  if (!state) {
+    stopTurnLimit();
+    return;
+  }
 
   render(app, state, difficulty, uiLocked, {
     onPlayHand: (handIndex) => void stepHumanPlayHandAsync(handIndex),
@@ -74,12 +210,15 @@ function draw() {
     onRestart: () => restartGame(),
     onGoHome: () => goHome(),
   });
+
+  ensureTurnLimit();
 }
 
 // ===== 画面遷移 =====
 function goHome() {
-  npcRunToken++; // NPCループ中断
+  npcRunToken++;
   uiLocked = false;
+  stopTurnLimit();
 
   screen = "HOME";
   state = null;
@@ -87,8 +226,9 @@ function goHome() {
 }
 
 function startGame(cfg: HomeConfig) {
-  npcRunToken++; // 前のループ中断
+  npcRunToken++;
   uiLocked = false;
+  stopTurnLimit();
 
   const name = (cfg.playerName || "").trim() || "プレイヤー";
   homeConfig = { ...cfg, playerName: name };
@@ -105,6 +245,7 @@ function restartGame() {
   if (!state) return;
   npcRunToken++;
   uiLocked = false;
+  stopTurnLimit();
 
   state = createInitialState(homeConfig.playerName, homeConfig.gameType);
   screen = "GAME";
@@ -124,13 +265,20 @@ async function stepDrawPlayAsync(seatIndex: number) {
 
   if (peek?.rank === "JOKER") {
     if (seatIndex === 0) {
+      // 時間切れ競合防止：ターンキーが変わったら無視
+      const keyBefore = nowTurnKey(state);
+
       const v = await pickJokerValue({
         mode: state.mode,
         total: state.total,
-        allowCancel: false, // 山札JOKERはキャンセル不可
+        allowCancel: false,
         target: state.target,
         isExtra: state.gameType === "EXTRA",
       });
+
+      if (!state) return;
+      if (nowTurnKey(state) !== keyBefore) return;
+
       if (v == null) return;
       jokerValue = v;
     } else {
@@ -154,13 +302,19 @@ async function stepHumanPlayHandAsync(handIndex: number) {
   let jokerValue: number | undefined;
 
   if (card.rank === "JOKER") {
+    const keyBefore = nowTurnKey(state);
+
     const v = await pickJokerValue({
       mode: state.mode,
       total: state.total,
-      allowCancel: true, // 手札JOKERはキャンセル可
+      allowCancel: true,
       target: state.target,
       isExtra: state.gameType === "EXTRA",
     });
+
+    if (!state) return;
+    if (nowTurnKey(state) !== keyBefore) return;
+
     if (v == null) return;
     jokerValue = v;
   }
@@ -195,7 +349,6 @@ async function runNpcTurnsAnimated() {
   if (!state) return;
 
   const token = ++npcRunToken;
-
   if (state.turn === 0) return;
 
   uiLocked = true;

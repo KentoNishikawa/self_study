@@ -2,7 +2,10 @@
 import type { GameState, GameType, Seat } from "./types";
 import { createDeck, deal, shuffle } from "./deck";
 
-const EXTRA_CANDIDATES: Array<Exclude<GameType, "EXTRA">> = [100, 200, 300, 400, 500];
+//const EXTRA_CANDIDATES: Array<Exclude<GameType, "EXTRA">> = [100, 200, 300, 400, 500];
+// お遊びデバッグ用コード　S　コンパイルで止められないで止められないため遊んだら消す
+const EXTRA_CANDIDATES: number[] = [25, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500];
+// お遊びデバッグ用コード　E
 
 function pickExtraTarget(): number {
   const i = Math.floor(Math.random() * EXTRA_CANDIDATES.length);

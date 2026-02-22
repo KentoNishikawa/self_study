@@ -186,7 +186,7 @@ function hideTip() {
 // Mobile: 2-tap hand play + info panel
 // =====================
 let selectedHandIndex: number | null = null;
-let selectedHandCardId: string | null = null; // ★追加：カードIDでも一致判定する（誤即出し防止）
+let selectedHandCardId: string | null = null;
 let lastHandDiv: HTMLDivElement | null = null;
 
 const isTouchEnvironment = () => {
@@ -195,8 +195,6 @@ const isTouchEnvironment = () => {
     const coarse = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
     const touch = (navigator.maxTouchPoints ?? 0) > 0;
     const small = window.matchMedia?.("(max-width: 820px)")?.matches ?? false;
-
-    // DevTools端末エミュでも noHover/coarse が効く
     return noHover || coarse || (touch && small);
   } catch {
     return false;
@@ -240,7 +238,6 @@ const buildCardInfoHtml = (card: Card, mode: GameState["mode"]) => {
   const effect = cardEffectText(card);
   const hint = currentDeltaHint(card, mode);
 
-  // PCホバーと同じ内容をそのまま流用
   return `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
       <div style="font-weight:950;">${escapeHtml(cardTipTitle(card))}</div>
@@ -266,6 +263,7 @@ const buildCardInfoHtml = (card: Card, mode: GameState["mode"]) => {
       <div class="tKey">■特殊効果</div>
       <div class="tVal">${escapeHtml(effect)}</div>
     </div>
+
     <div style="margin-top:10px;color:rgba(255,255,255,0.75);font-weight:800;">
       ※もう一度タップで出す
     </div>
@@ -294,7 +292,7 @@ const closeHandInfo = () => {
 
 const applyHandSelectionStyles = () => {
   if (!lastHandDiv) return;
-  const btns = lastHandDiv.querySelectorAll<HTMLButtonElement>('button[data-hand-index]');
+  const btns = lastHandDiv.querySelectorAll<HTMLButtonElement>("button[data-hand-index]");
   btns.forEach((b) => {
     const idx = Number(b.dataset.handIndex);
     const selected = selectedHandIndex === idx;
@@ -326,10 +324,7 @@ const ensureHandInfoDocListener = () => {
       const t = ev.target as HTMLElement | null;
       if (!t) return;
 
-      // パネル内はOK
       if (t.closest("#handInfoPanel")) return;
-
-      // 手札カードタップは「2タップ判定」に使うので閉じない
       if (t.closest("[data-hand-index]")) return;
 
       selectedHandIndex = null;
@@ -341,7 +336,7 @@ const ensureHandInfoDocListener = () => {
 };
 
 // =====================
-// Result Modal (single root, body appended)
+// Result Modal
 // =====================
 let dismissedResultKey: string | null = null;
 
@@ -421,7 +416,6 @@ function renderResultModal(show: boolean, key: string, title: string, bodyHtml: 
   };
 
   closeBtn?.addEventListener("click", close);
-
   overlay?.addEventListener("click", (ev: MouseEvent) => {
     if (ev.target === overlay) close();
   });
@@ -487,7 +481,6 @@ export function render(
     const turnSeat = state.seats[state.turn];
 
     const diffText = difficulty === "SMART" ? "SMART" : "CASUAL";
-
     const isPlaying = state.result.status === "PLAYING";
     const canOperate = isPlaying && state.turn === 0 && !uiLocked;
 
@@ -497,7 +490,6 @@ export function render(
     const lastValue = last ? last.value : undefined;
     const lastNote = last?.note ?? "";
 
-    // target表示（EXTRAはPLAYING中だけ???）
     const targetLabel =
       state.gameType === "EXTRA" && state.result.status === "PLAYING" ? "???" : String(state.target);
 
@@ -555,6 +547,32 @@ export function render(
           </div>
         </div>
 
+        <!-- ★LIMIT：角丸HPバー -->
+        <div id="limitRow"
+          style="height:24px;display:flex;align-items:center;gap:10px;margin-top:6px;user-select:none;"
+        >
+          <div style="font-weight:950;opacity:.85;letter-spacing:.5px;">LIMIT</div>
+          <div
+            style="
+              flex:1;
+              position:relative;
+              height:12px;
+              border-radius:999px;
+              background:rgba(255,255,255,0.08);
+              border:1px solid rgba(255,255,255,0.12);
+              overflow:hidden;
+            "
+            aria-label="turn time limit"
+          >
+            <div id="limitFill"
+              style="height:100%;width:100%;border-radius:999px;background:rgba(34,197,94,0.65);"
+            ></div>
+          </div>
+          <div id="limitSec"
+            style="min-width:46px;text-align:right;font-weight:950;font-variant-numeric:tabular-nums;color:#22c55e;font-size:13px;"
+          >60s</div>
+        </div>
+
         <!-- ★結果表示の高さは常に確保 -->
         <div class="kpiResult"
           style="height:24px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:6px;">
@@ -579,7 +597,9 @@ export function render(
               <div class="playMeta">
                 <div class="title">場の最新カード</div>
                 <div class="sub">${
-                  last ? `${escapeHtml(lastName)} / ${escapeHtml(cardLogLabel(last.card, last.value))}` : "—"
+                  last
+                    ? `${escapeHtml(lastName)} / ${escapeHtml(cardLogLabel(last.card, last.value))}`
+                    : "—"
                 }</div>
                 ${
                   lastNote
@@ -620,7 +640,7 @@ export function render(
       <div style="height:12px;"></div>
 
       <div class="panel">
-        <div style="font-weight:950;margin-bottom:10px;">プレイヤーの手札（${escapeHtml(me.name)}）</div>
+        <div style="font-weight:950;margin-bottom:10px;">あなたの手札（${escapeHtml(me.name)}）</div>
         <div id="hand" class="handGrid"></div>
 
         <div style="height:10px;"></div>
@@ -644,15 +664,11 @@ export function render(
       </div>
     `;
 
-    const handDiv = app.querySelector<HTMLDivElement>("#hand");
-    const drawBtn = app.querySelector<HTMLButtonElement>("#drawBtn");
-    const restartBtn = app.querySelector<HTMLButtonElement>("#restartBtn");
-    const homeBtn = app.querySelector<HTMLButtonElement>("#homeBtn");
-    const logDiv = app.querySelector<HTMLDivElement>("#log");
-
-    if (!handDiv || !drawBtn || !restartBtn || !homeBtn || !logDiv) {
-      throw new Error("render.ts: required element not found");
-    }
+    const handDiv = app.querySelector<HTMLDivElement>("#hand")!;
+    const drawBtn = app.querySelector<HTMLButtonElement>("#drawBtn")!;
+    const restartBtn = app.querySelector<HTMLButtonElement>("#restartBtn")!;
+    const homeBtn = app.querySelector<HTMLButtonElement>("#homeBtn")!;
+    const logDiv = app.querySelector<HTMLDivElement>("#log")!;
 
     // ===== 場札アニメ =====
     const playCardEl = app.querySelector<HTMLDivElement>(".playCard");
@@ -686,19 +702,6 @@ export function render(
             ],
             { duration: 620, easing: "cubic-bezier(.2,1.2,.2,1)" }
           );
-
-          const glowStrong = isUp ? "rgba(255, 77, 109, 0.65)" : "rgba(59, 130, 246, 0.65)";
-          const glowMid = isUp ? "rgba(255, 77, 109, 0.35)" : "rgba(59, 130, 246, 0.35)";
-          const glowWeak = isUp ? "rgba(255, 77, 109, 0.18)" : "rgba(59, 130, 246, 0.18)";
-
-          playCardEl.animate(
-            [
-              { boxShadow: "0 0 0 rgba(0,0,0,0)" },
-              { boxShadow: `0 0 55px ${glowStrong}, 0 0 0 3px ${glowMid}` },
-              { boxShadow: `0 0 10px ${glowWeak}, 0 0 0 1px rgba(34, 32, 32, 0.6)` },
-            ],
-            { duration: 650, easing: "ease-out" }
-          );
         });
       }
 
@@ -706,7 +709,8 @@ export function render(
 
       if (lastCard) {
         const jokerValForLast = lastCard.rank === "JOKER" ? lastValue : undefined;
-        playCardEl.onmouseenter = (ev) => showTip(ev as unknown as MouseEvent, lastCard, state.mode, jokerValForLast);
+        playCardEl.onmouseenter = (ev) =>
+          showTip(ev as unknown as MouseEvent, lastCard, state.mode, jokerValForLast);
         playCardEl.onmousemove = (ev) => moveTip(ev as unknown as MouseEvent);
         playCardEl.onmouseleave = () => hideTip();
       }
@@ -714,14 +718,12 @@ export function render(
     // ===== /場札アニメ =====
 
     // =====================
-    // 手札（カードボタン）
+    // 手札（スマホ：2タップ / PC：即出し）
     // =====================
     const isTouchUI = cachedIsTouchUI;
     ensureHandInfoDocListener();
-
     lastHandDiv = handDiv;
 
-    // PCなら説明パネルは使わない
     if (!isTouchUI) {
       selectedHandIndex = null;
       selectedHandCardId = null;
@@ -735,13 +737,11 @@ export function render(
       b.type = "button";
       b.innerHTML = cardInnerHtml(card);
 
-      // スマホは説明のために常にタップ可能（出すのは2タップ目＆canOperate時）
       b.disabled = isTouchUI ? false : !canOperate;
 
       b.dataset.handIndex = String(idx);
       b.setAttribute("data-hand-index", String(idx));
 
-      // PC：従来通り（クリックで即プレイ、ホバーでツールチップ）
       if (!isTouchUI) {
         b.onclick = () => handlers.onPlayHand(idx);
 
@@ -753,9 +753,7 @@ export function render(
         return;
       }
 
-      // スマホ：2タップ仕様（同じindex + 同じカードID で確定）
       b.onclick = () => {
-        // 1回目：説明表示（選択）
         if (selectedHandIndex !== idx || selectedHandCardId !== card.id) {
           selectedHandIndex = idx;
           selectedHandCardId = card.id;
@@ -764,7 +762,6 @@ export function render(
           return;
         }
 
-        // 2回目（同じカード）：出す（プレイヤーの手番だけ）
         if (!canOperate) return;
 
         selectedHandIndex = null;
@@ -776,10 +773,8 @@ export function render(
       handDiv.appendChild(b);
     });
 
-    // 再描画後に選択状態を反映
     applyHandSelectionStyles();
 
-    // 手札が減って index が範囲外なら解除
     if (selectedHandIndex != null && selectedHandIndex >= me.hand.length) {
       selectedHandIndex = null;
       selectedHandCardId = null;
@@ -791,7 +786,6 @@ export function render(
       me.hand[selectedHandIndex] &&
       me.hand[selectedHandIndex].id !== selectedHandCardId
     ) {
-      // 同じindexでもカードが入れ替わっていたら解除
       selectedHandIndex = null;
       selectedHandCardId = null;
       closeHandInfo();
@@ -820,7 +814,7 @@ export function render(
     };
 
     // =====================
-    // ログ（PLAY + SYSTEMを混ぜる）
+    // ログ（PLAY + SYSTEM）
     // =====================
     logDiv.innerHTML = "";
 
@@ -840,11 +834,8 @@ export function render(
     for (let i = 0; i < state.history.length; i++) {
       const playNo = i + 1;
       entries.push({ type: "PLAY", playNo, p: state.history[i] });
-
       const sys = sysByAfter.get(playNo);
-      if (sys) {
-        for (const s of sys) entries.push({ type: "SYSTEM", playNo, s });
-      }
+      if (sys) for (const s of sys) entries.push({ type: "SYSTEM", playNo, s });
     }
 
     const reversed = entries.slice().reverse();
@@ -853,7 +844,6 @@ export function render(
       const row = document.createElement("div");
       row.className = "logRow";
 
-      // SYSTEM行
       if (e.type === "SYSTEM") {
         row.classList.add("system");
 
@@ -871,9 +861,7 @@ export function render(
         return;
       }
 
-      // PLAY行（従来表示）
       const p = e.p;
-
       const originalNo = e.playNo;
       const name = state.seats[p.seat].name;
       const lbl = cardLogLabel(p.card, p.value);
@@ -886,7 +874,8 @@ export function render(
 
       const isJ = p.card.rank === "J";
       const isCancel =
-        (p.card.suit === "S" && p.card.rank === "3" && p.value === 0) || (p.note?.includes("相殺") ?? false);
+        (p.card.suit === "S" && p.card.rank === "3" && p.value === 0) ||
+        (p.note?.includes("相殺") ?? false);
 
       const isLosingPlay =
         idx === 0 && state.result.status === "LOSE" && state.result.loserSeat === p.seat;
@@ -921,12 +910,9 @@ export function render(
       if (p.origin === "HAND") {
         originImg.alt = "HAND";
         originImg.src = baseUrl + "icons/hand.png";
-      } else if (p.origin === "DECK") {
+      } else {
         originImg.alt = "DECK";
         originImg.src = baseUrl + "icons/deck.png";
-      } else {
-        originImg.alt = "UNKNOWN";
-        originImg.style.display = "none";
       }
 
       const text = document.createElement("span");
