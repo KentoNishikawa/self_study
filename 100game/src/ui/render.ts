@@ -67,9 +67,8 @@ function cardInnerHtml(card: Card, valueForJoker?: number) {
 
   const center =
     card.rank === "JOKER"
-      ? `<div class="rank">🃏</div><div class="suit">${
-          valueForJoker != null ? `(${valueForJoker})` : "JOKER"
-        }</div>`
+      ? `<div class="rank">🃏</div><div class="suit">${valueForJoker != null ? `(${valueForJoker})` : "JOKER"
+      }</div>`
       : `<div class="rank">${card.rank}</div><div class="suit">${suitToSymbol(card.suit)}</div>`;
 
   return `
@@ -497,12 +496,23 @@ export function render(
       state.result.status === "PLAYING"
         ? `<span style="color:#22c55e;font-weight:900;">進行中</span>`
         : state.result.status === "LOSE"
-        ? `<span style="color:#ff4d6d;font-weight:950;">敗北：${
-            state.seats[state.result.loserSeat].name
+          ? `<span style="color:#ff4d6d;font-weight:950;">敗北：${state.seats[state.result.loserSeat].name
           }（${escapeHtml(state.result.reason ?? "")}）</span>`
-        : `<span style="color:#ff4d6d;font-weight:950;">無効試合：${escapeHtml(
+          : `<span style="color:#ff4d6d;font-weight:950;">無効試合：${escapeHtml(
             state.result.reason ?? ""
           )}</span>`;
+
+    const mpSeatOffsetRaw = (state as any).__mpSeatOffset;
+    const mpSeatOffset = Number.isInteger(mpSeatOffsetRaw) ? (mpSeatOffsetRaw as number) : null;
+
+    const toServerTurn = (rotTurn: number) =>
+      mpSeatOffset == null ? rotTurn : (rotTurn + mpSeatOffset) % 4;
+
+    const toRotIndexFromServer = (serverIdx: number) =>
+      mpSeatOffset == null ? serverIdx : (serverIdx - mpSeatOffset + 4) % 4;
+
+    const serverTurn = toServerTurn(state.turn);
+    const myServerIdx = mpSeatOffset ?? 0;
 
     app.innerHTML = `
       <header class="appHeader">
@@ -539,11 +549,10 @@ export function render(
           <div class="spacer"></div>
 
           <div class="status">
-            ${
-              state.result.status === "PLAYING"
-                ? `<span class="statusText playing">進行中</span>`
-                : `<span class="statusText ended">決着</span>`
-            }
+            ${state.result.status === "PLAYING"
+        ? `<span class="statusText playing">進行中</span>`
+        : `<span class="statusText ended">決着</span>`
+      }
           </div>
         </div>
 
@@ -584,28 +593,24 @@ export function render(
         <div class="panel">
           <div class="row" style="align-items:flex-start;">
             <div class="cardArea">
-              <div class="playCard ${lastCard ? cardClass(lastCard) : "black"} ${
-                lastCard?.rank === "JOKER" ? "joker" : ""
-              }">
-                ${
-                  lastCard
-                    ? cardInnerHtml(lastCard, lastCard.rank === "JOKER" ? lastValue : undefined)
-                    : `<div class="center"><div class="rank">—</div><div class="suit">まだ場にカードなし</div></div>`
-                }
+              <div class="playCard ${lastCard ? cardClass(lastCard) : "black"} ${lastCard?.rank === "JOKER" ? "joker" : ""
+      }">
+                ${lastCard
+        ? cardInnerHtml(lastCard, lastCard.rank === "JOKER" ? lastValue : undefined)
+        : `<div class="center"><div class="rank">—</div><div class="suit">まだ場にカードなし</div></div>`
+      }
               </div>
 
               <div class="playMeta">
                 <div class="title">場の最新カード</div>
-                <div class="sub">${
-                  last
-                    ? `${escapeHtml(lastName)} / ${escapeHtml(cardLogLabel(last.card, last.value))}`
-                    : "—"
-                }</div>
-                ${
-                  lastNote
-                    ? `<div class="sub">※${escapeHtml(lastNote)}</div>`
-                    : `<div class="sub" style="opacity:.7;">&nbsp;</div>`
-                }
+                <div class="sub">${last
+        ? `${escapeHtml(lastName)} / ${escapeHtml(cardLogLabel(last.card, last.value))}`
+        : "—"
+      }</div>
+                ${lastNote
+        ? `<div class="sub">※${escapeHtml(lastNote)}</div>`
+        : `<div class="sub" style="opacity:.7;">&nbsp;</div>`
+      }
               </div>
             </div>
           </div>
@@ -614,26 +619,52 @@ export function render(
         <div class="panel">
           <div style="font-weight:950;margin-bottom:10px;">プレイヤー状況</div>
           <div class="playerList">
-            ${state.seats
-              .map((s, idx) => {
-                const isTurn = idx === state.turn;
-                const tag = idx === 0 ? "あなた" : "NPC";
-                return `
-                  <div class="playerRow">
-                    <div>
-                      <div class="name">${escapeHtml(s.name)}</div>
-                      <div class="muted">${tag} / 手札 ${s.hand.length}枚</div>
-                    </div>
-                    ${
-                      isTurn
-                        ? `<div class="turn">▶ 手番</div>`
-                        : `<div class="muted" style="margin-left:auto;">&nbsp;</div>`
-                    }
-                  </div>
-                `;
-              })
-              .join("")}
-          </div>
+  ${
+      // マルチ時だけ、HOST→P1→P2→P3 の固定順にする
+      mpSeatOffset == null
+        ? state.seats
+          .map((s, idx) => {
+            const isTurn = idx === state.turn;
+            const tag = idx === 0 ? "あなた" : "NPC";
+            return `
+              <div class="playerRow">
+                <div>
+                  <div class="name">${escapeHtml(s.name)}</div>
+                  <div class="muted">${tag} / 手札 ${s.hand.length}枚</div>
+                </div>
+                ${isTurn
+                ? `<div class="turn">▶ 手番</div>`
+                : `<div class="muted" style="margin-left:auto;">&nbsp;</div>`
+              }
+              </div>
+            `;
+          })
+          .join("")
+        : [0, 1, 2, 3]
+          .map((serverIdx) => {
+            const rotIdx = toRotIndexFromServer(serverIdx);
+            const s = state.seats[rotIdx];
+            const isTurn = serverIdx === serverTurn;
+
+            const role = serverIdx === 0 ? "HOST" : `P${serverIdx}`;
+            const who = serverIdx === myServerIdx ? "あなた" : s.kind === "NPC" ? "NPC" : "プレイヤー";
+
+            return `
+              <div class="playerRow">
+                <div>
+                  <div class="name">${escapeHtml(s.name)}</div>
+                  <div class="muted">${role} / ${who} / 手札 ${s.hand.length}枚</div>
+                </div>
+                ${isTurn
+                ? `<div class="turn">▶ 手番</div>`
+                : `<div class="muted" style="margin-left:auto;">&nbsp;</div>`
+              }
+              </div>
+            `;
+          })
+          .join("")
+      }
+</div>
         </div>
       </div>
 
@@ -691,7 +722,7 @@ export function render(
             try {
               playCardEl.style.outline = "";
               playCardEl.style.outlineOffset = "";
-            } catch {}
+            } catch { }
           }, 220);
 
           playCardEl.animate(
@@ -940,8 +971,8 @@ export function render(
       <div style="padding:16px;color:#fff;">
         <h2 style="margin:0 0 8px 0;color:#ff4d6d;">描画エラー</h2>
         <pre style="white-space:pre-wrap;background:#0b0d12;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);">${escapeHtml(
-          msg
-        )}</pre>
+      msg
+    )}</pre>
         <div style="color:rgba(255,255,255,0.7);font-weight:700;">DevTools(Console) も見てね</div>
       </div>
     `;

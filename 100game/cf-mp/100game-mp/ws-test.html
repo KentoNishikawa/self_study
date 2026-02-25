@@ -1,0 +1,58 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>100game WS Test</title>
+
+<button id="host">Connect as HOST</button>
+<button id="p1">Connect as Player</button>
+<button id="name">P1: UPDATE_NAME</button>
+<button id="commitEmpty">P1: COMMIT_NAME(empty)</button>
+<button id="icon">P1: UPDATE_ICON</button>
+<button id="start">HOST: START</button>
+
+<pre id="log"></pre>
+
+<script>
+  const ROOM_ID = "su2l52yl9p3m";
+  const HOST_TOKEN = "k51r9milj1yd1mbv9xbgdfv0";
+  const BASE = `ws://127.0.0.1:8787/api/rooms/${ROOM_ID}/ws`;
+
+  const log = (m) => {
+    document.getElementById("log").textContent += m + "\n";
+  };
+
+  let wsHost = null;
+  let wsP1 = null;
+
+  function hook(ws, tag) {
+    ws.onopen = () => log(`[${tag}] open`);
+    ws.onmessage = (e) => log(`[${tag}] ${e.data}`);
+    ws.onclose = (e) => log(`[${tag}] close code=${e.code} reason=${e.reason}`);
+    ws.onerror = () => log(`[${tag}] error`);
+  }
+
+  document.getElementById("host").onclick = () => {
+    wsHost = new WebSocket(`${BASE}?token=${HOST_TOKEN}`);
+    hook(wsHost, "HOST");
+  };
+
+  document.getElementById("p1").onclick = () => {
+    wsP1 = new WebSocket(BASE);
+    hook(wsP1, "P1");
+  };
+
+  document.getElementById("name").onclick = () => {
+    wsP1?.send(JSON.stringify({ type: "UPDATE_NAME", name: "なっきーと弟子" }));
+  };
+
+  document.getElementById("commitEmpty").onclick = () => {
+    wsP1?.send(JSON.stringify({ type: "COMMIT_NAME", name: "" }));
+  };
+
+  document.getElementById("icon").onclick = () => {
+    wsP1?.send(JSON.stringify({ type: "UPDATE_ICON", iconId: "icon_01" }));
+  };
+
+  document.getElementById("start").onclick = () => {
+    wsHost?.send(JSON.stringify({ type: "HOST_START" }));
+  };
+</script>
