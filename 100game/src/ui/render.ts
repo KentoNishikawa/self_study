@@ -15,28 +15,62 @@ function escapeHtml(s: string): string {
     .replaceAll("'", "&#39;");
 }
 
-
 // =====================
-// icon helpers (Home と同じアイコンID → 絵文字)
+// icons (HOMEで選んだiconId → 表示用絵文字)
 // =====================
-const ICON_PRESETS: Array<{ id: string; emoji: string }> = [
-  { id: "host_default", emoji: "👑" },
-  { id: "player_default", emoji: "🙂" },
-  { id: "npc_default", emoji: "🤖" },
-  { id: "icon_01", emoji: "😀" },
-  { id: "icon_02", emoji: "😺" },
-  { id: "icon_03", emoji: "🐉" },
-];
+const ICON_EMOJI = new Map<string, string>([
+  ["host_default", "👑"],
+  ["player_default", "🙂"],
+  ["npc_default", "🤖"],
+  ["icon_01", "😀"],
+  ["icon_02", "😺"],
+  ["icon_03", "🐉"],
+]);
 
-const ICON_EMOJI = new Map(ICON_PRESETS.map((p) => [p.id, p.emoji] as const));
-
-function iconEmoji(iconId: string): string {
-  return ICON_EMOJI.get(iconId) ?? "🙂";
+function iconEmoji(iconId?: string): string {
+  return ICON_EMOJI.get(iconId ?? "") ?? "🙂";
 }
 
-function seatIconId(seat: { iconId?: string; kind?: string }): string {
-  if (seat.iconId) return seat.iconId;
-  return seat.kind === "NPC" ? "npc_default" : "player_default";
+// =====================
+// exit log (HUMAN→NPC を検知して SYSTEM(INFO) を生成)
+// =====================
+let exitPrevKinds: Array<"HUMAN" | "NPC"> | null = null;
+let exitPrevNames: string[] | null = null;
+let exitPrevHistLen = 0;
+let localExitSysId = 100000;
+let localExitSysLogs: Array<{ id: number; kind: "INFO"; afterPlayIndex: number; message: string }> = [];
+
+function updateExitSystemLogs(state: GameState) {
+  const hlen = state.history.length;
+
+  // 再戦などで手数が巻き戻ったらリセット
+  if (hlen < exitPrevHistLen) {
+    exitPrevKinds = null;
+    exitPrevNames = null;
+    localExitSysLogs = [];
+    exitPrevHistLen = hlen;
+  }
+
+  if (exitPrevKinds && exitPrevNames) {
+    for (let i = 0; i < 4; i++) {
+      const prevK = exitPrevKinds[i];
+      const curK = state.seats[i].kind;
+      if (prevK === "HUMAN" && curK === "NPC") {
+        const name = (exitPrevNames[i] ?? "").trim() || `プレイヤー${i}`;
+        localExitSysLogs.push({
+          id: ++localExitSysId,
+          kind: "INFO",
+          afterPlayIndex: hlen,
+          message: `${name}が退出しました。以降はNPCが操作します。`,
+        });
+        if (localExitSysLogs.length > 50) localExitSysLogs = localExitSysLogs.slice(-50);
+      }
+    }
+  }
+
+  exitPrevKinds = state.seats.map((s) => s.kind) as Array<"HUMAN" | "NPC">;
+  exitPrevNames = state.seats.map((s) => s.name);
+  exitPrevHistLen = hlen;
 }
 
 
@@ -294,32 +328,6 @@ const buildCardInfoHtml = (card: Card, mode: GameState["mode"]) => {
   `;
 };
 
-const positionHandInfoAboveTable = () => {
-  if (!handInfo) return;
-
-  const pad = 8;
-
-  // 基本：場札＋プレイヤー状況のコンテナ上端に合わせる
-  const grid2 = document.querySelector<HTMLElement>(".grid2");
-  let top = 74; // fallback
-
-  if (grid2) {
-    const r = grid2.getBoundingClientRect();
-    top = Math.round(r.top + pad);
-  }
-
-  // 画面外にはみ出さないよう補正（下にはみ出すと困るので上に詰める）
-  handInfo.style.top = `${Math.max(pad, top)}px`;
-
-  // display:block後じゃないと高さが取れないので、2段階で補正
-  const h = handInfo.getBoundingClientRect().height;
-  const maxTop = window.innerHeight - pad - h;
-  if (maxTop >= pad) {
-    const currentTop = parseInt(handInfo.style.top, 10) || pad;
-    handInfo.style.top = `${Math.min(currentTop, maxTop)}px`;
-  }
-};
-
 const openHandInfo = (card: Card, mode: GameState["mode"]) => {
   if (!handInfo) return;
   handInfo.innerHTML = buildCardInfoHtml(card, mode);
@@ -331,9 +339,6 @@ const openHandInfo = (card: Card, mode: GameState["mode"]) => {
     selectedHandCardId = null;
     closeHandInfo();
   });
-
-  handInfo.style.display = "block";
-  positionHandInfoAboveTable();
 };
 
 const closeHandInfo = () => {
@@ -445,7 +450,7 @@ function renderResultModal(show: boolean, key: string, title: string, bodyHtml: 
         "
         role="dialog" aria-modal="true"
       >
-        <div style="font-weight:950;font-size:15px;margin-bottom:10px; text-align:center;">
+        <div style="font-weight:950;font-size:16px;margin-bottom:10px; text-align:center;">
           ${escapeHtml(title)}
         </div>
 
@@ -556,24 +561,6 @@ export function render(
             state.result.reason ?? ""
           )}</span>`;
 
-
-    // =====================
-    // MP表示用：サーバ席順（HOST→P1→P2→P3）に固定するための補助
-    // state は「自分が seat0」になるよう回転済みなので、__mpSeatOffset があれば復元できる
-    // =====================
-    const mpSeatOffsetRaw = (state as any).__mpSeatOffset;
-    const mpSeatOffset = Number.isInteger(mpSeatOffsetRaw) ? (mpSeatOffsetRaw as number) : null;
-
-    const toServerTurn = (rotTurn: number) =>
-      mpSeatOffset == null ? rotTurn : (rotTurn + mpSeatOffset) % 4;
-
-    const toRotIndexFromServer = (serverIdx: number) =>
-      mpSeatOffset == null ? serverIdx : (serverIdx - mpSeatOffset + 4) % 4;
-
-    const serverTurn = toServerTurn(state.turn);
-    const myServerIdx = mpSeatOffset ?? 0;
-    const mpIsHost = (state as any).__mpIsHost === true;
-
     app.innerHTML = `
       <header class="appHeader">
         <h1 class="appTitle">100ゲーム</h1>
@@ -679,62 +666,30 @@ export function render(
         <div class="panel">
           <div style="font-weight:950;margin-bottom:10px;">プレイヤー状況</div>
           <div class="playerList">
-            ${mpSeatOffset == null
-        ? state.seats
-          .map((s, idx) => {
-            const isTurn = idx === state.turn;
-
-            const iconId = seatIconId(s as any);
-            const icon = iconEmoji(iconId);
-
-            return `
-                        <div class="playerRow" style="display:grid;grid-template-columns:30px minmax(0,1fr) 54px;align-items:center;gap:8px;">
-                          <div style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-                                      background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:15px;">
-                            ${escapeHtml(icon)}
-                          </div>
-
-                          <div style="min-width:0;display:grid;gap:2px;">
-                            <div class="name" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(s.name)}</div>
-                            <div class="muted" style="font-size:10px;opacity:0.75;display:flex;gap:6px;align-items:baseline;min-width:0;">手札${s.hand.length}枚</div>
-                          </div>
-
-                          <div class="turn" style="display:grid;justify-items:end;align-content:center;gap:1px;visibility:${isTurn ? "visible" : "hidden"};">
-                            <span style="font-size:14px;line-height:1;">▶</span><span style="font-size:10px;line-height:1;opacity:0.9;">手番</span>
-                          </div>
-                        </div>
-                      `;
-          })
-          .join("")
-        : [0, 1, 2, 3]
-          .map((serverIdx) => {
-            const rotIdx = toRotIndexFromServer(serverIdx);
-            const s = state.seats[rotIdx];
-            const isTurn = serverIdx === serverTurn;
-
-              serverIdx === myServerIdx ? "あなた" : s.kind === "NPC" ? "NPC" : "プレイヤー";
-
-            const iconId = seatIconId(s as any);
-            const icon = iconEmoji(iconId);
-
-            return `
-                        <div class="playerRow" style="display:grid;grid-template-columns:30px minmax(0,1fr) 54px;align-items:center;gap:8px;">
-                          <div style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-                                      background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:15px;">
-                            ${escapeHtml(icon)}
-                          </div>
-
-                          <div style="min-width:0;display:grid;gap:2px;">
-                            <div class="name" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(s.name)}</div>
-                            <div class="muted" style="font-size:10px;opacity:0.75;display:flex;gap:6px;align-items:baseline;min-width:0;">手札${s.hand.length}枚</div>
-                          </div>
-
-                          <div class="turn" style="display:grid;justify-items:end;align-content:center;gap:1px;visibility:${isTurn ? "visible" : "hidden"};"><span style="font-size:14px;line-height:1;">▶</span><span style="font-size:10px;line-height:1;opacity:0.9;">手番</span></div>
-                        </div>
-                      `;
-          })
-          .join("")
-      }
+            ${state.seats
+        .map((s, idx) => {
+          const isTurn = idx === state.turn;
+          const tag = idx === 0 ? "あなた" : "NPC";
+          return `
+                  <div class="playerRow">
+                    <div style="display:flex;gap:10px;align-items:center;">
+                      <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                                  background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:16px;">
+                        ${escapeHtml(iconEmoji(s.iconId))}
+                      </div>
+                      <div>
+                        <div class="name">${escapeHtml(s.name)}</div>
+                        <div class="muted">${tag} / 手札 ${s.hand.length}枚</div>
+                      </div>
+                    </div>
+                    ${isTurn
+              ? `<div class="turn">▶ 手番</div>`
+              : `<div class="muted" style="margin-left:auto;">&nbsp;</div>`
+            }
+                  </div>
+                `;
+        })
+        .join("")}
           </div>
         </div>
       </div>
@@ -893,7 +848,7 @@ export function render(
     drawBtn.disabled = !canOperate || state.deck.length === 0;
     drawBtn.onclick = () => handlers.onDrawPlay();
 
-    restartBtn.disabled = isPlaying || (mpSeatOffset != null && !mpIsHost);
+    restartBtn.disabled = isPlaying;
     restartBtn.onclick = () => {
       if (restartBtn.disabled) return;
       handlers.onRestart();
@@ -917,8 +872,9 @@ export function render(
     type SysEntry = { type: "SYSTEM"; playNo: number; s: GameState["systemLogs"][number] };
     type Entry = PlayEntry | SysEntry;
 
+    updateExitSystemLogs(state);
     const sysByAfter = new Map<number, GameState["systemLogs"][number][]>();
-    for (const s of state.systemLogs ?? []) {
+    for (const s of [...(state.systemLogs ?? []), ...localExitSysLogs]) {
       const key = s.afterPlayIndex;
       const arr = sysByAfter.get(key) ?? [];
       arr.push(s);
@@ -926,6 +882,8 @@ export function render(
     }
 
     const entries: Entry[] = [];
+    const sys0 = sysByAfter.get(0);
+    if (sys0) for (const s of sys0) entries.push({ type: "SYSTEM", playNo: 0, s });
     for (let i = 0; i < state.history.length; i++) {
       const playNo = i + 1;
       entries.push({ type: "PLAY", playNo, p: state.history[i] });
@@ -948,7 +906,7 @@ export function render(
 
         const main = document.createElement("div");
         main.className = "main";
-        main.textContent = `🔄 再配布：${e.s.message}`;
+        main.textContent = e.s.kind === "REDEAL" ? `🔄 再配布：${e.s.message}` : `🚪 ${e.s.message}`;
 
         row.appendChild(left);
         row.appendChild(main);

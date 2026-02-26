@@ -36,7 +36,7 @@ export type Seat = {
   kind: SeatKind;
   name: string;
   hand: Card[];
-  iconId?: string;
+  iconId?: string; // ★ホームで選んだアイコンID（任意）
 };
 
 export type GameResult =
@@ -65,7 +65,7 @@ export type PlayLog = {
 
 export type SystemLog = {
   id: number;                  // 連番（toastの既読管理に使う）
-  kind: "REDEAL";
+  kind: "REDEAL" | "INFO";
   afterPlayIndex: number;      // “何手目の直後”に発生したか（history.length を入れる）
   message: string;             // 表示用
 };

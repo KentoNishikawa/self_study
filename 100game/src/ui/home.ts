@@ -91,7 +91,12 @@ export function renderHome(
   let ws: WebSocket | null = null;
 
   let pendingRedirect = false;
+  const ICON_STORAGE_KEY = "100game.iconId";
   let localIconId = "player_default";
+  try {
+    localIconId = localStorage.getItem(ICON_STORAGE_KEY) ?? "player_default";
+  } catch { }
+
 
   const redirectToHome = () => {
     // ルーム情報を消して、ソロHOMEへ（再生成を必ず押させる方針）
@@ -411,6 +416,9 @@ export function renderHome(
       const iconId = btn.dataset.icon || "player_default";
 
       localIconId = iconId;
+      try {
+        localStorage.setItem(ICON_STORAGE_KEY, iconId);
+      } catch { }
       iconBtn.textContent = iconEmoji(iconId);
       closePicker();
 
