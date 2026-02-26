@@ -48,6 +48,7 @@ function json(data: unknown, status = 200) {
 }
 
 function publicRoomState(st: RoomState) {
+    // hostTokenは返さない
     const { hostToken: _hide, ...rest } = st;
     return rest;
 }
@@ -79,11 +80,32 @@ function makeGameFromRoom(room: RoomState): GameState {
     const gameType = parseGameType(room.gameType);
     const target = gameType === "EXTRA" ? pickExtraTarget() : gameType;
 
+    // ★ここで iconId を GameState に埋め込む（ゲーム画面で表示するため）
     const seats: [Seat, Seat, Seat, Seat] = [
-        { kind: toSeatKind(room.seats[0].kind), name: room.seats[0].name, hand: [] },
-        { kind: toSeatKind(room.seats[1].kind), name: room.seats[1].kind === "NPC" ? "NPC1" : room.seats[1].name, hand: [] },
-        { kind: toSeatKind(room.seats[2].kind), name: room.seats[2].kind === "NPC" ? "NPC2" : room.seats[2].name, hand: [] },
-        { kind: toSeatKind(room.seats[3].kind), name: room.seats[3].kind === "NPC" ? "NPC3" : room.seats[3].name, hand: [] },
+        {
+            kind: toSeatKind(room.seats[0].kind),
+            name: room.seats[0].name,
+            hand: [],
+            iconId: room.seats[0].iconId,
+        },
+        {
+            kind: toSeatKind(room.seats[1].kind),
+            name: room.seats[1].kind === "NPC" ? "NPC1" : room.seats[1].name,
+            hand: [],
+            iconId: room.seats[1].iconId,
+        },
+        {
+            kind: toSeatKind(room.seats[2].kind),
+            name: room.seats[2].kind === "NPC" ? "NPC2" : room.seats[2].name,
+            hand: [],
+            iconId: room.seats[2].iconId,
+        },
+        {
+            kind: toSeatKind(room.seats[3].kind),
+            name: room.seats[3].kind === "NPC" ? "NPC3" : room.seats[3].name,
+            hand: [],
+            iconId: room.seats[3].iconId,
+        },
     ];
 
     const jokerCount = 1;
@@ -91,7 +113,7 @@ function makeGameFromRoom(room: RoomState): GameState {
     const { hands, restDeck } = deal(deck, 4, 4);
     for (let i = 0; i < 4; i++) seats[i] = { ...seats[i], hand: hands[i] };
 
-    return {
+    const state: GameState = {
         seats,
         gameType,
         target,
@@ -105,12 +127,15 @@ function makeGameFromRoom(room: RoomState): GameState {
         result: { status: "PLAYING" },
         lastCard: null,
     };
+
+    return state;
 }
 
 function isNpcTurn(game: GameState) {
     return game.seats[game.turn].kind === "NPC";
 }
 
+// ---------------- Durable Object ----------------
 export class RoomDO {
     private sessions = new Set<WebSocket>();
     private seatByWs = new WeakMap<WebSocket, number>();
@@ -174,7 +199,8 @@ export class RoomDO {
 
                     if (msg.type === "COMMIT_NAME" && typeof msg.name === "string") {
                         const trimmed = msg.name.trim();
-                        cur.seats[mySeat].name = trimmed === "" ? (mySeat === 0 ? "HOST" : `プレイヤー${mySeat}`) : msg.name;
+                        cur.seats[mySeat].name =
+                            trimmed === "" ? (mySeat === 0 ? "HOST" : `プレイヤー${mySeat}`) : msg.name;
                         await this.ctx.storage.put("state", cur);
                         this.broadcastRoomState(cur);
                         return;
@@ -273,10 +299,12 @@ export class RoomDO {
                 // ===== 離脱 / 解散 =====
                 if (msg.type === "LEAVE") {
                     if (mySeat !== 0 && mySeat >= 1 && mySeat <= 3) {
+                        // ロビー：即NPCへ
                         cur.seats[mySeat] = { kind: "NPC", name: `NPC${mySeat}`, iconId: "npc_default" };
                         await this.ctx.storage.put("state", cur);
                         this.broadcastRoomState(cur);
 
+                        // ゲーム中ならNPC化（iconもnpcにする）
                         if (cur.locked) {
                             await this.convertGameSeatToNpcAndMaybeRun(cur.npcDifficulty, mySeat);
                         }
@@ -420,9 +448,14 @@ export class RoomDO {
 
         if (game.seats[seatIndex].kind !== "HUMAN") return;
 
-        // まず席をNPCへ（この状態もフレームに含める）
+        // まず席をNPCへ（iconもNPCにする）
         const seats = ([...game.seats] as unknown as typeof game.seats) as any;
-        seats[seatIndex] = { ...game.seats[seatIndex], kind: "NPC", name: `NPC${seatIndex}` };
+        seats[seatIndex] = {
+            ...game.seats[seatIndex],
+            kind: "NPC",
+            name: `NPC${seatIndex}`,
+            iconId: "npc_default",
+        };
 
         const base: GameState = { ...game, seats };
         const frames: GameState[] = [base];

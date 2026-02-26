@@ -50,6 +50,7 @@ function toWsBase(httpBase: string) {
   return httpBase.replace(/^http/i, "ws");
 }
 
+// アイコンプリセット（絵文字。画像に置き換える時はここを差し替え）
 const ICON_PRESETS: Array<{ id: string; emoji: string; label: string }> = [
   { id: "host_default", emoji: "👑", label: "HOST" },
   { id: "player_default", emoji: "🙂", label: "PLAYER" },
@@ -76,13 +77,7 @@ export function renderHome(
     onStart: (cfg: HomeConfig) => void;
     onChange: (cfg: HomeConfig) => void;
     onEnterMpGame: (
-      p: {
-        ws: WebSocket;
-        roomId: string;
-        seatIndex: number;
-        isHost: boolean;
-        npcDifficulty: Difficulty;
-      },
+      p: { ws: WebSocket; roomId: string; seatIndex: number; isHost: boolean; npcDifficulty: Difficulty },
       initial: GameState
     ) => void;
   }
@@ -96,15 +91,21 @@ export function renderHome(
   let ws: WebSocket | null = null;
 
   let pendingRedirect = false;
-
   let localIconId = "player_default";
 
   const redirectToHome = () => {
+    // ルーム情報を消して、ソロHOMEへ（再生成を必ず押させる方針）
     if (roomId) {
       sessionStorage.removeItem(`hostToken:${roomId}`);
     }
     const next = location.origin + location.pathname + (location.hash ?? "");
+    // ここで確実に“戻った後”の表示を走らせたいので、replaceで遷移
     location.replace(next);
+  };
+
+  const flashAndRedirectHome = (message: string) => {
+    sessionStorage.setItem("mp_notice", message);
+    redirectToHome();
   };
 
   const leaveOrDisbandAndRedirect = () => {
@@ -115,11 +116,7 @@ export function renderHome(
 
     pendingRedirect = true;
 
-    if (mySeatIndex === 0) {
-      ws.send(JSON.stringify({ type: "HOST_DISBAND" }));
-    } else {
-      ws.send(JSON.stringify({ type: "LEAVE" }));
-    }
+    ws.send(JSON.stringify({ type: mySeatIndex === 0 ? "HOST_DISBAND" : "LEAVE" }));
 
     setTimeout(() => {
       try {
@@ -135,6 +132,16 @@ export function renderHome(
       <h1 class="appTitle">100ゲーム</h1>
       <div class="appTag">HOME</div>
     </header>
+
+    <!-- 通知モーダル（満員など） -->
+    <div id="mpNotice" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.60);align-items:center;justify-content:center;">
+      <div style="width:calc(100% - 40px);max-width:520px;border:1px solid rgba(255,255,255,0.18);
+                  background:rgba(12,12,12,0.96);border-radius:16px;padding:16px;color:rgba(255,255,255,0.92);">
+        <div style="font-weight:950;margin-bottom:8px;">入室できませんでした</div>
+        <div id="mpNoticeText" style="font-weight:800;line-height:1.7;"></div>
+        <button id="mpNoticeOk" class="btn" type="button" style="width:100%;margin-top:12px;">OK</button>
+      </div>
+    </div>
 
     <div class="panel">
       <div style="font-weight:950;margin-bottom:10px;">ゲーム設定</div>
@@ -232,6 +239,7 @@ export function renderHome(
 
         <div id="connStatus" style="display:none;"></div>
 
+        <!-- 高さ固定：常にblock。非接続時は hidden -->
         <button id="leaveRoomBtn" class="btn" type="button"
           style="width:100%; display:block; visibility:hidden; pointer-events:none;">
           部屋から抜けてホームへ
@@ -243,8 +251,36 @@ export function renderHome(
       <div style="font-weight:950;margin-bottom:10px;">参加者一覧</div>
       <div id="participants" style="display:grid;gap:8px;"></div>
     </div>
+
+    <div id="joinFailModal"style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;">
+      <div style="width:calc(100% - 40px);max-width:520px;border:1px solid rgba(255,255,255,0.18);background:rgba(12,12,12,0.96);border-radius:16px;padding:16px;">
+        <div id="joinFailText" style="font-weight:900;line-height:1.7;"></div>
+        <button id="joinFailOk" class="btn" type="button" style="width:100%;margin-top:12px;">OK</button>
+      </div>
+    </div>
   `;
 
+  // --- notice modal ---
+  const mpNotice = app.querySelector<HTMLDivElement>("#mpNotice")!;
+  const mpNoticeText = app.querySelector<HTMLDivElement>("#mpNoticeText")!;
+  const mpNoticeOk = app.querySelector<HTMLButtonElement>("#mpNoticeOk")!;
+  const notice = sessionStorage.getItem("mp_notice");
+  if (notice) {
+    sessionStorage.removeItem("mp_notice");
+    mpNoticeText.textContent = notice;
+    // 描画後に表示（環境差で見えないのを避ける）
+    setTimeout(() => {
+      mpNotice.style.display = "flex";
+    }, 0);
+  }
+  mpNoticeOk.onclick = () => {
+    mpNotice.style.display = "none";
+  };
+  mpNotice.addEventListener("click", (e) => {
+    if (e.target === mpNotice) mpNotice.style.display = "none";
+  });
+
+  // --- elements ---
   const profileRow = app.querySelector<HTMLDivElement>("#profileRow")!;
   const iconBtn = app.querySelector<HTMLButtonElement>("#iconBtn")!;
   const iconPicker = app.querySelector<HTMLDivElement>("#iconPicker")!;
@@ -263,8 +299,21 @@ export function renderHome(
   const connStatusEl = app.querySelector<HTMLDivElement>("#connStatus")!;
   const leaveRoomBtn = app.querySelector<HTMLButtonElement>("#leaveRoomBtn")!;
 
+  const joinFailModal = app.querySelector<HTMLDivElement>("#joinFailModal")!;
+  const joinFailText = app.querySelector<HTMLDivElement>("#joinFailText")!;
+  const joinFailOk = app.querySelector<HTMLButtonElement>("#joinFailOk")!;
+
   diffEl.value = config.difficulty;
   gameTypeEl.value = String(config.gameType);
+
+  const showJoinFailAndReturnHome = (message: string) => {
+    joinFailText.textContent = message;
+    joinFailModal.style.display = "flex";
+    joinFailOk.onclick = () => {
+      joinFailModal.style.display = "none";
+      redirectToHome(); // 既存の関数（?room=消してソロHOMEに戻す）
+    };
+  };
 
   const parseGameType = (v: string): GameType => {
     if (v === "EXTRA") return "EXTRA";
@@ -273,6 +322,7 @@ export function renderHome(
     return 100;
   };
 
+  // 非表示だけどログ用
   const setStatus = (s: string) => {
     connStatusEl.textContent = s;
   };
@@ -306,12 +356,14 @@ export function renderHome(
     const isConnected = !!ws && ws.readyState === WebSocket.OPEN && !!lobby;
     const isHost = isConnected && mySeatIndex === 0;
 
+    // 接続中：名前/アイコンは全員OK、難易度/タイプ/開始はHOSTのみ
     diffEl.disabled = isConnected ? !isHost : false;
     gameTypeEl.disabled = isConnected ? !isHost : false;
     startBtn.disabled = isConnected ? !isHost : false;
 
     createRoomBtn.disabled = !!roomId;
 
+    // 退出/解散ボタン（接続中のみ表示：高さ固定）
     if (isConnected) {
       leaveRoomBtn.style.visibility = "visible";
       leaveRoomBtn.style.pointerEvents = "auto";
@@ -377,12 +429,12 @@ export function renderHome(
     } catch { }
 
     const token = sessionStorage.getItem(`hostToken:${rid}`) ?? "";
-    const url = token
+    const wsUrl = token
       ? `${wsBase}/api/rooms/${rid}/ws?token=${encodeURIComponent(token)}`
       : `${wsBase}/api/rooms/${rid}/ws`;
 
     setStatus("connecting");
-    ws = new WebSocket(url);
+    ws = new WebSocket(wsUrl);
 
     ws.onmessage = (ev) => {
       let raw: any;
@@ -393,62 +445,59 @@ export function renderHome(
       }
 
       if (raw && raw.type === "ROOM_DISBANDED") {
-        pendingRedirect = false;
         redirectToHome();
         return;
       }
 
-      // ★ゲーム開始：GAME_STATEが来たら main.ts に引き渡してゲーム画面へ
-      if (raw && raw.type === "GAME_STATE" && raw.state && ws && mySeatIndex != null) {
-        const rid2 = roomId ?? "";
-        if (!rid2) return;
+      // GAME_STATE / GAME_STATES が来たら main.ts に引き渡して遷移
+      if ((raw?.type === "GAME_STATE" && raw.state) || (raw?.type === "GAME_STATES" && Array.isArray(raw.states))) {
+        if (!ws || mySeatIndex == null || !roomId) return;
+
+        const initial: GameState =
+          raw.type === "GAME_STATE" ? (raw.state as GameState) : (raw.states[0] as GameState);
 
         handlers.onEnterMpGame(
           {
             ws,
-            roomId: rid2,
+            roomId,
             seatIndex: mySeatIndex,
             isHost: mySeatIndex === 0,
             npcDifficulty: (lobby?.npcDifficulty ?? diffEl.value) as Difficulty,
           },
-          raw.state as GameState
+          initial
         );
         return;
       }
 
       if (isWelcomeMsg(raw)) {
-        const seatIndex = raw.seatIndex;
-        const state = raw.state;
+        mySeatIndex = raw.seatIndex;
+        lobby = raw.state;
 
-        mySeatIndex = seatIndex;
-        lobby = state;
-
-        const me = state.seats[seatIndex];
+        const me = lobby.seats[mySeatIndex];
         if (me) {
           localIconId = me.iconId;
           iconBtn.textContent = iconEmoji(me.iconId);
           if (document.activeElement !== nameEl) nameEl.value = me.name;
         }
 
-        diffEl.value = state.npcDifficulty;
-        gameTypeEl.value = state.gameType;
+        diffEl.value = lobby.npcDifficulty;
+        gameTypeEl.value = lobby.gameType;
 
-        inviteUrlEl.value = `${location.origin}?room=${state.roomId}`;
+        inviteUrlEl.value = `${location.origin}?room=${lobby.roomId}`;
 
-        renderParticipants(state);
+        renderParticipants(lobby);
         applyRole();
         return;
       }
 
       if (isRoomStateMsg(raw)) {
-        const state = raw.state;
-        lobby = state;
+        lobby = raw.state;
 
-        diffEl.value = state.npcDifficulty;
-        gameTypeEl.value = state.gameType;
+        diffEl.value = lobby.npcDifficulty;
+        gameTypeEl.value = lobby.gameType;
 
         if (mySeatIndex != null) {
-          const me = state.seats[mySeatIndex];
+          const me = lobby.seats[mySeatIndex];
           if (me) {
             localIconId = me.iconId;
             iconBtn.textContent = iconEmoji(me.iconId);
@@ -456,8 +505,8 @@ export function renderHome(
           }
         }
 
-        inviteUrlEl.value = `${location.origin}?room=${state.roomId}`;
-        renderParticipants(state);
+        inviteUrlEl.value = `${location.origin}?room=${lobby.roomId}`;
+        renderParticipants(lobby);
         applyRole();
         return;
       }
@@ -478,6 +527,40 @@ export function renderHome(
     ws.onerror = () => setStatus("ws error");
   };
 
+  async function preflightAndJoin(rid: string) {
+    try {
+      const res = await fetch(`${apiBase}/api/rooms/${rid}/state`, { method: "GET" });
+      if (!res.ok) {
+        showJoinFailAndReturnHome("roomが見つからないため入室できませんでした。ホーム画面に戻ります");
+        return;
+      }
+
+      const st = (await res.json()) as LobbyState;
+
+      if (Date.now() > st.expiresAt) {
+        showJoinFailAndReturnHome("招待URLの期限が切れているため入室できませんでした。ホーム画面に戻ります");
+        return;
+      }
+
+      if (st.locked) {
+        showJoinFailAndReturnHome("ゲームが開始済みのため入室できませんでした。ホーム画面に戻ります");
+        return;
+      }
+
+      const full = st.seats.slice(1).every((s) => s.kind !== "NPC");
+      if (full) {
+        showJoinFailAndReturnHome("roomが満員のため入室できませんでした。ホーム画面に戻ります");
+        return;
+      }
+
+      inviteUrlEl.value = `${location.origin}?room=${rid}`;
+      connectWs(rid);
+    } catch {
+      flashAndRedirectHome("入室できませんでした。ホーム画面に戻ります");
+      return;
+    }
+  }
+
   // ---- events ----
   nameEl.oninput = () => {
     updateConfigLocal();
@@ -495,14 +578,26 @@ export function renderHome(
   diffEl.onchange = () => {
     updateConfigLocal();
     if (ws && ws.readyState === WebSocket.OPEN && mySeatIndex === 0) {
-      ws.send(JSON.stringify({ type: "HOST_SET_CONFIG", npcDifficulty: diffEl.value, gameType: gameTypeEl.value }));
+      ws.send(
+        JSON.stringify({
+          type: "HOST_SET_CONFIG",
+          npcDifficulty: diffEl.value,
+          gameType: gameTypeEl.value,
+        })
+      );
     }
   };
 
   gameTypeEl.onchange = () => {
     updateConfigLocal();
     if (ws && ws.readyState === WebSocket.OPEN && mySeatIndex === 0) {
-      ws.send(JSON.stringify({ type: "HOST_SET_CONFIG", npcDifficulty: diffEl.value, gameType: gameTypeEl.value }));
+      ws.send(
+        JSON.stringify({
+          type: "HOST_SET_CONFIG",
+          npcDifficulty: diffEl.value,
+          gameType: gameTypeEl.value,
+        })
+      );
     }
   };
 
@@ -558,8 +653,7 @@ export function renderHome(
   leaveRoomBtn.onclick = () => leaveOrDisbandAndRedirect();
 
   if (roomId) {
-    inviteUrlEl.value = `${location.origin}?room=${roomId}`;
-    connectWs(roomId);
+    preflightAndJoin(roomId);
   } else {
     renderParticipants(null);
     applyRole();

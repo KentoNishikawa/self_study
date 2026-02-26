@@ -66,6 +66,8 @@ function playMpFrames(session: MpSession, frames: GameState[], intervalMs: numbe
   mpLastSeq = seq;
 
   mpAnimToken++;
+  mpLastSeq = 0;
+
   const token = mpAnimToken;
 
   uiLocked = true;
@@ -408,7 +410,6 @@ async function runNpcTurnsAnimated() {
     while (state && state.result.status === "PLAYING" && state.turn !== 0) {
       if (token !== npcRunToken) return;
 
-      const seatIndex = state.turn;
       const action = chooseNpcAction(state, difficulty);
 
       if (action.type === "PLAY_HAND") {
@@ -552,7 +553,12 @@ function draw() {
         restartGame();
         return;
       }
-      if (mp.isHost) mp.ws.send(JSON.stringify({ type: "HOST_RESTART" }));
+      if (mp.isHost) {
+        mpAnimToken++;   // 再生停止
+        mpLastSeq = 0;   // ★seqリセット
+        uiLocked = false;
+        mp.ws.send(JSON.stringify({ type: "HOST_RESTART" }));
+      }
     },
     onGoHome: () => {
       if (!mp) {

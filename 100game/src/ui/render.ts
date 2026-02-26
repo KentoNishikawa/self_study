@@ -15,6 +15,31 @@ function escapeHtml(s: string): string {
     .replaceAll("'", "&#39;");
 }
 
+
+// =====================
+// icon helpers (Home と同じアイコンID → 絵文字)
+// =====================
+const ICON_PRESETS: Array<{ id: string; emoji: string }> = [
+  { id: "host_default", emoji: "👑" },
+  { id: "player_default", emoji: "🙂" },
+  { id: "npc_default", emoji: "🤖" },
+  { id: "icon_01", emoji: "😀" },
+  { id: "icon_02", emoji: "😺" },
+  { id: "icon_03", emoji: "🐉" },
+];
+
+const ICON_EMOJI = new Map(ICON_PRESETS.map((p) => [p.id, p.emoji] as const));
+
+function iconEmoji(iconId: string): string {
+  return ICON_EMOJI.get(iconId) ?? "🙂";
+}
+
+function seatIconId(seat: { iconId?: string; kind?: string }): string {
+  if (seat.iconId) return seat.iconId;
+  return seat.kind === "NPC" ? "npc_default" : "player_default";
+}
+
+
 function suitToSymbol(suit: Card["suit"]): string {
   switch (suit) {
     case "S":
@@ -269,6 +294,32 @@ const buildCardInfoHtml = (card: Card, mode: GameState["mode"]) => {
   `;
 };
 
+const positionHandInfoAboveTable = () => {
+  if (!handInfo) return;
+
+  const pad = 8;
+
+  // 基本：場札＋プレイヤー状況のコンテナ上端に合わせる
+  const grid2 = document.querySelector<HTMLElement>(".grid2");
+  let top = 74; // fallback
+
+  if (grid2) {
+    const r = grid2.getBoundingClientRect();
+    top = Math.round(r.top + pad);
+  }
+
+  // 画面外にはみ出さないよう補正（下にはみ出すと困るので上に詰める）
+  handInfo.style.top = `${Math.max(pad, top)}px`;
+
+  // display:block後じゃないと高さが取れないので、2段階で補正
+  const h = handInfo.getBoundingClientRect().height;
+  const maxTop = window.innerHeight - pad - h;
+  if (maxTop >= pad) {
+    const currentTop = parseInt(handInfo.style.top, 10) || pad;
+    handInfo.style.top = `${Math.min(currentTop, maxTop)}px`;
+  }
+};
+
 const openHandInfo = (card: Card, mode: GameState["mode"]) => {
   if (!handInfo) return;
   handInfo.innerHTML = buildCardInfoHtml(card, mode);
@@ -280,6 +331,9 @@ const openHandInfo = (card: Card, mode: GameState["mode"]) => {
     selectedHandCardId = null;
     closeHandInfo();
   });
+
+  handInfo.style.display = "block";
+  positionHandInfoAboveTable();
 };
 
 const closeHandInfo = () => {
@@ -391,7 +445,7 @@ function renderResultModal(show: boolean, key: string, title: string, bodyHtml: 
         "
         role="dialog" aria-modal="true"
       >
-        <div style="font-weight:950;font-size:16px;margin-bottom:10px; text-align:center;">
+        <div style="font-weight:950;font-size:15px;margin-bottom:10px; text-align:center;">
           ${escapeHtml(title)}
         </div>
 
@@ -502,6 +556,11 @@ export function render(
             state.result.reason ?? ""
           )}</span>`;
 
+
+    // =====================
+    // MP表示用：サーバ席順（HOST→P1→P2→P3）に固定するための補助
+    // state は「自分が seat0」になるよう回転済みなので、__mpSeatOffset があれば復元できる
+    // =====================
     const mpSeatOffsetRaw = (state as any).__mpSeatOffset;
     const mpSeatOffset = Number.isInteger(mpSeatOffsetRaw) ? (mpSeatOffsetRaw as number) : null;
 
@@ -513,6 +572,7 @@ export function render(
 
     const serverTurn = toServerTurn(state.turn);
     const myServerIdx = mpSeatOffset ?? 0;
+    const mpIsHost = (state as any).__mpIsHost === true;
 
     app.innerHTML = `
       <header class="appHeader">
@@ -619,25 +679,31 @@ export function render(
         <div class="panel">
           <div style="font-weight:950;margin-bottom:10px;">プレイヤー状況</div>
           <div class="playerList">
-  ${
-      // マルチ時だけ、HOST→P1→P2→P3 の固定順にする
-      mpSeatOffset == null
+            ${mpSeatOffset == null
         ? state.seats
           .map((s, idx) => {
             const isTurn = idx === state.turn;
-            const tag = idx === 0 ? "あなた" : "NPC";
+
+            const iconId = seatIconId(s as any);
+            const icon = iconEmoji(iconId);
+
             return `
-              <div class="playerRow">
-                <div>
-                  <div class="name">${escapeHtml(s.name)}</div>
-                  <div class="muted">${tag} / 手札 ${s.hand.length}枚</div>
-                </div>
-                ${isTurn
-                ? `<div class="turn">▶ 手番</div>`
-                : `<div class="muted" style="margin-left:auto;">&nbsp;</div>`
-              }
-              </div>
-            `;
+                        <div class="playerRow" style="display:grid;grid-template-columns:30px minmax(0,1fr) 54px;align-items:center;gap:8px;">
+                          <div style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                                      background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:15px;">
+                            ${escapeHtml(icon)}
+                          </div>
+
+                          <div style="min-width:0;display:grid;gap:2px;">
+                            <div class="name" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(s.name)}</div>
+                            <div class="muted" style="font-size:10px;opacity:0.75;display:flex;gap:6px;align-items:baseline;min-width:0;">手札${s.hand.length}枚</div>
+                          </div>
+
+                          <div class="turn" style="display:grid;justify-items:end;align-content:center;gap:1px;visibility:${isTurn ? "visible" : "hidden"};">
+                            <span style="font-size:14px;line-height:1;">▶</span><span style="font-size:10px;line-height:1;opacity:0.9;">手番</span>
+                          </div>
+                        </div>
+                      `;
           })
           .join("")
         : [0, 1, 2, 3]
@@ -646,25 +712,30 @@ export function render(
             const s = state.seats[rotIdx];
             const isTurn = serverIdx === serverTurn;
 
-            const role = serverIdx === 0 ? "HOST" : `P${serverIdx}`;
-            const who = serverIdx === myServerIdx ? "あなた" : s.kind === "NPC" ? "NPC" : "プレイヤー";
+              serverIdx === myServerIdx ? "あなた" : s.kind === "NPC" ? "NPC" : "プレイヤー";
+
+            const iconId = seatIconId(s as any);
+            const icon = iconEmoji(iconId);
 
             return `
-              <div class="playerRow">
-                <div>
-                  <div class="name">${escapeHtml(s.name)}</div>
-                  <div class="muted">${role} / ${who} / 手札 ${s.hand.length}枚</div>
-                </div>
-                ${isTurn
-                ? `<div class="turn">▶ 手番</div>`
-                : `<div class="muted" style="margin-left:auto;">&nbsp;</div>`
-              }
-              </div>
-            `;
+                        <div class="playerRow" style="display:grid;grid-template-columns:30px minmax(0,1fr) 54px;align-items:center;gap:8px;">
+                          <div style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                                      background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:15px;">
+                            ${escapeHtml(icon)}
+                          </div>
+
+                          <div style="min-width:0;display:grid;gap:2px;">
+                            <div class="name" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(s.name)}</div>
+                            <div class="muted" style="font-size:10px;opacity:0.75;display:flex;gap:6px;align-items:baseline;min-width:0;">手札${s.hand.length}枚</div>
+                          </div>
+
+                          <div class="turn" style="display:grid;justify-items:end;align-content:center;gap:1px;visibility:${isTurn ? "visible" : "hidden"};"><span style="font-size:14px;line-height:1;">▶</span><span style="font-size:10px;line-height:1;opacity:0.9;">手番</span></div>
+                        </div>
+                      `;
           })
           .join("")
       }
-</div>
+          </div>
         </div>
       </div>
 
@@ -822,7 +893,7 @@ export function render(
     drawBtn.disabled = !canOperate || state.deck.length === 0;
     drawBtn.onclick = () => handlers.onDrawPlay();
 
-    restartBtn.disabled = isPlaying;
+    restartBtn.disabled = isPlaying || (mpSeatOffset != null && !mpIsHost);
     restartBtn.onclick = () => {
       if (restartBtn.disabled) return;
       handlers.onRestart();

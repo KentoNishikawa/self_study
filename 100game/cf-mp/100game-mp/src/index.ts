@@ -38,6 +38,16 @@ export default {
 			return withCors(request, new Response(null, { status: 204 }));
 		}
 
+		const mState = url.pathname.match(/^\/api\/rooms\/([a-z0-9]+)\/state$/);
+		if (mState && request.method === "GET") {
+			const roomId = mState[1];
+			const id = env.ROOMS.idFromName(roomId);
+			const stub = env.ROOMS.get(id);
+
+			const res = await stub.fetch("https://do/state", { method: "GET" });
+			return withCors(request, res);
+		}
+
 		// ✅ ルーム作成（招待URL生成の材料）
 		if (url.pathname === "/api/rooms" && request.method === "POST") {
 			const roomId = randId(12);

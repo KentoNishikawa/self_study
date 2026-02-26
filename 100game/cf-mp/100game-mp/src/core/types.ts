@@ -36,6 +36,7 @@ export type Seat = {
   kind: SeatKind;
   name: string;
   hand: Card[];
+  iconId?: string;
 };
 
 export type GameResult =
