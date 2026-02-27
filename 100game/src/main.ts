@@ -25,6 +25,40 @@ let mp: MpSession | null = null;
 let mpAnimToken = 0;
 let mpLastSeq = 0;
 
+// ソロ時にホームで選んだアイコンを引き継ぐ
+let soloIconId = "player_default";
+
+function getSelectedHomeIconId(): string {
+  // 1) sessionStorage に入っていればそれを優先（将来拡張用）
+  const s = sessionStorage.getItem("solo_iconId") || sessionStorage.getItem("selectedIconId");
+  if (s && typeof s === "string") return s;
+
+  // 2) HOMEのアイコンボタン（実装に依存するが id=iconBtn を優先）
+  const btn = document.querySelector<HTMLButtonElement>("#iconBtn");
+  const data = (btn as any)?.dataset;
+  const d = data?.iconId || data?.icon;
+  if (typeof d === "string" && d) return d;
+
+  // 3) 旧実装: select から拾う
+  const sel = document.querySelector<HTMLSelectElement>("#iconSelect");
+  if (sel?.value) return sel.value;
+
+  // 4) 最後の手段: ボタンの絵文字から推定
+  const emoji = (btn?.textContent ?? "").trim();
+  const map: Record<string, string> = {
+    "👑": "host_default",
+    "🙂": "player_default",
+    "🤖": "npc_default",
+    "😀": "icon_01",
+    "😺": "icon_02",
+    "🐉": "icon_03",
+  };
+  if (emoji && map[emoji]) return map[emoji];
+
+  return "player_default";
+}
+
+
 function rotateToMe(server: GameState, seatIndex: number): GameState {
   const mapIndex = (i: number) => (i - seatIndex + 4) % 4;
   const unmapIndex = (i: number) => (i + seatIndex) % 4;
@@ -170,7 +204,7 @@ function updateLimitDom() {
   const secEl = document.querySelector<HTMLDivElement>("#limitSec");
   if (!fill || !secEl) return;
 
-  if (!state || screen !== "GAME" || state.result.status !== "PLAYING" || mp) {
+  if (!state || screen !== "GAME" || state.result.status !== "PLAYING") {
     fill.style.width = "0%";
     fill.style.background = "rgba(255,255,255,0.18)";
     secEl.textContent = "";
@@ -211,10 +245,6 @@ function stopTurnLimit() {
 }
 
 function ensureTurnLimit() {
-  if (mp) {
-    stopTurnLimit();
-    return;
-  }
 
   if (!state || screen !== "GAME" || state.result.status !== "PLAYING") {
     stopTurnLimit();
@@ -296,7 +326,8 @@ function startGame(cfg: HomeConfig) {
   homeConfig = { ...cfg, playerName: name };
   difficulty = cfg.difficulty;
 
-  state = createInitialState(name, cfg.gameType);
+  soloIconId = getSelectedHomeIconId();
+  state = createInitialState(name, cfg.gameType, soloIconId);
   screen = "GAME";
   draw();
 
@@ -319,7 +350,7 @@ function restartGame() {
   stopTurnLimit();
 
   const name = (homeConfig.playerName || "").trim() || "プレイヤー";
-  state = createInitialState(name, homeConfig.gameType);
+  state = createInitialState(name, homeConfig.gameType, soloIconId);
   draw();
 
   void runNpcTurnsAnimated();
@@ -538,6 +569,10 @@ function draw() {
   }
 
   if (!state) return;
+
+  // ★マルチ時：プレイヤー状況を HOST→P1→P2→P3 固定表示にするための情報を毎回付与
+  if (mp && state) (state as any).__mpSeatOffset = Number(mp.seatIndex);
+  if (mp && state) (state as any).__mpIsHost = mp.isHost; // （Restart制御とかに使ってるなら）
 
   render(app, state, difficulty, uiLocked, {
     onPlayHand: (handIndex) => {

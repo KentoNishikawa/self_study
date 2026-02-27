@@ -666,32 +666,79 @@ export function render(
         <div class="panel">
           <div style="font-weight:950;margin-bottom:10px;">プレイヤー状況</div>
           <div class="playerList">
-            ${state.seats
-        .map((s, idx) => {
-          const isTurn = idx === state.turn;
-          const tag = idx === 0 ? "あなた" : "NPC";
-          return `
-                  <div class="playerRow">
-                    <div style="display:flex;gap:10px;align-items:center;">
-                      <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-                                  background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:16px;">
-                        ${escapeHtml(iconEmoji(s.iconId))}
+            ${
+              (() => {
+                const offRaw = (state as any).__mpSeatOffset;
+                const off = Number.isInteger(offRaw) ? (offRaw as number) : null;
+              
+                // off が無い（=ソロ or 未対応）なら今まで通り
+                if (off == null) {
+                  return state.seats
+                    .map((s, idx) => {
+                      const isTurn = idx === state.turn;
+                      const tag = idx === 0 ? "あなた" : "NPC";
+                      return `
+                        <div class="playerRow">
+                          <div style="display:flex;gap:10px;align-items:center;">
+                            <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                                        background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:16px;">
+                              ${escapeHtml(iconEmoji(s.iconId ?? "player_default"))}
+                            </div>
+                            <div>
+                              <div class="name">${escapeHtml(s.name)}</div>
+                              <div class="muted">${tag} / 手札 ${s.hand.length}枚</div>
+                            </div>
+                          </div>
+                          ${
+                            isTurn
+                              ? `<div class="turn">▶ 手番</div>`
+                              : `<div class="muted" style="margin-left:auto;">&nbsp;</div>`
+                          }
+                        </div>
+                      `;
+                    })
+                    .join("");
+                }
+              
+                // マルチ：サーバ席順(0..3=HOST,P1,P2,P3)で固定表示
+                const toRot = (serverIdx: number) => (serverIdx - off + 4) % 4;
+                const serverTurn = (state.turn + off) % 4;
+                const myServerIdx = off;
+              
+                return [0, 1, 2, 3]
+                  .map((serverIdx) => {
+                    const rotIdx = toRot(serverIdx);
+                    const s = state.seats[rotIdx];
+                    const isTurn = serverIdx === serverTurn;
+                  
+                    const role = serverIdx === 0 ? "HOST" : `P${serverIdx}`;
+                    const who = serverIdx === myServerIdx ? "あなた" : s.kind === "NPC" ? "NPC" : "プレイヤー";
+                  
+                    return `
+                      <div class="playerRow">
+                        <div style="display:flex;gap:10px;align-items:center;">
+                          <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                                      background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:16px;">
+                            ${escapeHtml(iconEmoji(s.iconId ?? "player_default"))}
+                          </div>
+                          <div>
+                            <div class="name">${escapeHtml(s.name)}</div>
+                            <div class="muted">${role} / ${who} / 手札 ${s.hand.length}枚</div>
+                          </div>
+                        </div>
+                        ${
+                          isTurn
+                            ? `<div class="turn">▶ 手番</div>`
+                            : `<div class="muted" style="margin-left:auto;">&nbsp;</div>`
+                        }
                       </div>
-                      <div>
-                        <div class="name">${escapeHtml(s.name)}</div>
-                        <div class="muted">${tag} / 手札 ${s.hand.length}枚</div>
-                      </div>
-                    </div>
-                    ${isTurn
-              ? `<div class="turn">▶ 手番</div>`
-              : `<div class="muted" style="margin-left:auto;">&nbsp;</div>`
+                    `;
+                  })
+                  .join("");
+              })()
             }
-                  </div>
-                `;
-        })
-        .join("")}
+            </div>
           </div>
-        </div>
       </div>
 
       <div style="height:12px;"></div>
