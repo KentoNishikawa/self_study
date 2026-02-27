@@ -3,6 +3,8 @@ import type { Card, Difficulty, GameState } from "../core/types";
 
 let prevHistoryLen = -1;
 
+
+
 // =====================
 // small helpers
 // =====================
@@ -14,65 +16,6 @@ function escapeHtml(s: string): string {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 }
-
-// =====================
-// icons (HOMEで選んだiconId → 表示用絵文字)
-// =====================
-const ICON_EMOJI = new Map<string, string>([
-  ["host_default", "👑"],
-  ["player_default", "🙂"],
-  ["npc_default", "🤖"],
-  ["icon_01", "😀"],
-  ["icon_02", "😺"],
-  ["icon_03", "🐉"],
-]);
-
-function iconEmoji(iconId?: string): string {
-  return ICON_EMOJI.get(iconId ?? "") ?? "🙂";
-}
-
-// =====================
-// exit log (HUMAN→NPC を検知して SYSTEM(INFO) を生成)
-// =====================
-let exitPrevKinds: Array<"HUMAN" | "NPC"> | null = null;
-let exitPrevNames: string[] | null = null;
-let exitPrevHistLen = 0;
-let localExitSysId = 100000;
-let localExitSysLogs: Array<{ id: number; kind: "INFO"; afterPlayIndex: number; message: string }> = [];
-
-function updateExitSystemLogs(state: GameState) {
-  const hlen = state.history.length;
-
-  // 再戦などで手数が巻き戻ったらリセット
-  if (hlen < exitPrevHistLen) {
-    exitPrevKinds = null;
-    exitPrevNames = null;
-    localExitSysLogs = [];
-    exitPrevHistLen = hlen;
-  }
-
-  if (exitPrevKinds && exitPrevNames) {
-    for (let i = 0; i < 4; i++) {
-      const prevK = exitPrevKinds[i];
-      const curK = state.seats[i].kind;
-      if (prevK === "HUMAN" && curK === "NPC") {
-        const name = (exitPrevNames[i] ?? "").trim() || `プレイヤー${i}`;
-        localExitSysLogs.push({
-          id: ++localExitSysId,
-          kind: "INFO",
-          afterPlayIndex: hlen,
-          message: `${name}が退出しました。以降はNPCが操作します。`,
-        });
-        if (localExitSysLogs.length > 50) localExitSysLogs = localExitSysLogs.slice(-50);
-      }
-    }
-  }
-
-  exitPrevKinds = state.seats.map((s) => s.kind) as Array<"HUMAN" | "NPC">;
-  exitPrevNames = state.seats.map((s) => s.name);
-  exitPrevHistLen = hlen;
-}
-
 
 function suitToSymbol(suit: Card["suit"]): string {
   switch (suit) {
@@ -98,7 +41,7 @@ function cardLabel(card: Card): string {
   return `${suitToSymbol(card.suit)}${card.rank}`;
 }
 
-// targetLabel を外から受け取る（EXTRA進行中は???）
+// ★変更：target表示を外から受け取る（EXTRAは???表示）
 function modeText(mode: GameState["mode"], targetLabel: string): string {
   return mode === "UP" ? `加算（${targetLabel}以上で負け）` : "減算（0以下で負け）";
 }
@@ -244,38 +187,39 @@ function hideTip() {
 // Mobile: 2-tap hand play + info panel
 // =====================
 let selectedHandIndex: number | null = null;
-let selectedHandCardId: string | null = null;
 let lastHandDiv: HTMLDivElement | null = null;
 
 const isTouchEnvironment = () => {
-  try {
-    const noHover = window.matchMedia?.("(hover: none)")?.matches ?? false;
-    const coarse = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
-    const touch = (navigator.maxTouchPoints ?? 0) > 0;
-    const small = window.matchMedia?.("(max-width: 820px)")?.matches ?? false;
-    return noHover || coarse || (touch && small);
-  } catch {
-    return false;
-  }
+  const touch = (navigator.maxTouchPoints ?? 0) > 0;
+  const small = window.matchMedia?.("(max-width: 820px)")?.matches ?? false;
+
+  // 既存判定も補助で使う（なくてもOK）
+  const noHover = window.matchMedia?.("(hover: none)")?.matches ?? false;
+  const coarse = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
+
+  // 「タッチ可能」かつ「画面が小さい」ならスマホUI扱い（安定）
+  return touch && (small || noHover || coarse);
 };
 
 let cachedIsTouchUI = false;
+
 try {
   cachedIsTouchUI = isTouchEnvironment();
-  const refresh = () => (cachedIsTouchUI = isTouchEnvironment());
-  window.addEventListener("resize", refresh);
-  window.addEventListener("orientationchange", refresh as any);
+  window.addEventListener("resize", () => {
+    cachedIsTouchUI = isTouchEnvironment();
+  });
 } catch {
   cachedIsTouchUI = false;
 }
 
+// 1個だけ作って使い回す「説明パネル」（スマホ用）
 let handInfo = document.querySelector<HTMLDivElement>("#handInfoPanel");
 if (!handInfo) {
   handInfo = document.createElement("div");
   handInfo.id = "handInfoPanel";
   handInfo.style.position = "fixed";
   handInfo.style.left = "50%";
-  handInfo.style.top = "74px";
+  handInfo.style.top = "74px"; // ★手札を塞がないよう上側に固定
   handInfo.style.transform = "translateX(-50%)";
   handInfo.style.width = "min(520px, calc(100% - 24px))";
   handInfo.style.maxHeight = "calc(100vh - 120px)";
@@ -296,6 +240,7 @@ const buildCardInfoHtml = (card: Card, mode: GameState["mode"]) => {
   const effect = cardEffectText(card);
   const hint = currentDeltaHint(card, mode);
 
+  // ★PCホバーと同じ中身をそのまま流用
   return `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
       <div style="font-weight:950;">${escapeHtml(cardTipTitle(card))}</div>
@@ -321,10 +266,6 @@ const buildCardInfoHtml = (card: Card, mode: GameState["mode"]) => {
       <div class="tKey">■特殊効果</div>
       <div class="tVal">${escapeHtml(effect)}</div>
     </div>
-
-    <div style="margin-top:10px;color:rgba(255,255,255,0.75);font-weight:800;">
-      ※もう一度タップで出す
-    </div>
   `;
 };
 
@@ -336,7 +277,6 @@ const openHandInfo = (card: Card, mode: GameState["mode"]) => {
   const closeBtn = handInfo.querySelector<HTMLButtonElement>("#hiClose");
   closeBtn?.addEventListener("click", () => {
     selectedHandIndex = null;
-    selectedHandCardId = null;
     closeHandInfo();
   });
 };
@@ -348,6 +288,7 @@ const closeHandInfo = () => {
   applyHandSelectionStyles();
 };
 
+// 手札の「選択状態（浮かせ）」を更新
 const applyHandSelectionStyles = () => {
   if (!lastHandDiv) return;
   const btns = lastHandDiv.querySelectorAll<HTMLButtonElement>("button[data-hand-index]");
@@ -369,6 +310,7 @@ const applyHandSelectionStyles = () => {
   });
 };
 
+// 画面のどこかをタップしたら閉じる（カードタップは閉じない）
 let handInfoDocHooked = false;
 const ensureHandInfoDocListener = () => {
   if (handInfoDocHooked) return;
@@ -382,11 +324,13 @@ const ensureHandInfoDocListener = () => {
       const t = ev.target as HTMLElement | null;
       if (!t) return;
 
+      // パネル内はOK
       if (t.closest("#handInfoPanel")) return;
+
+      // 手札カードタップは「2タップ判定」に使うので閉じない
       if (t.closest("[data-hand-index]")) return;
 
       selectedHandIndex = null;
-      selectedHandCardId = null;
       closeHandInfo();
     },
     { capture: true }
@@ -394,7 +338,7 @@ const ensureHandInfoDocListener = () => {
 };
 
 // =====================
-// Result Modal
+// Result Modal (single root, body appended)
 // =====================
 let dismissedResultKey: string | null = null;
 
@@ -417,7 +361,7 @@ function makeResultKey(state: GameState): string | null {
   ].join("|");
 }
 
-function originText(origin: GameState["history"][number]["origin"]): string {
+function originText(origin: unknown): string {
   return origin === "HAND" ? "手札" : origin === "DECK" ? "山札" : "—";
 }
 
@@ -474,6 +418,7 @@ function renderResultModal(show: boolean, key: string, title: string, bodyHtml: 
   };
 
   closeBtn?.addEventListener("click", close);
+
   overlay?.addEventListener("click", (ev: MouseEvent) => {
     if (ev.target === overlay) close();
   });
@@ -495,7 +440,7 @@ export function render(
   }
 ) {
   try {
-    hideTip();
+    hideTip()
 
     const resultKey = makeResultKey(state);
     if (state.result.status === "PLAYING") dismissedResultKey = null;
@@ -511,9 +456,9 @@ export function render(
 
       if (lastPlay) {
         const who = state.seats[lastPlay.seat].name;
-        const o = originText(lastPlay.origin);
+        const o = originText((lastPlay as any).origin);
         const cardTxt = cardLogLabel(lastPlay.card, lastPlay.value);
-        const after = lastPlay.afterTotal ?? state.total;
+        const after = (lastPlay as any).afterTotal ?? state.total;
 
         modalBodyHtml =
           `${escapeHtml(who)}が${escapeHtml(o)}から ` +
@@ -539,6 +484,7 @@ export function render(
     const turnSeat = state.seats[state.turn];
 
     const diffText = difficulty === "SMART" ? "SMART" : "CASUAL";
+
     const isPlaying = state.result.status === "PLAYING";
     const canOperate = isPlaying && state.turn === 0 && !uiLocked;
 
@@ -548,6 +494,7 @@ export function render(
     const lastValue = last ? last.value : undefined;
     const lastNote = last?.note ?? "";
 
+    // ★target表示（EXTRAはPLAYING中だけ???）
     const targetLabel =
       state.gameType === "EXTRA" && state.result.status === "PLAYING" ? "???" : String(state.target);
 
@@ -603,35 +550,7 @@ export function render(
           </div>
         </div>
 
-        <!-- ★LIMIT：角丸HPバー -->
-        <div id="limitRow"
-          style="height:24px;display:flex;align-items:center;gap:10px;margin-top:6px;user-select:none;"
-        >
-          <div style="font-weight:950;opacity:.85;letter-spacing:.5px;">LIMIT</div>
-          <div
-            style="
-              flex:1;
-              position:relative;
-              height:12px;
-              border-radius:999px;
-              background:rgba(255,255,255,0.08);
-              border:1px solid rgba(255,255,255,0.12);
-              overflow:hidden;
-            "
-            aria-label="turn time limit"
-          >
-            <div id="limitFill"
-              style="height:100%;width:100%;border-radius:999px;background:rgba(34,197,94,0.65);"
-            ></div>
-          </div>
-          <div id="limitSec"
-            style="min-width:46px;text-align:right;font-weight:950;font-variant-numeric:tabular-nums;color:#22c55e;font-size:13px;"
-          >60s</div>
-        </div>
-
-        <!-- ★結果表示の高さは常に確保 -->
-        <div class="kpiResult"
-          style="height:24px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:6px;">
+        <div class="kpiResult" style="height:24px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:6px;">
           ${state.result.status === "PLAYING" ? "" : resultHtml}
         </div>
       </div>
@@ -666,79 +585,46 @@ export function render(
         <div class="panel">
           <div style="font-weight:950;margin-bottom:10px;">プレイヤー状況</div>
           <div class="playerList">
-            ${
-              (() => {
-                const offRaw = (state as any).__mpSeatOffset;
-                const off = Number.isInteger(offRaw) ? (offRaw as number) : null;
-              
-                // off が無い（=ソロ or 未対応）なら今まで通り
-                if (off == null) {
-                  return state.seats
-                    .map((s, idx) => {
-                      const isTurn = idx === state.turn;
-                      const tag = idx === 0 ? "あなた" : "NPC";
-                      return `
-                        <div class="playerRow">
-                          <div style="display:flex;gap:10px;align-items:center;">
-                            <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-                                        background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:16px;">
-                              ${escapeHtml(iconEmoji(s.iconId ?? "player_default"))}
-                            </div>
-                            <div>
-                              <div class="name">${escapeHtml(s.name)}</div>
-                              <div class="muted">${tag} / 手札 ${s.hand.length}枚</div>
-                            </div>
-                          </div>
-                          ${
-                            isTurn
-                              ? `<div class="turn">▶ 手番</div>`
-                              : `<div class="muted" style="margin-left:auto;">&nbsp;</div>`
-                          }
-                        </div>
-                      `;
-                    })
-                    .join("");
-                }
-              
-                // マルチ：サーバ席順(0..3=HOST,P1,P2,P3)で固定表示
-                const toRot = (serverIdx: number) => (serverIdx - off + 4) % 4;
-                const serverTurn = (state.turn + off) % 4;
-                const myServerIdx = off;
-              
-                return [0, 1, 2, 3]
-                  .map((serverIdx) => {
-                    const rotIdx = toRot(serverIdx);
-                    const s = state.seats[rotIdx];
-                    const isTurn = serverIdx === serverTurn;
-                  
-                    const role = serverIdx === 0 ? "HOST" : `P${serverIdx}`;
-                    const who = serverIdx === myServerIdx ? "あなた" : s.kind === "NPC" ? "NPC" : "プレイヤー";
-                  
-                    return `
-                      <div class="playerRow">
-                        <div style="display:flex;gap:10px;align-items:center;">
-                          <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-                                      background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:16px;">
-                            ${escapeHtml(iconEmoji(s.iconId ?? "player_default"))}
-                          </div>
-                          <div>
-                            <div class="name">${escapeHtml(s.name)}</div>
-                            <div class="muted">${role} / ${who} / 手札 ${s.hand.length}枚</div>
-                          </div>
-                        </div>
-                        ${
-                          isTurn
-                            ? `<div class="turn">▶ 手番</div>`
-                            : `<div class="muted" style="margin-left:auto;">&nbsp;</div>`
-                        }
-                      </div>
-                    `;
-                  })
-                  .join("");
-              })()
-            }
-            </div>
+            ${state.seats
+        .map((s, idx) => {
+          const isTurn = idx === state.turn;
+
+          const iconId = (s as any).iconId as string | undefined;
+          const kind = (s as any).kind as string | undefined;
+          const fallback = kind === "NPC" ? "npc_default" : "player_default";
+
+          const icon =
+            ({
+              host_default: "👑",
+              player_default: "🙂",
+              npc_default: "🤖",
+              icon_01: "😀",
+              icon_02: "😺",
+              icon_03: "🐉",
+            } as Record<string, string>)[iconId ?? fallback] ?? "🙂";
+
+          return `
+                  <div class="playerRow" style="display:grid;grid-template-columns:30px minmax(0,1fr) 54px;align-items:center;gap:8px;">
+                    <div style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                                background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:15px;">
+                      ${escapeHtml(icon)}
+                    </div>
+
+                    <div style="min-width:0;display:grid;gap:2px;">
+                      <div class="name" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(s.name)}</div>
+                      <div class="muted" style="font-size:10px;opacity:0.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">手札${s.hand.length}枚</div>
+                    </div>
+
+                    <div class="turn" style="display:grid;justify-items:end;align-content:center;gap:1px;visibility:${isTurn ? "visible" : "hidden"};">
+                      <span style="font-size:14px;line-height:1;">▶</span>
+                      <span style="font-size:10px;line-height:1;opacity:0.9;">手番</span>
+                    </div>
+                  </div>
+                `;
+        })
+        .join("")}
           </div>
+        </div>
       </div>
 
       <div style="height:12px;"></div>
@@ -768,11 +654,15 @@ export function render(
       </div>
     `;
 
-    const handDiv = app.querySelector<HTMLDivElement>("#hand")!;
-    const drawBtn = app.querySelector<HTMLButtonElement>("#drawBtn")!;
-    const restartBtn = app.querySelector<HTMLButtonElement>("#restartBtn")!;
-    const homeBtn = app.querySelector<HTMLButtonElement>("#homeBtn")!;
-    const logDiv = app.querySelector<HTMLDivElement>("#log")!;
+    const handDiv = app.querySelector<HTMLDivElement>("#hand");
+    const drawBtn = app.querySelector<HTMLButtonElement>("#drawBtn");
+    const restartBtn = app.querySelector<HTMLButtonElement>("#restartBtn");
+    const homeBtn = app.querySelector<HTMLButtonElement>("#homeBtn");
+    const logDiv = app.querySelector<HTMLDivElement>("#log");
+
+    if (!handDiv || !drawBtn || !restartBtn || !homeBtn || !logDiv) {
+      throw new Error("render.ts: required element not found");
+    }
 
     // ===== 場札アニメ =====
     const playCardEl = app.querySelector<HTMLDivElement>(".playCard");
@@ -806,24 +696,43 @@ export function render(
             ],
             { duration: 620, easing: "cubic-bezier(.2,1.2,.2,1)" }
           );
+
+          const glowStrong = isUp ? "rgba(255, 77, 109, 0.65)" : "rgba(59, 130, 246, 0.65)";
+          const glowMid = isUp ? "rgba(255, 77, 109, 0.35)" : "rgba(59, 130, 246, 0.35)";
+          const glowWeak = isUp ? "rgba(255, 77, 109, 0.18)" : "rgba(59, 130, 246, 0.18)";
+
+          playCardEl.animate(
+            [
+              { boxShadow: "0 0 0 rgba(0,0,0,0)" },
+              { boxShadow: `0 0 55px ${glowStrong}, 0 0 0 3px ${glowMid}` },
+              { boxShadow: `0 0 10px ${glowWeak}, 0 0 0 1px rgba(34, 32, 32, 0.6)` },
+            ],
+            { duration: 650, easing: "ease-out" }
+          );
         });
       }
 
       prevHistoryLen = currentLen;
 
+      if (lastCard) {
+        const jokerValForLast = lastCard.rank === "JOKER" ? lastValue : undefined;
+        playCardEl.onmouseenter = (ev) => showTip(ev as unknown as MouseEvent, lastCard, state.mode, jokerValForLast);
+        playCardEl.onmousemove = (ev) => moveTip(ev as unknown as MouseEvent);
+        playCardEl.onmouseleave = () => hideTip();
+      }
     }
     // ===== /場札アニメ =====
 
-    // =====================
-    // 手札（スマホ：2タップ / PC：即出し）
-    // =====================
+
+    // 手札（カードボタン）
     const isTouchUI = cachedIsTouchUI;
     ensureHandInfoDocListener();
+
     lastHandDiv = handDiv;
 
+    // スマホ以外なら説明パネルは使わない
     if (!isTouchUI) {
       selectedHandIndex = null;
-      selectedHandCardId = null;
       closeHandInfo();
     }
 
@@ -834,14 +743,19 @@ export function render(
       b.type = "button";
       b.innerHTML = cardInnerHtml(card);
 
+      // ★重要：スマホは「説明を見る」ために disabled にはしない
+      // （プレイ確定は2タップ目で canOperate を見て制御）
       b.disabled = isTouchUI ? false : !canOperate;
 
+      // ★カード識別（外側タップで閉じる判定にも使う）
       b.dataset.handIndex = String(idx);
       b.setAttribute("data-hand-index", String(idx));
 
+      // PC：従来通り（クリックで即プレイ）
       if (!isTouchUI) {
         b.onclick = () => handlers.onPlayHand(idx);
 
+        // ツールチップ
         b.onmouseenter = (ev) => showTip(ev as unknown as MouseEvent, card, state.mode);
         b.onmousemove = (ev) => moveTip(ev as unknown as MouseEvent);
         b.onmouseleave = () => hideTip();
@@ -850,19 +764,20 @@ export function render(
         return;
       }
 
+      // スマホ：2タップ仕様
       b.onclick = () => {
-        if (selectedHandIndex !== idx || selectedHandCardId !== card.id) {
+        // 1回目：説明表示（選択）
+        if (selectedHandIndex !== idx) {
           selectedHandIndex = idx;
-          selectedHandCardId = card.id;
           openHandInfo(card, state.mode);
           applyHandSelectionStyles();
           return;
         }
 
+        // 2回目（同じカード）：出す（あなたの手番の時だけ）
         if (!canOperate) return;
 
         selectedHandIndex = null;
-        selectedHandCardId = null;
         closeHandInfo();
         handlers.onPlayHand(idx);
       };
@@ -870,28 +785,18 @@ export function render(
       handDiv.appendChild(b);
     });
 
+    // render直後に選択状態を反映（再描画時に浮きが戻らないように）
     applyHandSelectionStyles();
 
+    // もし再描画で手札が減って index が範囲外になったら閉じる
     if (selectedHandIndex != null && selectedHandIndex >= me.hand.length) {
       selectedHandIndex = null;
-      selectedHandCardId = null;
-      closeHandInfo();
-    } else if (
-      isTouchUI &&
-      selectedHandIndex != null &&
-      selectedHandCardId != null &&
-      me.hand[selectedHandIndex] &&
-      me.hand[selectedHandIndex].id !== selectedHandCardId
-    ) {
-      selectedHandIndex = null;
-      selectedHandCardId = null;
       closeHandInfo();
     } else if (isTouchUI && selectedHandIndex != null) {
       const c = me.hand[selectedHandIndex];
       if (c) openHandInfo(c, state.mode);
     }
 
-    // ボタン類
     drawBtn.disabled = !canOperate || state.deck.length === 0;
     drawBtn.onclick = () => handlers.onDrawPlay();
 
@@ -911,7 +816,7 @@ export function render(
     };
 
     // =====================
-    // ログ（PLAY + SYSTEM）
+    // ログ（PLAY + SYSTEMを混ぜる）
     // =====================
     logDiv.innerHTML = "";
 
@@ -919,9 +824,8 @@ export function render(
     type SysEntry = { type: "SYSTEM"; playNo: number; s: GameState["systemLogs"][number] };
     type Entry = PlayEntry | SysEntry;
 
-    updateExitSystemLogs(state);
     const sysByAfter = new Map<number, GameState["systemLogs"][number][]>();
-    for (const s of [...(state.systemLogs ?? []), ...localExitSysLogs]) {
+    for (const s of state.systemLogs ?? []) {
       const key = s.afterPlayIndex;
       const arr = sysByAfter.get(key) ?? [];
       arr.push(s);
@@ -929,13 +833,14 @@ export function render(
     }
 
     const entries: Entry[] = [];
-    const sys0 = sysByAfter.get(0);
-    if (sys0) for (const s of sys0) entries.push({ type: "SYSTEM", playNo: 0, s });
     for (let i = 0; i < state.history.length; i++) {
       const playNo = i + 1;
       entries.push({ type: "PLAY", playNo, p: state.history[i] });
+
       const sys = sysByAfter.get(playNo);
-      if (sys) for (const s of sys) entries.push({ type: "SYSTEM", playNo, s });
+      if (sys) {
+        for (const s of sys) entries.push({ type: "SYSTEM", playNo, s });
+      }
     }
 
     const reversed = entries.slice().reverse();
@@ -944,6 +849,7 @@ export function render(
       const row = document.createElement("div");
       row.className = "logRow";
 
+      // SYSTEM行
       if (e.type === "SYSTEM") {
         row.classList.add("system");
 
@@ -953,7 +859,7 @@ export function render(
 
         const main = document.createElement("div");
         main.className = "main";
-        main.textContent = e.s.kind === "REDEAL" ? `🔄 再配布：${e.s.message}` : `🚪 ${e.s.message}`;
+        main.textContent = `🔄 再配布：${e.s.message}`;
 
         row.appendChild(left);
         row.appendChild(main);
@@ -961,7 +867,9 @@ export function render(
         return;
       }
 
+      // PLAY行（既存そのまま）
       const p = e.p;
+
       const originalNo = e.playNo;
       const name = state.seats[p.seat].name;
       const lbl = cardLogLabel(p.card, p.value);
@@ -974,8 +882,7 @@ export function render(
 
       const isJ = p.card.rank === "J";
       const isCancel =
-        (p.card.suit === "S" && p.card.rank === "3" && p.value === 0) ||
-        (p.note?.includes("相殺") ?? false);
+        (p.card.suit === "S" && p.card.rank === "3" && p.value === 0) || (p.note?.includes("相殺") ?? false);
 
       const isLosingPlay =
         idx === 0 && state.result.status === "LOSE" && state.result.loserSeat === p.seat;
@@ -1004,15 +911,21 @@ export function render(
       main.style.gap = "8px";
       main.style.alignItems = "baseline";
 
+      const origin =
+        (p as any).origin === "HAND" ? "HAND" : (p as any).origin === "DECK" ? "DECK" : undefined;
+
       const originImg = document.createElement("img");
       originImg.className = "logIcon";
 
-      if (p.origin === "HAND") {
+      if (origin === "HAND") {
         originImg.alt = "HAND";
         originImg.src = baseUrl + "icons/hand.png";
-      } else {
+      } else if (origin === "DECK") {
         originImg.alt = "DECK";
         originImg.src = baseUrl + "icons/deck.png";
+      } else {
+        originImg.alt = "UNKNOWN";
+        originImg.style.display = "none";
       }
 
       const text = document.createElement("span");
