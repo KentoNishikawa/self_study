@@ -1,8 +1,9 @@
 // cf-mp/100game-mp/src/room.ts
-import type { Difficulty, GameState, GameType, Seat, SeatKind } from "./core/types";
+import type { Difficulty, GameState, GameType, Seat, SeatKind, SystemLog } from "./core/types";
 import { reducer, type Action } from "./core/reducer";
 import { createDeck, deal, shuffle } from "./core/deck";
 import { chooseNpcAction } from "./ai/npc";
+
 
 // ---------------- Lobby types ----------------
 type LobbySeat = {
@@ -19,6 +20,7 @@ type RoomState = {
     npcDifficulty: Difficulty;
     gameType: string; // "100" | "200" | "300" | "400" | "500" | "EXTRA"
     seats: [LobbySeat, LobbySeat, LobbySeat, LobbySeat]; // 0=HOST, 1..3=P1..P3 or NPC
+    playOrder: [number, number, number, number];
     disbanded?: boolean;
 };
 
@@ -36,6 +38,7 @@ function makeInitialState(roomId: string, hostToken: string, expiresAt: number):
             { kind: "NPC", name: "NPC2", iconId: "npc_default" },
             { kind: "NPC", name: "NPC3", iconId: "npc_default" },
         ],
+        playOrder: [0, 1, 2, 3],
         disbanded: false,
     };
 }
@@ -150,6 +153,11 @@ export class RoomDO {
             const st = await this.ctx.storage.get<RoomState>("state");
             if (!st) return new Response("Room not initialized", { status: 404 });
             if (st.disbanded) return new Response("Room disbanded", { status: 410 });
+
+            if (st.disbanded) {
+                // preflightで解散を判断できるように410で返す
+                return json({ disbanded: true }, 410);
+            }
 
             const now = Date.now();
             if (now > st.expiresAt) return new Response("Invite expired", { status: 410 });
@@ -299,6 +307,7 @@ export class RoomDO {
                 // ===== 離脱 / 解散 =====
                 if (msg.type === "LEAVE") {
                     if (mySeat !== 0 && mySeat >= 1 && mySeat <= 3) {
+                        const leaverName = cur.seats[mySeat].name;
                         // ロビー：即NPCへ
                         cur.seats[mySeat] = { kind: "NPC", name: `NPC${mySeat}`, iconId: "npc_default" };
                         await this.ctx.storage.put("state", cur);
@@ -306,7 +315,7 @@ export class RoomDO {
 
                         // ゲーム中ならNPC化（iconもnpcにする）
                         if (cur.locked) {
-                            await this.convertGameSeatToNpcAndMaybeRun(cur.npcDifficulty, mySeat);
+                            await this.convertGameSeatToNpcAndMaybeRun(cur.npcDifficulty, mySeat, leaverName);
                         }
                     }
                     try {
@@ -373,10 +382,15 @@ export class RoomDO {
             return new Response("ok");
         }
 
-        // デバッグ（必要なら）
         if (url.pathname === "/state" && request.method === "GET") {
             const st = await this.ctx.storage.get<RoomState>("state");
             if (!st) return json({ error: "NOT_INITIALIZED" }, 404);
+
+            if (st.disbanded) {
+                // preflightで解散を判断できるように410
+                return json({ disbanded: true }, 410);
+            }
+
             return json(publicRoomState(st));
         }
 
@@ -442,25 +456,50 @@ export class RoomDO {
         return { final: g, steps };
     }
 
-    private async convertGameSeatToNpcAndMaybeRun(difficulty: Difficulty, seatIndex: number) {
+    private async convertGameSeatToNpcAndMaybeRun(
+        difficulty: Difficulty,
+        seatIndex: number,
+        leaverName?: string
+    ) {
         const game = await this.ctx.storage.get<GameState>("game");
         if (!game) return;
 
-        if (game.seats[seatIndex].kind !== "HUMAN") return;
+        // ★ロビー席→ゲーム席へ変換（playOrderが無い場合は従来通り）
+        const cur = await this.ctx.storage.get<RoomState>("state");
+        const playOrder = cur?.playOrder ?? ([0, 1, 2, 3] as [number, number, number, number]);
+        const gameSeatIndex = playOrder.indexOf(seatIndex);
+        if (gameSeatIndex < 0) return;
+
+        if (game.seats[gameSeatIndex].kind !== "HUMAN") return;
 
         // まず席をNPCへ（iconもNPCにする）
         const seats = ([...game.seats] as unknown as typeof game.seats) as any;
-        seats[seatIndex] = {
-            ...game.seats[seatIndex],
+        seats[gameSeatIndex] = {
+            ...game.seats[gameSeatIndex],
             kind: "NPC",
             name: `NPC${seatIndex}`,
             iconId: "npc_default",
         };
 
         const base: GameState = { ...game, seats };
-        const frames: GameState[] = [base];
 
-        const npc = this.runNpcSteps(difficulty, base);
+        // ★退出ログを追加（ゲーム中ログに出す）
+        const name = (leaverName ?? "").trim() || `プレイヤー${seatIndex}`;
+        const message = `${name}が退出しました。以降はNPCが操作します。`;
+        const lastId = base.systemLogs.length ? base.systemLogs[base.systemLogs.length - 1].id : 0;
+
+        const infoLog: SystemLog = {
+            id: lastId + 1,
+            kind: "INFO",
+            afterPlayIndex: base.history.length,
+            message,
+        };
+
+        const base2: GameState = { ...base, systemLogs: [...base.systemLogs, infoLog] };
+
+        const frames: GameState[] = [base2];
+
+        const npc = this.runNpcSteps(difficulty, base2);
         frames.push(...npc.steps);
         const final = npc.final;
 

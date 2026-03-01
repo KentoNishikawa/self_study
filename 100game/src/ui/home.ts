@@ -543,6 +543,11 @@ export function renderHome(
         return;
       }
 
+      if (res.status === 410) {
+        showJoinFailAndReturnHome("HOSTが部屋を解散しました。ホーム画面に戻ります。");
+        return;
+      }
+
       const st = (await res.json()) as LobbyState;
 
       if (Date.now() > st.expiresAt) {

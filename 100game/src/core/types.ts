@@ -36,7 +36,6 @@ export type Seat = {
   kind: SeatKind;
   name: string;
   hand: Card[];
-  iconId?: string; // ★ホームで選んだアイコンID（任意）
 };
 
 export type GameResult =
