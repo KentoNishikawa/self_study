@@ -236,7 +236,8 @@ export function renderHome(
           ゲーム開始
         </button>
 
-        <div id="roleHint" style="font-size:12px;opacity:0.8;"></div>
+        <!-- 高さ固定：接続状態の文言が変わっても折り返して高さが変動しないようにする -->
+        <div id="roleHint" style="font-size:12px;opacity:0.8;min-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
       </div>
     </div>
 
@@ -258,22 +259,21 @@ export function renderHome(
 
         <div id="connStatus" style="display:none;"></div>
 
-        <!-- 高さ固定：常にblock。非接続時は hidden -->
+        <!-- 高さ固定：招待URL生成前後でDOMが増減して下の参加者一覧がズレないようにする -->
         <button id="leaveRoomBtn" class="btn" type="button"
-          style="width:100%; display:block; visibility:hidden; pointer-events:none;">
+          style="width:100%; display:block; min-height:40px; visibility:hidden; pointer-events:none;">
           部屋から抜けてホームへ
         </button>
       </div>
     </div>
 
     <div class="panel">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
-        <div style="font-weight:950;">参加者一覧</div>
-        <button id="reorderBtn" class="btn" type="button"
-          style="display:none;width:auto;padding:8px 10px;font-weight:900;white-space:nowrap;">
-          順番を入れ替える
-        </button>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;min-height:40px;">
+        <div style="font-weight:950;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">参加者一覧</div>
+        <!-- ボタン分の空間を最初から確保（ボタン自体は必要な時だけ描画） -->
+        <div id="reorderSlot" style="width:clamp(130px, 40vw, 190px);min-height:40px;display:flex;align-items:center;justify-content:flex-end;"></div>
       </div>
+      <div id="reorderHint" style="display:none;text-align:center;font-weight:950;opacity:0.88;margin:-2px 0 10px 0;line-height:1.25;"></div>
       <div id="participants" style="display:grid;gap:8px;"></div>
     </div>
 
@@ -321,7 +321,10 @@ export function renderHome(
   const inviteUrlEl = app.querySelector<HTMLInputElement>("#inviteUrl")!;
   const copyInviteBtn = app.querySelector<HTMLButtonElement>("#copyInviteBtn")!;
   const participantsEl = app.querySelector<HTMLDivElement>("#participants")!;
-  const reorderBtn = app.querySelector<HTMLButtonElement>("#reorderBtn")!;
+  const reorderSlotEl = app.querySelector<HTMLDivElement>("#reorderSlot")!;
+  const reorderHintEl = app.querySelector<HTMLDivElement>("#reorderHint")!;
+
+  let reorderBtn: HTMLButtonElement | null = null;
   const connStatusEl = app.querySelector<HTMLDivElement>("#connStatus")!;
   const leaveRoomBtn = app.querySelector<HTMLButtonElement>("#leaveRoomBtn")!;
 
@@ -452,11 +455,10 @@ export function renderHome(
     startBtn.disabled = isConnected ? !isHost : false;
 
     createRoomBtn.disabled = !!roomId;
-
     // 入れ替えボタン（HOSTのみ・開始前のみ）
     const canReorder = isConnected && isHost && !lobby?.locked;
-    reorderBtn.style.display = canReorder ? "inline-flex" : "none";
-    reorderBtn.disabled = !canReorder;
+    // ボタン分の空間は常に確保（ボタン自体は必要な時だけ描画）
+    ensureReorderButton(!!canReorder);
 
     if (!canReorder) {
       reorderMode = false;
@@ -473,6 +475,8 @@ export function renderHome(
       leaveRoomBtn.style.pointerEvents = "none";
       leaveRoomBtn.textContent = "部屋から抜けてホームへ";
     }
+
+    updateReorderHint();
 
     roleHintEl.textContent = !isConnected
       ? "ローカルプレイ（マルチ未接続）"
@@ -766,18 +770,87 @@ export function renderHome(
 
   leaveRoomBtn.onclick = () => leaveOrDisbandAndRedirect();
 
-  reorderBtn.onclick = () => {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    if (!lobby) return;
-    if (mySeatIndex !== 0) return;
-    if (lobby.locked) return;
+  const isMobile = () => window.matchMedia("(max-width: 520px)").matches;
 
-    // 押すたびにやり直し（仕様）
-    reorderMode = true;
-    draftOrder = [];
-    renderParticipants(lobby);
-    applyRole();
+  const updateReorderHint = () => {
+    const connected = !!ws && ws.readyState === WebSocket.OPEN && !!lobby;
+    const isHost = connected && mySeatIndex === 0;
+
+    // 高さ固定：入れ替えモードの開始/終了で参加者一覧の位置がズレないように、
+    // 「表示する可能性がある状況」では常にヒント枠の空間を確保する。
+    const shouldReserve = connected && isHost && !lobby?.locked;
+    const canShow = shouldReserve && reorderMode;
+
+    if (!shouldReserve) {
+      reorderHintEl.style.display = "none";
+      reorderHintEl.style.visibility = "hidden";
+      reorderHintEl.textContent = "";
+      reorderHintEl.innerHTML = "";
+      return;
+    }
+
+    // まず空間を確保（スマホは2行分）
+    reorderHintEl.style.display = "flex";
+    reorderHintEl.style.flexDirection = "column";
+    reorderHintEl.style.alignItems = "center";
+    reorderHintEl.style.justifyContent = "center";
+    reorderHintEl.style.minHeight = isMobile() ? "44px" : "24px";
+    reorderHintEl.style.visibility = canShow ? "visible" : "hidden";
+
+    if (!canShow) {
+      // 空枠（高さだけ確保）
+      reorderHintEl.innerHTML = isMobile() ? `<div>&nbsp;</div><div>&nbsp;</div>` : `&nbsp;`;
+      return;
+    }
+
+    const nextNum = Math.min(4, draftOrder.length + 1);
+    if (isMobile()) {
+      reorderHintEl.innerHTML = `<div>${nextNum}番目を</div><div>選択してください</div>`;
+    } else {
+      reorderHintEl.textContent = `${nextNum}番目を選択してください`;
+    }
   };
+
+  const ensureReorderButton = (canReorder: boolean) => {
+    if (!canReorder) {
+      if (reorderBtn?.parentElement) reorderBtn.parentElement.removeChild(reorderBtn);
+      reorderBtn = null;
+      return;
+    }
+
+    if (!reorderBtn) {
+      const btn = document.createElement("button");
+      btn.id = "reorderBtn";
+      btn.type = "button";
+      btn.className = "btn";
+      btn.textContent = "順番を入れ替える";
+      btn.style.width = "auto";
+      btn.style.padding = "8px 10px";
+      btn.style.fontWeight = "900";
+      btn.style.whiteSpace = "nowrap";
+      btn.onclick = () => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        if (!lobby) return;
+        if (mySeatIndex !== 0) return;
+        if (lobby.locked) return;
+
+        // 押すたびにやり直し（仕様）
+        reorderMode = true;
+        draftOrder = [];
+        renderParticipants(lobby);
+        applyRole();
+      };
+      reorderBtn = btn;
+    }
+
+    if (reorderBtn.parentElement !== reorderSlotEl) {
+      reorderSlotEl.innerHTML = "";
+      reorderSlotEl.appendChild(reorderBtn);
+    }
+
+    reorderBtn.disabled = false;
+  };
+
 
   if (roomId) {
     preflightAndJoin(roomId);
