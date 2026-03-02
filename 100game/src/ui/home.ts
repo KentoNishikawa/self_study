@@ -20,6 +20,7 @@ type LobbyState = {
   npcDifficulty: Difficulty;
   gameType: string;
   seats: [LobbySeat, LobbySeat, LobbySeat, LobbySeat];
+  playOrder: [number, number, number, number];
 };
 
 type WelcomeMsg = { type: "WELCOME"; seatIndex: number; state: LobbyState };
@@ -34,9 +35,13 @@ function isLobbyState(v: any): v is LobbyState {
     typeof v.npcDifficulty === "string" &&
     typeof v.gameType === "string" &&
     Array.isArray(v.seats) &&
-    v.seats.length === 4
+    v.seats.length === 4 &&
+    Array.isArray(v.playOrder) &&
+    v.playOrder.length === 4 &&
+    v.playOrder.every((n: any) => Number.isInteger(n))
   );
 }
+
 
 function isWelcomeMsg(v: any): v is WelcomeMsg {
   return v && v.type === "WELCOME" && typeof v.seatIndex === "number" && isLobbyState(v.state);
@@ -70,6 +75,12 @@ function seatLabel(i: number) {
   return `P${i}`;
 }
 
+function shortName(name: string) {
+  const chars = Array.from(name);
+  if (chars.length <= 6) return name;
+  return chars.slice(0, 6).join("") + "…";
+}
+
 export function renderHome(
   app: HTMLDivElement,
   config: HomeConfig,
@@ -89,6 +100,9 @@ export function renderHome(
   let mySeatIndex: number | null = null;
   let lobby: LobbyState | null = null;
   let ws: WebSocket | null = null;
+
+  let reorderMode = false;
+  let draftOrder: number[] = [];
 
   let pendingRedirect = false;
   const ICON_STORAGE_KEY = "100game.iconId";
@@ -253,7 +267,13 @@ export function renderHome(
     </div>
 
     <div class="panel">
-      <div style="font-weight:950;margin-bottom:10px;">参加者一覧</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
+        <div style="font-weight:950;">参加者一覧</div>
+        <button id="reorderBtn" class="btn" type="button"
+          style="display:none;width:auto;padding:8px 10px;font-weight:900;white-space:nowrap;">
+          順番を入れ替える
+        </button>
+      </div>
       <div id="participants" style="display:grid;gap:8px;"></div>
     </div>
 
@@ -301,6 +321,7 @@ export function renderHome(
   const inviteUrlEl = app.querySelector<HTMLInputElement>("#inviteUrl")!;
   const copyInviteBtn = app.querySelector<HTMLButtonElement>("#copyInviteBtn")!;
   const participantsEl = app.querySelector<HTMLDivElement>("#participants")!;
+  const reorderBtn = app.querySelector<HTMLButtonElement>("#reorderBtn")!;
   const connStatusEl = app.querySelector<HTMLDivElement>("#connStatus")!;
   const leaveRoomBtn = app.querySelector<HTMLButtonElement>("#leaveRoomBtn")!;
 
@@ -332,30 +353,94 @@ export function renderHome(
     connStatusEl.textContent = s;
   };
 
+
+  const CIRCLED = ["①", "②", "③", "④"] as const;
+
+  const normalizePlayOrder = (st: LobbyState) => {
+    const po = (st as any).playOrder;
+    if (!Array.isArray(po) || po.length !== 4) return [0, 1, 2, 3];
+    const nums = po.map((n: any) => Number(n));
+    const ok = nums.every((n) => Number.isInteger(n) && n >= 0 && n <= 3);
+    if (!ok) return [0, 1, 2, 3];
+    const uniq = new Set(nums);
+    if (uniq.size !== 4) return [0, 1, 2, 3];
+    return nums as [number, number, number, number];
+  };
+
   const renderParticipants = (st: LobbyState | null) => {
     if (!st) {
       participantsEl.innerHTML = `<div style="opacity:0.75;">未接続</div>`;
       return;
     }
 
-    participantsEl.innerHTML = st.seats
-      .map((seat, i) => {
-        const isMe = mySeatIndex === i;
+    const order = normalizePlayOrder(st);
+    const isHost = mySeatIndex === 0;
+    const canPick = reorderMode && isHost && !st.locked;
+
+    participantsEl.innerHTML = order
+      .map((seatIndex) => {
+        const seat = st.seats[seatIndex];
+        const isMe = mySeatIndex === seatIndex;
         const border = isMe ? "1px solid rgba(255,255,255,0.65)" : "1px solid rgba(255,255,255,0.16)";
         const bg = isMe ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)";
+        const cursor = canPick ? "pointer" : "default";
+
+        const pickedAt = draftOrder.indexOf(seatIndex);
+        const orderBadge = canPick && pickedAt >= 0
+          ? `<span style="margin-left:6px;font-weight:950;">${CIRCLED[pickedAt] ?? ""}</span>`
+          : "";
+
         return `
-          <div style="display:flex;align-items:center;gap:10px;padding:10px;border:${border};border-radius:12px;background:${bg};">
+          <div data-seat-index="${seatIndex}" style="display:flex;align-items:center;gap:10px;padding:10px;border:${border};border-radius:12px;background:${bg};cursor:${cursor};">
             <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
                         background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:16px;">
               ${escapeHtml(iconEmoji(seat.iconId))}
             </div>
-            <div style="flex:1;font-weight:850;">${escapeHtml(seat.name)}</div>
-            <div style="font-size:12px;opacity:0.75;">${escapeHtml(seatLabel(i))}</div>
+            <div style="flex:1;font-weight:850;display:flex;align-items:center;gap:6px;">
+              <span>${escapeHtml(shortName(seat.name))}</span>
+              ${orderBadge}
+            </div>
+            <div style="font-size:12px;opacity:0.75;">${escapeHtml(seatLabel(seatIndex))}</div>
           </div>
         `;
       })
       .join("");
+
+    if (!canPick) return;
+
+    const rows = Array.from(participantsEl.querySelectorAll<HTMLDivElement>("[data-seat-index]"));
+    rows.forEach((row) => {
+      row.onclick = () => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        if (!lobby) return;
+        if (mySeatIndex !== 0) return;
+        if (lobby.locked) return;
+
+        const seatIndex = Number((row as any).dataset.seatIndex);
+        if (!Number.isInteger(seatIndex) || seatIndex < 0 || seatIndex > 3) return;
+        if (draftOrder.includes(seatIndex)) return; // 2回押しは無視
+
+        draftOrder = [...draftOrder, seatIndex];
+
+        if (draftOrder.length >= 4) {
+          const po = draftOrder.slice(0, 4) as [number, number, number, number];
+
+          // 4人目で即確定：先にローカル反映してから同期
+          (lobby as any).playOrder = po;
+          try {
+            ws.send(JSON.stringify({ type: "HOST_SET_PLAY_ORDER", playOrder: po }));
+          } catch { }
+
+          reorderMode = false;
+          draftOrder = [];
+        }
+
+        renderParticipants(lobby);
+        applyRole();
+      };
+    });
   };
+
 
   const applyRole = () => {
     const isConnected = !!ws && ws.readyState === WebSocket.OPEN && !!lobby;
@@ -367,6 +452,16 @@ export function renderHome(
     startBtn.disabled = isConnected ? !isHost : false;
 
     createRoomBtn.disabled = !!roomId;
+
+    // 入れ替えボタン（HOSTのみ・開始前のみ）
+    const canReorder = isConnected && isHost && !lobby?.locked;
+    reorderBtn.style.display = canReorder ? "inline-flex" : "none";
+    reorderBtn.disabled = !canReorder;
+
+    if (!canReorder) {
+      reorderMode = false;
+      draftOrder = [];
+    }
 
     // 退出/解散ボタン（接続中のみ表示：高さ固定）
     if (isConnected) {
@@ -468,7 +563,11 @@ export function renderHome(
           {
             ws,
             roomId,
-            seatIndex: mySeatIndex,
+            seatIndex: (() => {
+              const po = lobby ? normalizePlayOrder(lobby) : ([0, 1, 2, 3] as [number, number, number, number]);
+              const idx = po.indexOf(mySeatIndex);
+              return idx >= 0 ? idx : mySeatIndex;
+            })(),
             isHost: mySeatIndex === 0,
             npcDifficulty: (lobby?.npcDifficulty ?? diffEl.value) as Difficulty,
           },
@@ -523,6 +622,8 @@ export function renderHome(
     ws.onclose = () => {
       lobby = null;
       mySeatIndex = null;
+      reorderMode = false;
+      draftOrder = [];
       renderParticipants(null);
       applyRole();
 
@@ -664,6 +765,19 @@ export function renderHome(
   };
 
   leaveRoomBtn.onclick = () => leaveOrDisbandAndRedirect();
+
+  reorderBtn.onclick = () => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    if (!lobby) return;
+    if (mySeatIndex !== 0) return;
+    if (lobby.locked) return;
+
+    // 押すたびにやり直し（仕様）
+    reorderMode = true;
+    draftOrder = [];
+    renderParticipants(lobby);
+    applyRole();
+  };
 
   if (roomId) {
     preflightAndJoin(roomId);

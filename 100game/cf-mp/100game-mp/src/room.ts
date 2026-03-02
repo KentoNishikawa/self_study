@@ -82,34 +82,19 @@ function toSeatKind(k: LobbySeat["kind"]): SeatKind {
 function makeGameFromRoom(room: RoomState): GameState {
     const gameType = parseGameType(room.gameType);
     const target = gameType === "EXTRA" ? pickExtraTarget() : gameType;
-
     // ★ここで iconId を GameState に埋め込む（ゲーム画面で表示するため）
-    const seats: [Seat, Seat, Seat, Seat] = [
-        {
-            kind: toSeatKind(room.seats[0].kind),
-            name: room.seats[0].name,
+    // ★playOrder（手番順）に並べ替えて GameState.seats を作る
+    const order = room.playOrder ?? ([0, 1, 2, 3] as [number, number, number, number]);
+
+    const seats = order.map((slot) => {
+        const ls = room.seats[slot];
+        return {
+            kind: toSeatKind(ls.kind),
+            name: ls.kind === "NPC" ? `NPC${slot}` : ls.name,
             hand: [],
-            iconId: room.seats[0].iconId,
-        },
-        {
-            kind: toSeatKind(room.seats[1].kind),
-            name: room.seats[1].kind === "NPC" ? "NPC1" : room.seats[1].name,
-            hand: [],
-            iconId: room.seats[1].iconId,
-        },
-        {
-            kind: toSeatKind(room.seats[2].kind),
-            name: room.seats[2].kind === "NPC" ? "NPC2" : room.seats[2].name,
-            hand: [],
-            iconId: room.seats[2].iconId,
-        },
-        {
-            kind: toSeatKind(room.seats[3].kind),
-            name: room.seats[3].kind === "NPC" ? "NPC3" : room.seats[3].name,
-            hand: [],
-            iconId: room.seats[3].iconId,
-        },
-    ];
+            iconId: ls.iconId,
+        };
+    }) as unknown as [Seat, Seat, Seat, Seat];
 
     const jokerCount = 1;
     const deck = shuffle(createDeck(jokerCount));
@@ -235,6 +220,23 @@ export class RoomDO {
                     }
                 }
 
+
+                if (msg.type === "HOST_SET_PLAY_ORDER") {
+                    if (mySeat !== 0) return;
+                    const po = (msg as any).playOrder;
+                    if (!Array.isArray(po) || po.length !== 4) return;
+                    const nums = po.map((n: any) => Number(n));
+                    const ok = nums.every((n) => Number.isInteger(n) && n >= 0 && n <= 3);
+                    if (!ok) return;
+                    const uniq = new Set(nums);
+                    if (uniq.size !== 4) return;
+
+                    cur.playOrder = nums as [number, number, number, number];
+                    await this.ctx.storage.put("state", cur);
+                    this.broadcastRoomState(cur);
+                    return;
+                }
+
                 // ===== ゲーム開始 =====
                 if (msg.type === "HOST_START") {
                     if (mySeat !== 0) return;
@@ -247,9 +249,18 @@ export class RoomDO {
                     // フレーム連番を初期化
                     await this.ctx.storage.put("gameSeq", 0);
 
-                    const game = makeGameFromRoom(cur);
-                    await this.ctx.storage.put("game", game);
-                    this.broadcastGameState(game);
+                    const game0 = makeGameFromRoom(cur);
+                    await this.ctx.storage.put("game", game0);
+                    this.broadcastGameState(game0);
+
+                    // ★開始直後がNPC手番なら、ここでNPCを自動実行して進める
+                    if (isNpcTurn(game0)) {
+                        const npc = this.runNpcSteps(cur.npcDifficulty, game0);
+                        if (npc.steps.length) {
+                            await this.ctx.storage.put("game", npc.final);
+                            await this.broadcastGameStates(npc.steps, 250);
+                        }
+                    }
                     return;
                 }
 
@@ -260,9 +271,18 @@ export class RoomDO {
 
                     await this.ctx.storage.put("gameSeq", 0);
 
-                    const game = makeGameFromRoom(cur);
-                    await this.ctx.storage.put("game", game);
-                    this.broadcastGameState(game);
+                    const game0 = makeGameFromRoom(cur);
+                    await this.ctx.storage.put("game", game0);
+                    this.broadcastGameState(game0);
+
+                    // ★開始直後がNPC手番なら、ここでNPCを自動実行して進める
+                    if (isNpcTurn(game0)) {
+                        const npc = this.runNpcSteps(cur.npcDifficulty, game0);
+                        if (npc.steps.length) {
+                            await this.ctx.storage.put("game", npc.final);
+                            await this.broadcastGameStates(npc.steps, 250);
+                        }
+                    }
                     return;
                 }
 
@@ -271,10 +291,12 @@ export class RoomDO {
                     const game = await this.ctx.storage.get<GameState>("game");
                     if (!game) return;
                     if (game.result.status !== "PLAYING") return;
-
-                    // 手番一致チェック（サーバ上の席番号）
-                    if (mySeat !== game.turn) return;
-                    if (game.seats[mySeat].kind !== "HUMAN") return;
+                    // 手番一致チェック（ロビー席→ゲーム席へ変換して判定）
+                    const playOrder = cur.playOrder ?? ([0, 1, 2, 3] as [number, number, number, number]);
+                    const myGameSeat = playOrder.indexOf(mySeat);
+                    if (myGameSeat < 0) return;
+                    if (myGameSeat !== game.turn) return;
+                    if (game.seats[myGameSeat].kind !== "HUMAN") return;
 
                     let action: Action | null = null;
 
@@ -318,6 +340,10 @@ export class RoomDO {
                             await this.convertGameSeatToNpcAndMaybeRun(cur.npcDifficulty, mySeat, leaverName);
                         }
                     }
+                    // closeイベントで二重処理しないため、先に紐付けを外す
+                    this.sessions.delete(server);
+                    this.seatByWs.delete(server);
+
                     try {
                         server.close(1000, "leave");
                     } catch { }
@@ -355,12 +381,13 @@ export class RoomDO {
                 if (cur.disbanded) return;
 
                 if (typeof seatIndex === "number" && seatIndex >= 1 && seatIndex <= 3) {
+                    const leaverName = cur.seats[seatIndex].name;
                     cur.seats[seatIndex] = { kind: "NPC", name: `NPC${seatIndex}`, iconId: "npc_default" };
                     await this.ctx.storage.put("state", cur);
                     this.broadcastRoomState(cur);
 
                     if (cur.locked) {
-                        await this.convertGameSeatToNpcAndMaybeRun(cur.npcDifficulty, seatIndex);
+                        await this.convertGameSeatToNpcAndMaybeRun(cur.npcDifficulty, seatIndex, leaverName);
                     }
                 }
             });

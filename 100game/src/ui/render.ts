@@ -9,6 +9,21 @@ let extraSystemLogId = 1_000_000;
 let prevSeatSnap: Array<{ kind: GameState["seats"][number]["kind"]; name: string }> | null = null;
 let leftLogged: boolean[] = [false, false, false, false];
 
+// アイコンID→絵文字（ホーム画面と同じプリセット）
+const ICON_EMOJI_MAP: Record<string, string> = {
+  host_default: "👑",
+  player_default: "🙂",
+  npc_default: "🤖",
+  icon_01: "😀",
+  icon_02: "😺",
+  icon_03: "🐉",
+};
+
+function iconEmoji(iconId: unknown): string {
+  const key = typeof iconId === "string" ? iconId : "";
+  return ICON_EMOJI_MAP[key] ?? "🙂";
+}
+
 // =====================
 // small helpers
 // =====================
@@ -485,12 +500,38 @@ export function render(
     const me = state.seats[0];
     const turnSeat = state.seats[state.turn];
 
+    const mpSeatOffsetRaw = Number((state as any).__mpSeatOffset);
+    const hasMpOrder = Number.isFinite(mpSeatOffsetRaw) && mpSeatOffsetRaw >= 0 && mpSeatOffsetRaw <= 3;
+    const mpSeatOffset = hasMpOrder ? mpSeatOffsetRaw : 0;
+
+    const unrotateIndex = (i: number) => (i - mpSeatOffset + 4) % 4;
+    const listSeats = hasMpOrder
+      ? ([0, 1, 2, 3].map((i) => state.seats[unrotateIndex(i)]) as any)
+      : state.seats;
+    const listTurn = hasMpOrder ? (state.turn + mpSeatOffset) % 4 : state.turn;
+
+    const shortName = (name: string) => {
+      const chars = Array.from(name);
+      if (chars.length <= 6) return name;
+      return chars.slice(0, 6).join("") + "…";
+    };
+
+    const formatLeaveInfo = (msg: string) => {
+      const suffix = "が退出しました。以降はNPCが操作します。";
+      const idx = msg.indexOf(suffix);
+      if (idx > 0) {
+        const nm = msg.slice(0, idx);
+        return shortName(nm) + suffix;
+      }
+      return msg;
+    };
+
     const diffText = difficulty === "SMART" ? "SMART" : "CASUAL";
     const isPlaying = state.result.status === "PLAYING";
     const canOperate = isPlaying && state.turn === 0 && !uiLocked;
 
     const last = state.history.length > 0 ? state.history[state.history.length - 1] : null;
-    const lastName = last ? state.seats[last.seat].name : "—";
+    const lastName = last ? shortName(state.seats[last.seat].name) : "—";
     const lastCard = last ? last.card : null;
     const lastValue = last ? last.value : undefined;
     const lastNote = last?.note ?? "";
@@ -502,8 +543,7 @@ export function render(
       state.result.status === "PLAYING"
         ? `<span style="color:#22c55e;font-weight:900;">進行中</span>`
         : state.result.status === "LOSE"
-          ? `<span style="color:#ff4d6d;font-weight:950;">敗北：${state.seats[state.result.loserSeat].name
-          }（${escapeHtml(state.result.reason ?? "")}）</span>`
+          ? `<span style="color:#ff4d6d;font-weight:950;">敗北：${escapeHtml(shortName(state.seats[state.result.loserSeat].name))}（${escapeHtml(state.result.reason ?? "")}）</span>`
           : `<span style="color:#ff4d6d;font-weight:950;">無効試合：${escapeHtml(
             state.result.reason ?? ""
           )}</span>`;
@@ -532,7 +572,7 @@ export function render(
 
           <div class="kpi">
             <span class="label">手番</span>
-            <span class="value small">${escapeHtml(turnSeat.name)}</span>
+            <span class="value small" style="white-space:nowrap;">${escapeHtml(shortName(turnSeat.name))}</span>
           </div>
 
           <div class="kpi">
@@ -613,20 +653,16 @@ export function render(
         <div class="panel">
           <div style="font-weight:950;margin-bottom:10px;">プレイヤー状況</div>
           <div class="playerList">
-            ${state.seats
-        .map((s, idx) => {
-          const isTurn = idx === state.turn;
-          const tag = idx === 0 ? "あなた" : "NPC";
+            ${listSeats
+        .map((s: any, idx: number) => {
+          const isTurn = idx === listTurn;
           return `
-                  <div class="playerRow">
+                  <div class=\"playerRow\">
                     <div>
-                      <div class="name">${escapeHtml(s.name)}</div>
-                      <div class="muted">${tag} / 手札 ${s.hand.length}枚</div>
+                      <div class=\"name\" style=\"display:flex;align-items:center;gap:6px;\"><span style=\"width:18px;display:inline-flex;justify-content:center;\">${escapeHtml(iconEmoji((s as any).iconId))}</span><span>${escapeHtml(shortName(s.name))}</span></div>
+                      <div class=\"muted\">手札 ${s.hand.length}枚</div>
                     </div>
-                    ${isTurn
-              ? `<div class="turn">▶ 手番</div>`
-              : `<div class="muted" style="margin-left:auto;">&nbsp;</div>`
-            }
+                    <div class=\"turn\" style=\"opacity:${isTurn ? 1 : 0};\">▶</div>
                   </div>
                 `;
         })
@@ -638,7 +674,7 @@ export function render(
       <div style="height:12px;"></div>
 
       <div class="panel">
-        <div style="font-weight:950;margin-bottom:10px;">あなたの手札（${escapeHtml(me.name)}）</div>
+        <div style="font-weight:950;margin-bottom:10px;">あなたの手札（${escapeHtml(shortName(me.name))}）</div>
         <div id="hand" class="handGrid"></div>
 
         <div style="height:10px;"></div>
@@ -721,6 +757,13 @@ export function render(
       closeHandInfo();
     }
 
+    // ★スマホUIでも手番以外は誤操作防止のため選択/詳細表示を解除
+    if (isTouchUI && !canOperate) {
+      selectedHandIndex = null;
+      selectedHandCardId = null;
+      closeHandInfo();
+    }
+
     handDiv.innerHTML = "";
     me.hand.forEach((card, idx) => {
       const b = document.createElement("button");
@@ -728,7 +771,7 @@ export function render(
       b.type = "button";
       b.innerHTML = cardInnerHtml(card);
 
-      b.disabled = isTouchUI ? false : !canOperate;
+      b.disabled = !canOperate;
 
       b.dataset.handIndex = String(idx);
       b.setAttribute("data-hand-index", String(idx));
@@ -817,6 +860,20 @@ export function render(
       leftLogged = [false, false, false, false];
     }
 
+    const serverInfoMsgs = new Set((state.systemLogs ?? []).filter((l) => l.kind === "INFO").map((l) => l.message));
+    const serverHasLeaveInfoAt = (afterPlayIndex: number) =>
+      (state.systemLogs ?? []).some((l) =>
+        l.kind === "INFO" &&
+        l.afterPlayIndex === afterPlayIndex &&
+        (l.message ?? "").includes("が退出しました。以降はNPCが操作します。")
+      );
+    // サーバ側で退出ログが付与されている場合はクライアント補完を抑止（重複防止）
+    extraSystemLogs = extraSystemLogs.filter((l) => {
+      if (serverInfoMsgs.has(l.message)) return false;
+      if (l.kind === "INFO" && (l.message ?? "").includes("が退出しました。以降はNPCが操作します。") && serverHasLeaveInfoAt(l.afterPlayIndex)) return false;
+      return true;
+    });
+
     const curSnap = state.seats.map((s) => ({ kind: s.kind, name: s.name }));
     if (prevSeatSnap) {
       for (let i = 1; i <= 3; i++) {
@@ -826,12 +883,15 @@ export function render(
         if (!leftLogged[i] && prev.kind === "HUMAN" && now.kind === "NPC") {
           const msg = `${prev.name}が退出しました。以降はNPCが操作します。`;
           const afterPlayIndex = Math.max(1, state.history.length);
-          extraSystemLogs.push({
-            id: extraSystemLogId++,
-            kind: "INFO",
-            afterPlayIndex,
-            message: msg,
-          });
+
+          if (!serverInfoMsgs.has(msg) && !serverHasLeaveInfoAt(afterPlayIndex)) {
+            extraSystemLogs.push({
+              id: extraSystemLogId++,
+              kind: "INFO",
+              afterPlayIndex,
+              message: msg,
+            });
+          }
           leftLogged[i] = true;
         }
       }
@@ -875,7 +935,7 @@ export function render(
         const main = document.createElement("div");
         main.className = "main";
         main.textContent =
-          e.s.kind === "INFO" ? `🚪 ${e.s.message}` : `🔄 再配布：${e.s.message}`;
+          e.s.kind === "INFO" ? `🚪 ${formatLeaveInfo(e.s.message ?? "")}` : `🔄 再配布：${e.s.message}`;
 
         row.appendChild(left);
         row.appendChild(main);
@@ -885,7 +945,7 @@ export function render(
 
       const p = e.p;
       const originalNo = e.playNo;
-      const name = state.seats[p.seat].name;
+      const name = shortName(state.seats[p.seat].name);
       const lbl = cardLogLabel(p.card, p.value);
       const d = p.delta >= 0 ? `+${p.delta}` : `${p.delta}`;
 

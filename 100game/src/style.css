@@ -207,6 +207,10 @@ html {
   margin-left: auto;
   font-weight: 950;
   color: #22c55e;
+  font-size: 12px;
+  line-height: 1;
+  min-width: 18px;
+  text-align: right;
 }
 
 /* ---------- Card visuals (played card) ---------- */
