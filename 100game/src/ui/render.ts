@@ -208,6 +208,7 @@ function hideTip() {
 let selectedHandIndex: number | null = null;
 let selectedHandCardId: string | null = null;
 let lastHandDiv: HTMLDivElement | null = null;
+let lastTopPanelsDiv: HTMLDivElement | null = null;
 
 const isTouchEnvironment = () => {
   try {
@@ -231,16 +232,33 @@ try {
   cachedIsTouchUI = false;
 }
 
+let handInfoOverlay = document.querySelector<HTMLDivElement>("#handInfoOverlay");
+if (!handInfoOverlay) {
+  handInfoOverlay = document.createElement("div");
+  handInfoOverlay.id = "handInfoOverlay";
+  // ここは「場の最新カード枠 + プレイヤー状況枠」を包む領域に差し替えて使う
+  // なので position/size はアンカー側（#topPanels）に対して absolute で全面に。
+  handInfoOverlay.style.position = "absolute";
+  handInfoOverlay.style.inset = "0";
+  handInfoOverlay.style.display = "none";
+  handInfoOverlay.style.alignItems = "center";
+  handInfoOverlay.style.justifyContent = "center";
+  handInfoOverlay.style.padding = "10px";
+  handInfoOverlay.style.boxSizing = "border-box";
+  handInfoOverlay.style.zIndex = "9998";
+  // 従来の見た目を維持するため、背景は透明（クリック受け取り用の面だけ確保）
+  handInfoOverlay.style.background = "transparent";
+  document.body.appendChild(handInfoOverlay);
+}
+
 let handInfo = document.querySelector<HTMLDivElement>("#handInfoPanel");
 if (!handInfo) {
   handInfo = document.createElement("div");
   handInfo.id = "handInfoPanel";
-  handInfo.style.position = "fixed";
-  handInfo.style.left = "50%";
-  handInfo.style.top = "74px";
-  handInfo.style.transform = "translateX(-50%)";
+  // ★従来のカード詳細UIの見た目は維持（位置だけアンカーに追従させる）
+  handInfo.style.position = "relative";
   handInfo.style.width = "min(520px, calc(100% - 24px))";
-  handInfo.style.maxHeight = "calc(100vh - 120px)";
+  handInfo.style.maxHeight = "calc(100% - 20px)";
   handInfo.style.overflow = "auto";
   handInfo.style.background = "rgba(15,18,26,0.96)";
   handInfo.style.border = "1px solid rgba(255,255,255,0.12)";
@@ -248,9 +266,12 @@ if (!handInfo) {
   handInfo.style.padding = "12px";
   handInfo.style.color = "white";
   handInfo.style.boxShadow = "0 18px 60px rgba(0,0,0,.55)";
-  handInfo.style.zIndex = "9998";
   handInfo.style.display = "none";
-  document.body.appendChild(handInfo);
+}
+
+// handInfo は overlay の中に格納して扱う
+if (handInfoOverlay && handInfo.parentElement !== handInfoOverlay) {
+  handInfoOverlay.appendChild(handInfo);
 }
 
 const buildCardInfoHtml = (card: Card, mode: GameState["mode"]) => {
@@ -292,6 +313,23 @@ const buildCardInfoHtml = (card: Card, mode: GameState["mode"]) => {
 
 const openHandInfo = (card: Card, mode: GameState["mode"]) => {
   if (!handInfo) return;
+  if (handInfoOverlay && lastTopPanelsDiv) {
+    // 念のため、毎回アンカー内に移動（renderで再生成されても追従）
+    if (handInfoOverlay.parentElement !== lastTopPanelsDiv) {
+      lastTopPanelsDiv.appendChild(handInfoOverlay);
+    }
+    // TopPanels が完全に画面外なら、見える位置に寄せる（固定表示→アンカー表示に変わったため）
+    const r = lastTopPanelsDiv.getBoundingClientRect();
+    const outOfView = r.bottom < 0 || r.top > window.innerHeight;
+    if (outOfView) {
+      try {
+        lastTopPanelsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch {
+        // ignore
+      }
+    }
+    handInfoOverlay.style.display = "flex";
+  }
   handInfo.innerHTML = buildCardInfoHtml(card, mode);
   handInfo.style.display = "block";
 
@@ -305,6 +343,7 @@ const openHandInfo = (card: Card, mode: GameState["mode"]) => {
 
 const closeHandInfo = () => {
   if (!handInfo) return;
+  if (handInfoOverlay) handInfoOverlay.style.display = "none";
   handInfo.style.display = "none";
   handInfo.innerHTML = "";
   applyHandSelectionStyles();
@@ -623,7 +662,7 @@ export function render(
         </div>
       </div>
 
-      <div class="grid2">
+      <div class="grid2" id="topPanels" style="position:relative;">
         <div class="panel">
           <div class="row" style="align-items:flex-start;">
             <div class="cardArea">
@@ -703,6 +742,12 @@ export function render(
     const restartBtn = app.querySelector<HTMLButtonElement>("#restartBtn")!;
     const homeBtn = app.querySelector<HTMLButtonElement>("#homeBtn")!;
     const logDiv = app.querySelector<HTMLDivElement>("#log")!;
+
+    // スマホ手札タップ時のカード詳細モーダルは「場の最新カード枠 + プレイヤー状況枠」に固定表示
+    lastTopPanelsDiv = app.querySelector<HTMLDivElement>("#topPanels");
+    if (handInfoOverlay && lastTopPanelsDiv && handInfoOverlay.parentElement !== lastTopPanelsDiv) {
+      lastTopPanelsDiv.appendChild(handInfoOverlay);
+    }
 
     // ===== 場札アニメ =====
     const playCardEl = app.querySelector<HTMLDivElement>(".playCard");
