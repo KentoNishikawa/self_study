@@ -63,6 +63,21 @@ function send(ws: WebSocket, type: string, payload: Record<string, unknown> = {}
 // ---------------- Game helpers ----------------
 const EXTRA_CANDIDATES: Array<Exclude<GameType, "EXTRA">> = [100, 200, 300, 400, 500];
 
+// ---------------- Turn limit (MP) ----------------
+// ローカルはクライアントで強制手を実行しているが、MPではサーバ側（DO）で強制する。
+const TURN_LIMIT_MS = 60 * 1000;
+
+function turnKey(g: GameState) {
+    return `${g.turn}|${g.history.length}`;
+}
+
+function pickAutoJokerValueNoBust(s: GameState): number {
+    const total = s.total;
+    const safeMax = s.mode === "UP" ? Math.min(49, (s.target - 1) - total) : Math.min(49, total - 1);
+    if (safeMax < 1) return 1;
+    return safeMax;
+}
+
 function pickExtraTarget(): number {
     const i = Math.floor(Math.random() * EXTRA_CANDIDATES.length);
     return EXTRA_CANDIDATES[i];
@@ -129,6 +144,33 @@ export class RoomDO {
     private seatByWs = new WeakMap<WebSocket, number>();
 
     constructor(private ctx: DurableObjectState) { }
+
+    // MP用：次の手番締切をDOアラームで管理
+    private async scheduleTurnAlarm(room: RoomState, game: GameState) {
+        if (room.disbanded) return;
+
+        // ゲーム未開始/終了なら締切なし
+        if (!room.locked || game.result.status !== "PLAYING") {
+            await this.ctx.storage.put("turnDeadlineAt", 0);
+            await this.ctx.storage.put("turnKey", "");
+            await this.ctx.storage.setAlarm(room.expiresAt);
+            return;
+        }
+
+        // NPC手番なら、すぐ進める（ただし念のためアラームも最短で）
+        if (isNpcTurn(game)) {
+            await this.ctx.storage.put("turnDeadlineAt", Date.now());
+            await this.ctx.storage.put("turnKey", turnKey(game));
+            await this.ctx.storage.setAlarm(Math.min(room.expiresAt, Date.now()));
+            return;
+        }
+
+        // 人間手番のみ締切を持つ
+        const deadline = Date.now() + TURN_LIMIT_MS;
+        await this.ctx.storage.put("turnDeadlineAt", deadline);
+        await this.ctx.storage.put("turnKey", turnKey(game));
+        await this.ctx.storage.setAlarm(Math.min(room.expiresAt, deadline));
+    }
 
     async fetch(request: Request): Promise<Response> {
         const url = new URL(request.url);
@@ -259,8 +301,12 @@ export class RoomDO {
                         if (npc.steps.length) {
                             await this.ctx.storage.put("game", npc.final);
                             await this.broadcastGameStates(npc.steps, 250);
+                            await this.scheduleTurnAlarm(cur, npc.final);
+                            return;
                         }
                     }
+
+                    await this.scheduleTurnAlarm(cur, game0);
                     return;
                 }
 
@@ -281,8 +327,12 @@ export class RoomDO {
                         if (npc.steps.length) {
                             await this.ctx.storage.put("game", npc.final);
                             await this.broadcastGameStates(npc.steps, 250);
+                            await this.scheduleTurnAlarm(cur, npc.final);
+                            return;
                         }
                     }
+
+                    await this.scheduleTurnAlarm(cur, game0);
                     return;
                 }
 
@@ -323,6 +373,9 @@ export class RoomDO {
 
                     // 5) 全員へ「途中経過まとめて送信」
                     await this.broadcastGameStates(frames, 250);
+
+                    // 6) 次手番のタイムアウトを再スケジュール
+                    await this.scheduleTurnAlarm(cur, final);
                     return;
                 }
 
@@ -405,6 +458,8 @@ export class RoomDO {
 
             const state = makeInitialState(roomId, hostToken, expiresAt);
             await this.ctx.storage.put("state", state);
+            await this.ctx.storage.put("turnDeadlineAt", 0);
+            await this.ctx.storage.put("turnKey", "");
             await this.ctx.storage.setAlarm(expiresAt);
             return new Response("ok");
         }
@@ -425,7 +480,92 @@ export class RoomDO {
     }
 
     async alarm(): Promise<void> {
-        // 期限切れ後は join時に now>expiresAt で弾く
+        const st = await this.ctx.storage.get<RoomState>("state");
+        if (!st) return;
+        if (st.disbanded) return;
+
+        const now = Date.now();
+        // 期限切れ後は join時に now>expiresAt で弾く（ここでは何もしない）
+        if (now >= st.expiresAt) return;
+
+        const deadline = (await this.ctx.storage.get<number>("turnDeadlineAt")) ?? 0;
+        if (!deadline || deadline <= 0) {
+            // ゲーム未開始など。次のアラームは期限切れ
+            await this.ctx.storage.setAlarm(st.expiresAt);
+            return;
+        }
+
+        // まだ期限前なら、次は締切へ
+        if (now < deadline) {
+            await this.ctx.storage.setAlarm(Math.min(st.expiresAt, deadline));
+            return;
+        }
+
+        // ここに来たら「手番の締切」
+        const game = await this.ctx.storage.get<GameState>("game");
+        if (!game) {
+            await this.ctx.storage.put("turnDeadlineAt", 0);
+            await this.ctx.storage.put("turnKey", "");
+            await this.ctx.storage.setAlarm(st.expiresAt);
+            return;
+        }
+        if (game.result.status !== "PLAYING") {
+            await this.ctx.storage.put("turnDeadlineAt", 0);
+            await this.ctx.storage.put("turnKey", "");
+            await this.ctx.storage.setAlarm(st.expiresAt);
+            return;
+        }
+
+        const expectedKey = (await this.ctx.storage.get<string>("turnKey")) ?? "";
+        const curKey = turnKey(game);
+        if (expectedKey && expectedKey !== curKey) {
+            // 既に手が進んでいる（古いアラーム）→今の状態で再スケジュール
+            await this.scheduleTurnAlarm(st, game);
+            return;
+        }
+
+        // NPC手番はサーバ側で即実行する設計（基本的にここに来ない想定だが保険）
+        if (isNpcTurn(game)) {
+            const npc = this.runNpcSteps(st.npcDifficulty, game);
+            if (npc.steps.length) {
+                await this.ctx.storage.put("game", npc.final);
+                await this.broadcastGameStates(npc.steps, 250);
+                await this.scheduleTurnAlarm(st, npc.final);
+            } else {
+                await this.scheduleTurnAlarm(st, game);
+            }
+            return;
+        }
+
+        // 人間の手番：DECKから強制で出す（DECKが空なら手札先頭）
+        let jokerValue: number | undefined;
+        const top = game.deck[game.deck.length - 1];
+        let after: GameState;
+        if (top) {
+            if (top.rank === "JOKER") jokerValue = pickAutoJokerValueNoBust(game);
+            after = reducer(game, { type: "DRAW_PLAY", jokerValue });
+        } else {
+            const hand = game.seats[game.turn].hand;
+            if (hand.length === 0) {
+                // 何も出せないなら締切を消すだけ
+                await this.ctx.storage.put("turnDeadlineAt", 0);
+                await this.ctx.storage.put("turnKey", "");
+                await this.ctx.storage.setAlarm(st.expiresAt);
+                return;
+            }
+            const card = hand[0];
+            if (card.rank === "JOKER") jokerValue = pickAutoJokerValueNoBust(game);
+            after = reducer(game, { type: "PLAY_HAND", handIndex: 0, jokerValue });
+        }
+
+        const frames: GameState[] = [after];
+        const npc = this.runNpcSteps(st.npcDifficulty, after);
+        frames.push(...npc.steps);
+        const final = npc.final;
+
+        await this.ctx.storage.put("game", final);
+        await this.broadcastGameStates(frames, 250);
+        await this.scheduleTurnAlarm(st, final);
     }
 
     private assignPlayerSeat(st: RoomState): number {
@@ -532,5 +672,10 @@ export class RoomDO {
 
         await this.ctx.storage.put("game", final);
         await this.broadcastGameStates(frames, 250);
+
+        // ターン制限の再スケジュール
+        if (cur) {
+            await this.scheduleTurnAlarm(cur, final);
+        }
     }
 }

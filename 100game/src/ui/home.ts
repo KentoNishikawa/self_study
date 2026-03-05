@@ -148,7 +148,7 @@ export function renderHome(
 
   app.innerHTML = `
     <header class="appHeader">
-      <h1 class="appTitle">100ゲーム</h1>
+      <h1 class="appTitle">100ゲームEX</h1>
       <div class="appTag">HOME</div>
     </header>
 
