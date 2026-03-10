@@ -210,12 +210,13 @@ let selectedHandCardId: string | null = null;
 let lastHandDiv: HTMLDivElement | null = null;
 let lastTopPanelsDiv: HTMLDivElement | null = null;
 
+const small = window.matchMedia?.("(max-width: 820px)")?.matches ?? false;
+
 const isTouchEnvironment = () => {
   try {
     const noHover = window.matchMedia?.("(hover: none)")?.matches ?? false;
     const coarse = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
     const touch = (navigator.maxTouchPoints ?? 0) > 0;
-    const small = window.matchMedia?.("(max-width: 820px)")?.matches ?? false;
     return noHover || coarse || (touch && small);
   } catch {
     return false;
@@ -589,7 +590,7 @@ export function render(
 
     app.innerHTML = `
       <header class="appHeader">
-        <h1 class="appTitle">100ゲームEX</h1>
+        <h1 class="appTitle">100GAMEplus</h1>
         <div class="appTag">BATTLE</div>
       </header>
 
@@ -732,7 +733,6 @@ export function render(
       <div style="height:12px;"></div>
 
       <div class="panel">
-        <div style="font-weight:950;margin-bottom:10px;">ログ（最新が上）</div>
         <div id="log" class="logBox"></div>
       </div>
     `;
@@ -895,6 +895,67 @@ export function render(
     // =====================
     // ログ（PLAY + SYSTEM）
     // =====================
+
+    // 既存ボタンがあれば削除（再描画対策）
+    document.getElementById("logToggleBtn")?.remove();
+    document.getElementById("logModalOverlay")?.remove();
+
+    // スマホ時のみボタン生成
+    let logVisible: boolean = !small; // PCは常にtrue
+
+    logDiv.style.display = "block";
+    const pcHeader = document.createElement("div");
+    pcHeader.id = "pcLogHeader";
+    pcHeader.innerHTML = `
+        <div style="font-weight:950;margin-bottom:10px;">ログ（最新が上）</div>
+        `;
+
+    if (small) {
+      logVisible = false;
+
+      // モーダル生成
+      const overlay: HTMLDivElement = document.createElement("div");
+      overlay.id = "logModalOverlay";
+
+      const modal: HTMLDivElement = document.createElement("div");
+      modal.className = "logModal";
+
+      const closeBtn: HTMLButtonElement = document.createElement("button");
+      closeBtn.className = "logModalClose";
+      closeBtn.textContent = "×";
+
+      // ×ボタンで閉じる
+      closeBtn.onclick = (): void => {
+        overlay.classList.remove("open");
+      };
+
+      // 背景タップで閉じる
+      overlay.addEventListener("click", (e: MouseEvent) => {
+        if (e.target === overlay) {
+          overlay.classList.remove("open");
+        }
+      });
+
+      // 「ログを表示」ボタン生成
+      const toggleBtn: HTMLButtonElement = document.createElement("button");
+      toggleBtn.id = "logToggleBtn";
+      toggleBtn.textContent = "ログを表示";
+      toggleBtn.className = "btn";
+
+      toggleBtn.onclick = (): void => {
+        overlay.classList.add("open");
+      };
+
+      const parent: HTMLElement | null = logDiv.parentElement;
+      parent?.insertBefore(toggleBtn, logDiv);
+
+      modal.appendChild(closeBtn);
+      modal.appendChild(logDiv);
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+
+    }
+    logDiv.parentElement?.insertBefore(pcHeader, logDiv);
 
     // 退出ログ（クライアント補完）：HUMAN→NPC を検知して systemLogs に混ぜる
     if (prevHistoryLen > state.history.length) {
@@ -1066,6 +1127,11 @@ export function render(
       empty.style.color = "rgba(255,255,255,0.65)";
       empty.textContent = "まだログはありません";
       logDiv.appendChild(empty);
+
+      if (small) {
+        const modal = document.querySelector(".logModal");
+        modal?.classList.add("empty");
+      }
     }
   } catch (e) {
     console.error(e);

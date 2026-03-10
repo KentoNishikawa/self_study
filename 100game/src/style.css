@@ -450,6 +450,52 @@ html {
   font-weight: 800;
 }
 
+#logModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: none;
+  z-index: 9999;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+#logModalOverlay.open {
+  display: flex;
+}
+
+.logModal {
+  position: relative;
+  background: #111;
+  opacity: 0.9;
+  border-radius: 12px;
+  padding: 20px;
+  width: auto;
+  margin: 40px auto;
+  box-sizing: border-box;
+  margin: 0;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.logModal.empty {
+  width: 100%;
+}
+
+.logModalClose {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 22px;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+
 /* === Joker Picker Modal === */
 .jpOverlay {
   position: fixed;
@@ -777,7 +823,8 @@ html {
 
   /* 調整しやすいように高さを変数化 */
   :root {
-    --m-grid2-h: 230px; /* ここを 220〜260 で微調整 */
+    --m-grid2-h: 230px;
+    /* ここを 220〜260 で微調整 */
   }
 
   /* ===== Header (mobile only) ===== */
@@ -837,7 +884,7 @@ html {
     align-items: stretch;
   }
 
-  .grid2 > .panel {
+  .grid2>.panel {
     min-height: var(--m-grid2-h);
     height: auto;
     padding: 8px;
