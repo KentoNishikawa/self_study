@@ -55,19 +55,35 @@ function toWsBase(httpBase: string) {
   return httpBase.replace(/^http/i, "ws");
 }
 
-// アイコンプリセット（絵文字。画像に置き換える時はここを差し替え）
-const ICON_PRESETS: Array<{ id: string; emoji: string; label: string }> = [
-  { id: "host_default", emoji: "👑", label: "HOST" },
-  { id: "player_default", emoji: "🙂", label: "PLAYER" },
+// アイコンプリセット（絵文字 or 画像）
+const HOST_DEFAULT_SRC = new URL("../icons/01.男の子.png", import.meta.url).href;
+const PLAYER_DEFAULT = new URL("../icons/02.女の子.png", import.meta.url).href;
+
+type IconPreset = { id: string; label: string; emoji?: string; src?: string };
+
+const ICON_PRESETS: IconPreset[] = [
+  { id: "host_default", src: HOST_DEFAULT_SRC, emoji: "👑", label: "HOST" },
+  { id: "player_default",src: PLAYER_DEFAULT,  emoji: "🙂", label: "PLAYER" },
   { id: "npc_default", emoji: "🤖", label: "NPC" },
   { id: "icon_01", emoji: "😀", label: "A" },
   { id: "icon_02", emoji: "😺", label: "B" },
   { id: "icon_03", emoji: "🐉", label: "C" },
 ];
 
-const ICON_EMOJI = new Map(ICON_PRESETS.map((p) => [p.id, p.emoji] as const));
+const ICON_BY_ID = new Map(ICON_PRESETS.map((p) => [p.id, p] as const));
+
+function iconHtml(iconId: string, sizePx: number) {
+  const p = ICON_BY_ID.get(iconId) ?? ICON_BY_ID.get("player_default")!;
+  if (p.src) {
+    return `<img src="${escapeHtml(p.src)}" alt="${escapeHtml(p.label)}"
+      style="width:${sizePx}px;height:${sizePx}px;object-fit:contain;display:block;" />`;
+  }
+  return escapeHtml(p.emoji ?? "🙂");
+}
+
 function iconEmoji(iconId: string) {
-  return ICON_EMOJI.get(iconId) ?? "🙂";
+  const p = ICON_BY_ID.get(iconId) ?? ICON_BY_ID.get("player_default")!;
+  return p.emoji ?? "🙂";
 }
 
 function seatLabel(i: number) {
@@ -148,7 +164,7 @@ export function renderHome(
 
   app.innerHTML = `
     <header class="appHeader">
-      <h1 class="appTitle">100ゲームEX</h1>
+      <h1 class="appTitle">100GAME⁺</h1>
       <div class="appTag">HOME</div>
     </header>
 
@@ -174,7 +190,7 @@ export function renderHome(
               style="width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);
                      background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;
                      font-size:18px;cursor:pointer;">
-              ${escapeHtml(iconEmoji(localIconId))}
+              ${iconHtml(localIconId, 44)}
             </button>
 
             <div id="iconPicker"
@@ -186,8 +202,8 @@ export function renderHome(
                   <button type="button" class="iconOpt" data-icon="${escapeHtml(p.id)}"
                     title="${escapeHtml(p.label)}"
                     style="width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,0.16);
-                           background:rgba(255,255,255,0.06);cursor:pointer;font-size:18px;">
-                    ${escapeHtml(p.emoji)}
+                           background:rgba(255,255,255,0.06);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">
+                    ${iconHtml(p.id, 44)}
                   </button>
                 `).join("")}
               </div>
@@ -397,7 +413,7 @@ export function renderHome(
           <div data-seat-index="${seatIndex}" style="display:flex;align-items:center;gap:10px;padding:10px;border:${border};border-radius:12px;background:${bg};cursor:${cursor};">
             <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
                         background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:16px;">
-              ${escapeHtml(iconEmoji(seat.iconId))}
+              ${iconHtml(seat.iconId, 18)}
             </div>
             <div style="flex:1;font-weight:850;display:flex;align-items:center;gap:6px;">
               <span>${escapeHtml(shortName(seat.name))}</span>
@@ -518,7 +534,7 @@ export function renderHome(
       try {
         localStorage.setItem(ICON_STORAGE_KEY, iconId);
       } catch { }
-      iconBtn.textContent = iconEmoji(iconId);
+      iconBtn.innerHTML = iconHtml(iconId, 44);
       closePicker();
 
       if (ws && ws.readyState === WebSocket.OPEN && mySeatIndex != null) {
@@ -587,7 +603,7 @@ export function renderHome(
         const me = lobby.seats[mySeatIndex];
         if (me) {
           localIconId = me.iconId;
-          iconBtn.textContent = iconEmoji(me.iconId);
+          iconBtn.innerHTML = iconHtml(me.iconId, 44);
           if (document.activeElement !== nameEl) nameEl.value = me.name;
         }
 
@@ -611,7 +627,7 @@ export function renderHome(
           const me = lobby.seats[mySeatIndex];
           if (me) {
             localIconId = me.iconId;
-            iconBtn.textContent = iconEmoji(me.iconId);
+            iconBtn.innerHTML = iconHtml(me.iconId, 44);
             if (document.activeElement !== nameEl) nameEl.value = me.name;
           }
         }
