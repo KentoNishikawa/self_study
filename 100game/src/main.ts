@@ -560,6 +560,13 @@ function draw() {
         (state as any).__mpIsHost = p.isHost;
 
         screen = "GAME";
+
+        // MPゲーム画面中にリロード/リダイレクトしても "?room=" でJOINし直さないよう、URLからsearchを除去
+        try {
+          const next = location.pathname + (location.hash ?? "");
+          history.replaceState(null, "", next);
+        } catch { }
+
         attachMpWs(mp);
         draw();
       },

@@ -81,11 +81,6 @@ function iconHtml(iconId: string, sizePx: number) {
   return escapeHtml(p.emoji ?? "🙂");
 }
 
-function iconEmoji(iconId: string) {
-  const p = ICON_BY_ID.get(iconId) ?? ICON_BY_ID.get("player_default")!;
-  return p.emoji ?? "🙂";
-}
-
 function seatLabel(i: number) {
   if (i === 0) return "HOST";
   return `P${i}`;

@@ -52,18 +52,16 @@ function pushSystemLog(
 // 再配布（target>=200）
 function maybeRedeal(state: GameState): GameState {
   if (state.result.status !== "PLAYING") return state;
-  if (state.target < 200) return state;
+  if (state.target === 100) return state;
 
-  // トリガー：山札が尽きた && 誰か1人でも手札が尽きた
+  // トリガー：山札が尽きた（ゲームタイプ100以外）
   if (state.deck.length !== 0) return state;
-  if (!anyHandEmpty(state)) return state;
 
   const recovered = state.discard.length + state.deck.length; // deckは通常0だが一応
-  const pool = shuffle([...state.discard, ...state.deck]);
-
-  // プールが無い＝再配布不能 → 無効
+  const pool = shuffle([...state.discard, ...state.deck]);  // プールが無い：回収できるカード無し（手札補充も山札化もできない）
+  // ※手札が尽きている場合はVOIDにしてデッドロック回避。そうでなければ何もしない。
   if (pool.length === 0) {
-    return setVoid(state, "再配布できるカードが無いため無効試合");
+    return anyHandEmpty(state) ? setVoid(state, "再配布できるカードが無いため無効試合") : state;
   }
 
   // 手札は残す／lastCardは残す／discard+deckをシャッフルして補充
@@ -106,8 +104,8 @@ function maybeRedeal(state: GameState): GameState {
 function toVoidIfNoCards(state: GameState): GameState {
   if (state.result.status !== "PLAYING") return state;
 
-  // 200以上は「再配布できない」ケースでVOID（デッドロック回避）
-  if (state.target >= 200) {
+  // 100以外は「再配布できない」ケースでVOID（デッドロック回避）
+  if (state.target !== 100) {
     if (state.deck.length === 0 && anyHandEmpty(state) && state.discard.length === 0) {
       return setVoid(state, "再配布できるカードが無いため無効試合");
     }
@@ -165,10 +163,10 @@ export function reducer(state: GameState, action: GameAction): GameState {
     const result =
       r.lose
         ? ({
-            status: "LOSE" as const,
-            loserSeat: seatIndex,
-            reason: `${loseReason(next, r.afterTotal, r.log.beforeMode)}${extraSuffix(next)}`,
-          })
+          status: "LOSE" as const,
+          loserSeat: seatIndex,
+          reason: `${loseReason(next, r.afterTotal, r.log.beforeMode)}${extraSuffix(next)}`,
+        })
         : next.result;
 
     next = {
@@ -208,10 +206,10 @@ export function reducer(state: GameState, action: GameAction): GameState {
     const result =
       r.lose
         ? ({
-            status: "LOSE" as const,
-            loserSeat: seatIndex,
-            reason: `${loseReason(next, r.afterTotal, r.log.beforeMode)}${extraSuffix(next)}`,
-          })
+          status: "LOSE" as const,
+          loserSeat: seatIndex,
+          reason: `${loseReason(next, r.afterTotal, r.log.beforeMode)}${extraSuffix(next)}`,
+        })
         : next.result;
 
     next = {
