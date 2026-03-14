@@ -470,7 +470,7 @@ html {
 .logModal {
   position: relative;
   background: #111;
-  opacity: 0.9;
+  opacity: 0.8;
   border-radius: 12px;
   padding: 20px;
   width: auto;
@@ -495,6 +495,13 @@ html {
   color: #fff;
   cursor: pointer;
 }
+
+#logToggleBtn {
+  display: block;
+  width: min(100%, 360px);
+  margin: 0 auto 12px;
+}
+
 
 /* === Joker Picker Modal === */
 .jpOverlay {

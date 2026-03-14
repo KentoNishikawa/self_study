@@ -590,7 +590,7 @@ export function render(
 
     app.innerHTML = `
       <header class="appHeader">
-        <h1 class="appTitle">100GAMEplus</h1>
+        <h1 class="appTitle">100GAME⁺</h1>
         <div class="appTag">BATTLE</div>
       </header>
 
