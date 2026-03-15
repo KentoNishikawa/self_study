@@ -2,6 +2,155 @@
 import type { Card, Difficulty, GameState, SystemLog } from "../core/types";
 
 let prevHistoryLen = -1;
+let gameStartOverlayTimer: number | null = null;
+
+type HandVisualSlot =
+  | { kind: "card"; card: Card }
+  | { kind: "placeholder"; key: string };
+
+let handVisualSlots: HandVisualSlot[] = [];
+let handPlaceholderSeq = 0;
+
+function nextHandPlaceholderKey() {
+  handPlaceholderSeq += 1;
+  return `hand-ph-${handPlaceholderSeq}`;
+}
+
+function syncHandVisualSlots(cards: Card[], reset: boolean) {
+  if (reset || handVisualSlots.length === 0) {
+    handVisualSlots = cards.map((card) => ({ kind: "card", card }));
+    return handVisualSlots;
+  }
+
+  const prevCardIds = new Set(
+    handVisualSlots
+      .filter((slot): slot is Extract<HandVisualSlot, { kind: "card" }> => slot.kind === "card")
+      .map((slot) => slot.card.id)
+  );
+  const prevCardCount = handVisualSlots.filter((slot) => slot.kind === "card").length;
+  const matchedCount = cards.filter((card) => prevCardIds.has(card.id)).length;
+
+  if (cards.length > prevCardCount || (cards.length === 4 && matchedCount === 0)) {
+    handVisualSlots = cards.map((card) => ({ kind: "card", card }));
+    return handVisualSlots;
+  }
+
+  const nextSlots: HandVisualSlot[] = [];
+  let cardIndex = 0;
+
+  for (const slot of handVisualSlots) {
+    const currentCard = cards[cardIndex];
+
+    if (!currentCard) {
+      nextSlots.push(slot.kind === "placeholder" ? slot : { kind: "placeholder", key: nextHandPlaceholderKey() });
+      continue;
+    }
+
+    if (slot.kind === "placeholder") {
+      nextSlots.push(slot);
+      continue;
+    }
+
+    if (slot.card.id === currentCard.id) {
+      nextSlots.push({ kind: "card", card: currentCard });
+      cardIndex += 1;
+      continue;
+    }
+
+    nextSlots.push({ kind: "placeholder", key: nextHandPlaceholderKey() });
+  }
+
+  while (cardIndex < cards.length) {
+    nextSlots.push({ kind: "card", card: cards[cardIndex] });
+    cardIndex += 1;
+  }
+
+  handVisualSlots = nextSlots;
+  return handVisualSlots;
+}
+
+export const GAME_START_OVERLAY_HOLD_MS = 2500;
+export const GAME_START_OVERLAY_FADE_MS = 220;
+
+function showGameStartOverlay(modeLabel: string, turnText: string) {
+  const existing = document.getElementById("gameStartOverlay");
+  existing?.remove();
+
+  if (gameStartOverlayTimer != null) {
+    window.clearTimeout(gameStartOverlayTimer);
+    gameStartOverlayTimer = null;
+  }
+
+  const overlay = document.createElement("div");
+  overlay.id = "gameStartOverlay";
+  overlay.style.position = "fixed";
+  overlay.style.inset = "0";
+  overlay.style.display = "grid";
+  overlay.style.placeItems = "center";
+  overlay.style.padding = "24px";
+  overlay.style.background = "rgba(7, 10, 18, 0.30)";
+  overlay.style.backdropFilter = "blur(2px)";
+  overlay.style.zIndex = "10020";
+  overlay.style.pointerEvents = "none";
+  overlay.style.opacity = "0";
+  overlay.style.transition = `opacity ${GAME_START_OVERLAY_FADE_MS}ms ease`;
+
+  const box = document.createElement("div");
+  box.style.minWidth = "min(92vw, 440px)";
+  box.style.maxWidth = "520px";
+  box.style.padding = "24px 20px";
+  box.style.borderRadius = "24px";
+  box.style.border = "1px solid rgba(255,255,255,0.18)";
+  box.style.background = "linear-gradient(180deg, rgba(18,24,38,0.94), rgba(10,14,24,0.90))";
+  box.style.boxShadow = "0 18px 60px rgba(0,0,0,0.45)";
+  box.style.textAlign = "center";
+  box.style.color = "#ffffff";
+  box.style.transform = "translateY(8px) scale(0.98)";
+  box.style.transition = `transform ${GAME_START_OVERLAY_FADE_MS}ms ease`;
+
+  const title = document.createElement("div");
+  title.textContent = "ゲーム開始";
+  title.style.fontSize = "clamp(30px, 7vw, 42px)";
+  title.style.fontWeight = "950";
+  title.style.letterSpacing = "0.08em";
+  title.style.lineHeight = "1.1";
+
+  const mode = document.createElement("div");
+  mode.textContent = modeLabel;
+  mode.style.marginTop = "10px";
+  mode.style.fontSize = "clamp(18px, 4.6vw, 24px)";
+  mode.style.fontWeight = "800";
+  mode.style.lineHeight = "1.25";
+
+  const turn = document.createElement("div");
+  turn.textContent = turnText;
+  turn.style.marginTop = "6px";
+  turn.style.fontSize = "clamp(18px, 4.6vw, 24px)";
+  turn.style.fontWeight = "800";
+  turn.style.lineHeight = "1.25";
+
+  box.appendChild(title);
+  box.appendChild(mode);
+  box.appendChild(turn);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    overlay.style.opacity = "0.75";
+    box.style.transform = "translateY(0) scale(1)";
+  });
+
+  gameStartOverlayTimer = window.setTimeout(() => {
+    overlay.style.opacity = "0";
+    box.style.transform = "translateY(6px) scale(0.98)";
+
+    window.setTimeout(() => {
+      if (overlay.parentElement) overlay.remove();
+    }, GAME_START_OVERLAY_FADE_MS);
+
+    gameStartOverlayTimer = null;
+  }, GAME_START_OVERLAY_HOLD_MS);
+}
 
 // 退出ログ（サーバ未対応でも表示できるよう、HUMAN→NPC を検知して補完）
 let extraSystemLogs: SystemLog[] = [];
@@ -97,6 +246,10 @@ function cardInnerHtml(card: Card, valueForJoker?: number) {
     <div class="center">${center}</div>
     <div class="corner br">${corner}</div>
   `;
+}
+
+function cardBackInnerHtml(baseUrl: string) {
+  return `<img src="${baseUrl}icons/back.png" alt="" draggable="false" style="width:100%;height:100%;display:block;object-fit:cover;border-radius:inherit;pointer-events:none;user-select:none;" />`;
 }
 
 // =====================
@@ -556,6 +709,11 @@ export function render(
       return chars.slice(0, 6).join("") + "…";
     };
 
+    if ((state as any).__showStartOverlay) {
+      (state as any).__showStartOverlay = false;
+      showGameStartOverlay(`${state.gameType}モード`, `${shortName(turnSeat.name)}のターンです`);
+    }
+
     const formatLeaveInfo = (msg: string) => {
       const suffix = "が退出しました。以降はNPCが操作します。";
       const idx = msg.indexOf(suffix);
@@ -569,6 +727,7 @@ export function render(
     const diffText = difficulty === "SMART" ? "SMART" : "CASUAL";
     const isPlaying = state.result.status === "PLAYING";
     const canOperate = isPlaying && state.turn === 0 && !uiLocked;
+    const shouldHideHandUntilTurnLimitStarts = Boolean((state as any).__hideHandUntilTurnLimitStarts);
 
     const last = state.history.length > 0 ? state.history[state.history.length - 1] : null;
     const lastName = last ? shortName(state.seats[last.seat].name) : "—";
@@ -810,11 +969,36 @@ export function render(
     }
 
     handDiv.innerHTML = "";
-    me.hand.forEach((card, idx) => {
+    const visualSlots = syncHandVisualSlots(me.hand, state.history.length === 0);
+    let actualHandIndex = 0;
+
+    visualSlots.forEach((slot) => {
+      if (slot.kind === "placeholder") {
+        const ph = document.createElement("div");
+        ph.className = "cardBtn";
+        ph.setAttribute("aria-hidden", "true");
+        ph.style.cursor = "default";
+        ph.style.pointerEvents = "none";
+        ph.style.boxShadow = "none";
+        ph.style.background = "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015))";
+        ph.style.border = "2px dashed rgba(255,255,255,0.28)";
+        ph.style.opacity = "0.82";
+        handDiv.appendChild(ph);
+        return;
+      }
+
+      const card = slot.card;
+      const idx = actualHandIndex;
+      actualHandIndex += 1;
+
       const b = document.createElement("button");
-      b.className = `cardBtn ${cardClass(card)} ${card.rank === "JOKER" ? "joker" : ""}`;
+      const isFaceDown = shouldHideHandUntilTurnLimitStarts;
+      b.className = isFaceDown ? "cardBtn" : `cardBtn ${cardClass(card)} ${card.rank === "JOKER" ? "joker" : ""}`;
       b.type = "button";
-      b.innerHTML = cardInnerHtml(card);
+      b.innerHTML = isFaceDown ? cardBackInnerHtml(baseUrl) : cardInnerHtml(card);
+      if (isFaceDown) {
+        b.setAttribute("aria-label", "裏向きカード");
+      }
 
       b.disabled = !canOperate;
 
@@ -824,15 +1008,19 @@ export function render(
       if (!isTouchUI) {
         b.onclick = () => handlers.onPlayHand(idx);
 
-        b.onmouseenter = (ev) => showTip(ev as unknown as MouseEvent, card, state.mode);
-        b.onmousemove = (ev) => moveTip(ev as unknown as MouseEvent);
-        b.onmouseleave = () => hideTip();
+        if (!isFaceDown) {
+          b.onmouseenter = (ev) => showTip(ev as unknown as MouseEvent, card, state.mode);
+          b.onmousemove = (ev) => moveTip(ev as unknown as MouseEvent);
+          b.onmouseleave = () => hideTip();
+        }
 
         handDiv.appendChild(b);
         return;
       }
 
       b.onclick = () => {
+        if (isFaceDown) return;
+
         if (selectedHandIndex !== idx || selectedHandCardId !== card.id) {
           selectedHandIndex = idx;
           selectedHandCardId = card.id;
@@ -901,8 +1089,6 @@ export function render(
     document.getElementById("logModalOverlay")?.remove();
 
     // スマホ時のみボタン生成
-    let logVisible: boolean = !small; // PCは常にtrue
-
     logDiv.style.display = "block";
     const pcHeader = document.createElement("div");
     pcHeader.id = "pcLogHeader";
@@ -911,8 +1097,6 @@ export function render(
         `;
 
     if (small) {
-      logVisible = false;
-
       // モーダル生成
       const overlay: HTMLDivElement = document.createElement("div");
       overlay.id = "logModalOverlay";
@@ -1018,6 +1202,12 @@ export function render(
     }
 
     const entries: Entry[] = [];
+
+    const sysAtZero = sysByAfter.get(0);
+    if (sysAtZero) {
+      for (const s of sysAtZero) entries.push({ type: "SYSTEM", playNo: 0, s });
+    }
+
     for (let i = 0; i < state.history.length; i++) {
       const playNo = i + 1;
       entries.push({ type: "PLAY", playNo, p: state.history[i] });

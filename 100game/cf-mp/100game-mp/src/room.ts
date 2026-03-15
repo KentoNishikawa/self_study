@@ -428,10 +428,30 @@ export class RoomDO {
             server.addEventListener("close", async () => {
                 this.sessions.delete(server);
                 const seatIndex = this.seatByWs.get(server);
+                this.seatByWs.delete(server);
 
                 const cur = await this.ctx.storage.get<RoomState>("state");
                 if (!cur) return;
                 if (cur.disbanded) return;
+
+                if (seatIndex === 0) {
+                    cur.disbanded = true;
+                    await this.ctx.storage.put("state", cur);
+
+                    const payload = JSON.stringify({ type: "ROOM_DISBANDED" });
+                    for (const ws of this.sessions) {
+                        try {
+                            ws.send(payload);
+                        } catch { }
+                    }
+                    for (const ws of this.sessions) {
+                        try {
+                            ws.close(1000, "disband");
+                        } catch { }
+                    }
+                    this.sessions.clear();
+                    return;
+                }
 
                 if (typeof seatIndex === "number" && seatIndex >= 1 && seatIndex <= 3) {
                     const leaverName = cur.seats[seatIndex].name;

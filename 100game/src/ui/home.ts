@@ -63,7 +63,7 @@ type IconPreset = { id: string; label: string; emoji?: string; src?: string };
 
 const ICON_PRESETS: IconPreset[] = [
   { id: "host_default", src: HOST_DEFAULT_SRC, emoji: "👑", label: "HOST" },
-  { id: "player_default",src: PLAYER_DEFAULT,  emoji: "🙂", label: "PLAYER" },
+  { id: "player_default", src: PLAYER_DEFAULT, emoji: "🙂", label: "PLAYER" },
   { id: "npc_default", emoji: "🤖", label: "NPC" },
   { id: "icon_01", emoji: "😀", label: "A" },
   { id: "icon_02", emoji: "😺", label: "B" },
@@ -138,6 +138,57 @@ export function renderHome(
     redirectToHome();
   };
 
+  const showNoticeModal = (title: string, message: string) => {
+    mpNoticeTitle.textContent = title;
+    mpNoticeTitle.style.display = title ? "block" : "none";
+    mpNoticeText.textContent = message;
+    mpNotice.style.display = "flex";
+  };
+
+  const resetLobbyConnectionState = () => {
+    pendingRedirect = false;
+    reorderMode = false;
+    draftOrder = [];
+    lobby = null;
+    mySeatIndex = null;
+
+    if (roomId) {
+      try {
+        sessionStorage.removeItem(`hostToken:${roomId}`);
+      } catch { }
+    }
+    roomId = null;
+
+    if (ws) {
+      try {
+        ws.onmessage = null;
+        ws.onclose = null;
+      } catch { }
+      try {
+        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+          ws.close();
+        }
+      } catch { }
+    }
+    ws = null;
+
+    inviteUrlEl.value = "";
+    renderParticipants(null);
+    applyRole();
+    setStatus("disconnected");
+
+    try {
+      const next = new URL(location.href);
+      next.searchParams.delete("room");
+      history.replaceState(null, "", next.toString());
+    } catch { }
+  };
+
+  const handleHostDisbandedAtHome = () => {
+    resetLobbyConnectionState();
+    showNoticeModal("", "HOSTが部屋を解散したため、マルチプレイを終了します。");
+  };
+
   const leaveOrDisbandAndRedirect = () => {
     if (!ws || ws.readyState !== WebSocket.OPEN || mySeatIndex == null) {
       redirectToHome();
@@ -149,10 +200,9 @@ export function renderHome(
     ws.send(JSON.stringify({ type: mySeatIndex === 0 ? "HOST_DISBAND" : "LEAVE" }));
 
     setTimeout(() => {
-      try {
-        ws?.close();
-      } catch { }
-    }, 50);
+      if (!pendingRedirect) return;
+      redirectToHome();
+    }, 3000);
   };
 
   const targetLabel = config.gameType === "EXTRA" ? "???" : String(config.gameType);
@@ -167,7 +217,7 @@ export function renderHome(
     <div id="mpNotice" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.60);align-items:center;justify-content:center;">
       <div style="width:calc(100% - 40px);max-width:520px;border:1px solid rgba(255,255,255,0.18);
                   background:rgba(12,12,12,0.96);border-radius:16px;padding:16px;color:rgba(255,255,255,0.92);">
-        <div style="font-weight:950;margin-bottom:8px;">入室できませんでした</div>
+        <div id="mpNoticeTitle" style="font-weight:950;margin-bottom:8px;">入室できませんでした</div>
         <div id="mpNoticeText" style="font-weight:800;line-height:1.7;"></div>
         <button id="mpNoticeOk" class="btn" type="button" style="width:100%;margin-top:12px;">OK</button>
       </div>
@@ -298,11 +348,18 @@ export function renderHome(
 
   // --- notice modal ---
   const mpNotice = app.querySelector<HTMLDivElement>("#mpNotice")!;
+  const mpNoticeTitle = app.querySelector<HTMLDivElement>("#mpNoticeTitle")!;
   const mpNoticeText = app.querySelector<HTMLDivElement>("#mpNoticeText")!;
   const mpNoticeOk = app.querySelector<HTMLButtonElement>("#mpNoticeOk")!;
   const notice = sessionStorage.getItem("mp_notice");
+  const noticeTitle = sessionStorage.getItem("mp_notice_title");
   if (notice) {
     sessionStorage.removeItem("mp_notice");
+    sessionStorage.removeItem("mp_notice_title");
+
+    const hideTitle = (!noticeTitle && notice.includes("HOSTが部屋を解散したため")) || noticeTitle === "";
+    mpNoticeTitle.textContent = hideTitle ? "" : (noticeTitle || "入室できませんでした");
+    mpNoticeTitle.style.display = hideTitle ? "none" : "block";
     mpNoticeText.textContent = notice;
     // 描画後に表示（環境差で見えないのを避ける）
     setTimeout(() => {
@@ -408,7 +465,7 @@ export function renderHome(
           <div data-seat-index="${seatIndex}" style="display:flex;align-items:center;gap:10px;padding:10px;border:${border};border-radius:12px;background:${bg};cursor:${cursor};">
             <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
                         background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:16px;">
-              ${iconHtml(seat.iconId, 18)}
+              ${iconHtml(seat.iconId, 35)}
             </div>
             <div style="flex:1;font-weight:850;display:flex;align-items:center;gap:6px;">
               <span>${escapeHtml(shortName(seat.name))}</span>
@@ -563,7 +620,7 @@ export function renderHome(
       }
 
       if (raw && raw.type === "ROOM_DISBANDED") {
-        redirectToHome();
+        handleHostDisbandedAtHome();
         return;
       }
 
@@ -634,7 +691,12 @@ export function renderHome(
       }
     };
 
-    ws.onclose = () => {
+    ws.onclose = (ev) => {
+      if (ev.reason === "disband" && !pendingRedirect) {
+        handleHostDisbandedAtHome();
+        return;
+      }
+
       lobby = null;
       mySeatIndex = null;
       reorderMode = false;
@@ -654,13 +716,32 @@ export function renderHome(
   async function preflightAndJoin(rid: string) {
     try {
       const res = await fetch(`${apiBase}/api/rooms/${rid}/state`, { method: "GET" });
-      if (!res.ok) {
-        showJoinFailAndReturnHome("roomが見つからないため入室できませんでした。ホーム画面に戻ります");
+      const hasHostToken = !!sessionStorage.getItem(`hostToken:${rid}`);
+
+      if (res.status === 410) {
+        if (hasHostToken) {
+          showJoinFailAndReturnHome("マルチプレイを終了しました。ホーム画面へ戻ります。");
+        } else {
+          showJoinFailAndReturnHome("HOSTが部屋を解散しました。ホーム画面に戻ります。");
+        }
         return;
       }
 
-      if (res.status === 410) {
-        showJoinFailAndReturnHome("HOSTが部屋を解散しました。ホーム画面に戻ります。");
+      if (res.status === 404) {
+        if (hasHostToken) {
+          showJoinFailAndReturnHome("マルチプレイを終了しました。ホーム画面へ戻ります。");
+        } else {
+          showJoinFailAndReturnHome("roomが見つからないため入室できませんでした。ホーム画面に戻ります");
+        }
+        return;
+      }
+
+      if (!res.ok) {
+        if (hasHostToken) {
+          showJoinFailAndReturnHome("マルチプレイが終了しました。ホーム画面へ戻ります。");
+        } else {
+          showJoinFailAndReturnHome("入室できませんでした。ホーム画面に戻ります");
+        }
         return;
       }
 

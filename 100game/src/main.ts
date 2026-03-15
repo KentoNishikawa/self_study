@@ -5,7 +5,7 @@ import { createInitialState } from "./core/game";
 import { reducer } from "./core/reducer";
 import { chooseNpcAction } from "./ai/npc";
 import { renderHome, type HomeConfig } from "./ui/home";
-import { render } from "./ui/render";
+import { GAME_START_OVERLAY_FADE_MS, GAME_START_OVERLAY_HOLD_MS, render } from "./ui/render";
 import { pickJokerValue } from "./ui/jokerPicker";
 
 type Screen = "HOME" | "GAME";
@@ -24,6 +24,35 @@ let mp: MpSession | null = null;
 
 let mpAnimToken = 0;
 let mpLastSeq = 0;
+let mpPendingHostDisbandNotice = false;
+
+const HOST_DISBANDED_NOTICE = {
+  message: "HOSTが部屋を解散したため、ホーム画面に戻りました。",
+} as const;
+
+const HOST_REDIRECT_NOTICE = {
+  title: "",
+  message: "マルチプレイを終了しました。ホーム画面へ戻ります。",
+} as const;
+
+function leaveMpAfterRoomDisband(session?: MpSession | null) {
+  if (session?.isHost) {
+    leaveMpToHome(session);
+    return;
+  }
+  leaveMpToHome(session, HOST_DISBANDED_NOTICE);
+}
+
+function stashNoticeForNextHomeRender(notice: { title?: string; message: string }) {
+  if (!notice?.message) return;
+  try {
+    sessionStorage.setItem("mp_notice", notice.message);
+    if (notice.title !== undefined) sessionStorage.setItem("mp_notice_title", notice.title);
+    else sessionStorage.removeItem("mp_notice_title");
+  } catch { }
+}
+
+const MP_API_BASE = String((import.meta as any).env?.VITE_MP_API_BASE || "http://127.0.0.1:8787");
 
 // ソロ時にホームで選んだアイコンを引き継ぐ
 let soloIconId = "player_default";
@@ -80,10 +109,48 @@ function rotateToMe(server: GameState, seatIndex: number): GameState {
   return { ...server, seats, turn: mapIndex(server.turn), history, result };
 }
 
-function redirectToHomeUrl() {
-  const next = location.origin + location.pathname + (location.hash ?? "");
-  location.replace(next);
+function leaveMpToHome(session?: MpSession | null, notice?: { title?: string; message: string } | null) {
+  npcRunToken++;
+  mpAnimToken++;
+  mpLastSeq = 0;
+  uiLocked = false;
+  stopTurnLimit();
+  mpPendingHostDisbandNotice = false;
+  stopMpDisbandWatch();
+
+  if (notice?.message) {
+    stashNoticeForNextHomeRender(notice);
+  }
+
+  const active = session ?? mp;
+  if (active) {
+    try {
+      active.ws.onmessage = null;
+      active.ws.onclose = null;
+    } catch { }
+    try {
+      if (active.ws.readyState === WebSocket.OPEN || active.ws.readyState === WebSocket.CONNECTING) {
+        active.ws.close();
+      }
+    } catch { }
+  }
+
+  mp = null;
+  screen = "HOME";
+  state = null;
+  draw();
+
+  try {
+    const next = location.pathname + (location.hash ?? "");
+    history.replaceState(null, "", next);
+  } catch { }
 }
+
+window.addEventListener("pagehide", () => {
+  if (screen !== "GAME") return;
+  if (!mp?.isHost) return;
+  stashNoticeForNextHomeRender(HOST_REDIRECT_NOTICE);
+});
 
 const appEl = document.querySelector<HTMLDivElement>("#app");
 if (!appEl) throw new Error("#app not found");
@@ -122,6 +189,10 @@ function playMpFrames(session: MpSession, frames: GameState[], intervalMs: numbe
     }
 
     if (token !== mpAnimToken) return;
+    if (state && state.history.length === 0 && gameStartUnlockTimerId != null) {
+      draw();
+      return;
+    }
     uiLocked = false;
     draw();
   })();
@@ -137,10 +208,7 @@ function attachMpWs(session: MpSession) {
     }
 
     if (raw?.type === "ROOM_DISBANDED") {
-      mpAnimToken++;
-      mpLastSeq = 0;
-      mp = null;
-      redirectToHomeUrl();
+      leaveMpAfterRoomDisband(session);
       return;
     }
 
@@ -156,19 +224,32 @@ function attachMpWs(session: MpSession) {
     if (raw?.type === "GAME_STATE" && raw.state) {
       mpAnimToken++;
       state = rotateToMe(raw.state as GameState, session.seatIndex);
+      if (state.history.length === 0) {
+        beginGameStartOverlayPhase(false);
+      }
       (state as any).__mpSeatOffset = session.seatIndex;
       (state as any).__mpIsHost = session.isHost;
+      if (state.history.length === 0 && gameStartUnlockTimerId != null) {
+        draw();
+        return;
+      }
       uiLocked = false;
       draw();
       return;
     }
   };
 
-  session.ws.onclose = () => {
-    mpAnimToken++;
-    mpLastSeq = 0;
-    mp = null;
-    redirectToHomeUrl();
+  session.ws.onclose = (ev) => {
+    if (ev.reason === "disband" && !session.isHost) {
+      leaveMpAfterRoomDisband(session);
+      return;
+    }
+    if (mpPendingHostDisbandNotice) {
+      mpPendingHostDisbandNotice = false;
+      leaveMpAfterRoomDisband(session);
+      return;
+    }
+    leaveMpToHome(session);
   };
 }
 
@@ -188,6 +269,12 @@ let turnLimitKey = "";
 let turnDeadlineMs = 0;
 let turnTimeoutId: number | null = null;
 let turnTickId: number | null = null;
+let turnLimitDelayUntilMs = 0;
+let gameStartUnlockTimerId: number | null = null;
+let mpDisbandWatchIntervalId: number | null = null;
+let mpDisbandWatchToken = 0;
+
+const GAME_START_TURN_LIMIT_DELAY_MS = GAME_START_OVERLAY_HOLD_MS + GAME_START_OVERLAY_FADE_MS;
 
 function nowTurnKey(s: GameState) {
   return `${s.turn}|${s.history.length}`;
@@ -197,6 +284,97 @@ function limitColor(rem: number): string {
   if (rem >= 31) return "#22c55e";
   if (rem >= 11) return "#f59e0b";
   return "#ff4d6d";
+}
+
+function stopMpDisbandWatch() {
+  mpDisbandWatchToken++;
+  if (mpDisbandWatchIntervalId != null) {
+    window.clearInterval(mpDisbandWatchIntervalId);
+    mpDisbandWatchIntervalId = null;
+  }
+}
+
+function startMpDisbandWatch(session: MpSession) {
+  stopMpDisbandWatch();
+
+  const token = ++mpDisbandWatchToken;
+  let checking = false;
+
+  const check = async () => {
+    if (checking) return;
+    if (mp !== session) return;
+    checking = true;
+    try {
+      const res = await fetch(`${MP_API_BASE}/api/rooms/${session.roomId}/state`, {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (token !== mpDisbandWatchToken || mp !== session) return;
+
+      if (res.status === 410 || res.status === 404) {
+        leaveMpAfterRoomDisband(session);
+      }
+    } catch {
+      // WS側でも検知するので、監視の通信失敗だけでは何もしない
+    } finally {
+      checking = false;
+    }
+  };
+
+  mpDisbandWatchIntervalId = window.setInterval(() => {
+    void check();
+  }, 1000);
+  void check();
+}
+
+function clearGameStartOverlayPhase() {
+  if (gameStartUnlockTimerId != null) {
+    window.clearTimeout(gameStartUnlockTimerId);
+    gameStartUnlockTimerId = null;
+  }
+  document.getElementById("gameStartOverlay")?.remove();
+}
+
+function holdTurnLimitUntilOverlayEnds() {
+  turnLimitDelayUntilMs = Date.now() + GAME_START_TURN_LIMIT_DELAY_MS;
+}
+
+function beginGameStartOverlayPhase(runNpcAfterUnlock = false) {
+  clearGameStartOverlayPhase();
+
+  if (!state || screen !== "GAME" || state.result.status !== "PLAYING") return;
+
+  uiLocked = true;
+  (state as any).__showStartOverlay = true;
+  holdTurnLimitUntilOverlayEnds();
+
+  const capturedKey = nowTurnKey(state);
+  gameStartUnlockTimerId = window.setTimeout(() => {
+    gameStartUnlockTimerId = null;
+
+    if (!state || screen !== "GAME" || state.result.status !== "PLAYING") return;
+    if (nowTurnKey(state) !== capturedKey) return;
+
+    uiLocked = false;
+    draw();
+
+    if (runNpcAfterUnlock && state && state.result.status === "PLAYING" && state.turn !== 0) {
+      void runNpcTurnsAnimated();
+    }
+  }, GAME_START_TURN_LIMIT_DELAY_MS);
+}
+
+function showPendingTurnLimitDom() {
+  const fill = document.querySelector<HTMLDivElement>("#limitFill");
+  const secEl = document.querySelector<HTMLDivElement>("#limitSec");
+  if (!fill || !secEl) return;
+
+  fill.style.width = "100%";
+  fill.style.background = limitColor(TURN_LIMIT_SEC);
+  secEl.textContent = `${TURN_LIMIT_SEC}s`;
+  secEl.style.color = limitColor(TURN_LIMIT_SEC);
+  secEl.style.fontSize = "13px";
 }
 
 function updateLimitDom() {
@@ -231,6 +409,8 @@ function updateLimitDom() {
 }
 
 function stopTurnLimit() {
+  clearGameStartOverlayPhase();
+
   if (turnTimeoutId != null) {
     window.clearTimeout(turnTimeoutId);
     turnTimeoutId = null;
@@ -241,6 +421,7 @@ function stopTurnLimit() {
   }
   turnLimitKey = "";
   turnDeadlineMs = 0;
+  turnLimitDelayUntilMs = 0;
   updateLimitDom();
 }
 
@@ -250,6 +431,23 @@ function ensureTurnLimit() {
     stopTurnLimit();
     return;
   }
+
+  if (turnLimitDelayUntilMs > Date.now()) {
+    if (turnTimeoutId != null) {
+      window.clearTimeout(turnTimeoutId);
+      turnTimeoutId = null;
+    }
+    if (turnTickId != null) {
+      window.clearInterval(turnTickId);
+      turnTickId = null;
+    }
+    turnLimitKey = "";
+    turnDeadlineMs = 0;
+    showPendingTurnLimitDom();
+    return;
+  }
+
+  turnLimitDelayUntilMs = 0;
 
   const key = nowTurnKey(state);
   if (key !== turnLimitKey) {
@@ -317,6 +515,7 @@ function startGame(cfg: HomeConfig) {
   mpAnimToken++;
   mpLastSeq = 0;
   mp = null;
+  stopMpDisbandWatch();
 
   npcRunToken++;
   uiLocked = false;
@@ -329,9 +528,8 @@ function startGame(cfg: HomeConfig) {
   soloIconId = getSelectedHomeIconId();
   state = createInitialState(name, cfg.gameType, soloIconId);
   screen = "GAME";
+  beginGameStartOverlayPhase(true);
   draw();
-
-  void runNpcTurnsAnimated();
 }
 
 function goHome() {
@@ -341,6 +539,7 @@ function goHome() {
 
   screen = "HOME";
   state = null;
+  stopMpDisbandWatch();
   draw();
 }
 
@@ -350,10 +549,10 @@ function restartGame() {
   stopTurnLimit();
 
   const name = (homeConfig.playerName || "").trim() || "プレイヤー";
+  stopMpDisbandWatch();
   state = createInitialState(name, homeConfig.gameType, soloIconId);
+  beginGameStartOverlayPhase(true);
   draw();
-
-  void runNpcTurnsAnimated();
 }
 
 async function stepHumanPlayHandAsync(handIndex: number) {
@@ -546,6 +745,7 @@ function draw() {
         mpAnimToken++;
         mpLastSeq = 0;
 
+        mpPendingHostDisbandNotice = false;
         mp = {
           roomId: p.roomId,
           seatIndex: p.seatIndex,
@@ -561,6 +761,10 @@ function draw() {
 
         screen = "GAME";
 
+        if (state.history.length === 0) {
+          beginGameStartOverlayPhase(false);
+        }
+
         // MPゲーム画面中にリロード/リダイレクトしても "?room=" でJOINし直さないよう、URLからsearchを除去
         try {
           const next = location.pathname + (location.hash ?? "");
@@ -568,6 +772,7 @@ function draw() {
         } catch { }
 
         attachMpWs(mp);
+        startMpDisbandWatch(mp);
         draw();
       },
     });
@@ -580,6 +785,7 @@ function draw() {
   // ★マルチ時：プレイヤー状況を HOST→P1→P2→P3 固定表示にするための情報を毎回付与
   if (mp && state) (state as any).__mpSeatOffset = Number(mp.seatIndex);
   if (mp && state) (state as any).__mpIsHost = mp.isHost; // （Restart制御とかに使ってるなら）
+  if (state) (state as any).__hideHandUntilTurnLimitStarts = turnLimitDelayUntilMs > Date.now();
 
   render(app, state, difficulty, uiLocked, {
     onPlayHand: (handIndex) => {
@@ -608,15 +814,31 @@ function draw() {
         return;
       }
 
+      const currentMp = mp;
+      if (currentMp.isHost) {
+        mpPendingHostDisbandNotice = true;
+        uiLocked = true;
+        draw();
+        try {
+          currentMp.ws.send(JSON.stringify({ type: "HOST_DISBAND" }));
+        } catch {
+          mpPendingHostDisbandNotice = false;
+          leaveMpToHome(currentMp);
+          return;
+        }
+
+        window.setTimeout(() => {
+          if (mp !== currentMp || !mpPendingHostDisbandNotice) return;
+          leaveMpToHome(currentMp);
+        }, 3000);
+        return;
+      }
+
       try {
-        mp.ws.send(JSON.stringify({ type: mp.isHost ? "HOST_DISBAND" : "LEAVE" }));
-      } catch { }
-      try {
-        mp.ws.close();
+        currentMp.ws.send(JSON.stringify({ type: "LEAVE" }));
       } catch { }
 
-      mp = null;
-      redirectToHomeUrl();
+      leaveMpToHome(currentMp);
     },
   });
 
