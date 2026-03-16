@@ -5,7 +5,7 @@ import { createInitialState } from "./core/game";
 import { reducer } from "./core/reducer";
 import { chooseNpcAction } from "./ai/npc";
 import { renderHome, type HomeConfig } from "./ui/home";
-import { GAME_START_OVERLAY_FADE_MS, GAME_START_OVERLAY_HOLD_MS, render } from "./ui/render";
+import { GAME_START_OVERLAY_FADE_MS, GAME_START_OVERLAY_HOLD_MS, render, resetRenderTransientState } from "./ui/render";
 import { pickJokerValue } from "./ui/jokerPicker";
 
 type Screen = "HOME" | "GAME";
@@ -136,6 +136,7 @@ function leaveMpToHome(session?: MpSession | null, notice?: { title?: string; me
   }
 
   mp = null;
+  resetRenderTransientState();
   screen = "HOME";
   state = null;
   draw();
@@ -354,7 +355,10 @@ function beginGameStartOverlayPhase(runNpcAfterUnlock = false) {
     gameStartUnlockTimerId = null;
 
     if (!state || screen !== "GAME" || state.result.status !== "PLAYING") return;
-    if (nowTurnKey(state) !== capturedKey) return;
+    if (nowTurnKey(state) !== capturedKey) {
+      draw();
+      return;
+    }
 
     uiLocked = false;
     draw();
@@ -754,6 +758,8 @@ function draw() {
           ws: p.ws,
         };
         difficulty = p.npcDifficulty;
+
+        resetRenderTransientState();
 
         state = rotateToMe(initial, p.seatIndex);
         (state as any).__mpSeatOffset = p.seatIndex;

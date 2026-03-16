@@ -158,6 +158,25 @@ let extraSystemLogId = 1_000_000;
 let prevSeatSnap: Array<{ kind: GameState["seats"][number]["kind"]; name: string }> | null = null;
 let leftLogged: boolean[] = [false, false, false, false];
 
+export function resetRenderTransientState() {
+  prevHistoryLen = -1;
+
+  if (gameStartOverlayTimer != null) {
+    window.clearTimeout(gameStartOverlayTimer);
+    gameStartOverlayTimer = null;
+  }
+
+  extraSystemLogs = [];
+  extraSystemLogId = 1_000_000;
+  prevSeatSnap = null;
+  leftLogged = [false, false, false, false];
+
+  handVisualSlots = [];
+  handPlaceholderSeq = 0;
+
+  document.getElementById("gameStartOverlay")?.remove();
+}
+
 // アイコンID→絵文字（ホーム画面と同じプリセット）
 const ICON_EMOJI_MAP: Record<string, string> = {
   host_default: "👑",

@@ -104,6 +104,11 @@ html {
   min-width: 140px;
 }
 
+.kpi .label {
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
 /* 数字は等幅風 */
 .kpi .value {
   font-size: 28px;
