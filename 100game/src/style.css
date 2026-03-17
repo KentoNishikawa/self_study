@@ -183,6 +183,24 @@ html {
   cursor: not-allowed;
 }
 
+
+.handPanelTitle {
+  font-weight: 950;
+  margin-bottom: 10px;
+}
+
+.handPanel.isMyTurn {
+  border-color: rgba(34, 197, 94, 0.72);
+  box-shadow:
+    0 0 0 1px rgba(34, 197, 94, 0.28),
+    0 0 18px rgba(34, 197, 94, 0.18),
+    0 10px 26px rgba(0, 0, 0, 0.35);
+}
+
+.handPanel.isMyTurn .handPanelTitle {
+  color: #86efac;
+}
+
 /* ---------- Players ---------- */
 .playerList {
   display: grid;
@@ -378,6 +396,11 @@ html {
 /* ---------- Played card meta ---------- */
 .playMeta .title {
   font-weight: 900;
+}
+
+.latestCardTitle span,
+.emptyFieldText span {
+  display: inline;
 }
 
 .playMeta .sub {
@@ -931,6 +954,22 @@ html {
     font-size: 12px;
   }
 
+  .latestCardTitle {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.15;
+  }
+
+  .emptyFieldText {
+    font-size: 20px;
+    line-height: 1.15;
+  }
+
+  .emptyFieldText span {
+    display: block;
+  }
+
   .playMeta .sub {
     font-size: 11px;
     line-height: 1.25;
@@ -965,5 +1004,22 @@ html {
   #homeBtn {
     padding: 8px 10px;
     font-size: 12px;
+  }
+
+  .handPanelTitle {
+    font-weight: 950;
+    margin-bottom: 10px;
+  }
+
+  .handPanel.isMyTurn {
+    border-color: rgba(34, 197, 94, 0.72);
+    box-shadow:
+      0 0 0 1px rgba(34, 197, 94, 0.28),
+      0 0 18px rgba(34, 197, 94, 0.18),
+      0 10px 26px rgba(0, 0, 0, 0.35);
+  }
+
+  .handPanel.isMyTurn .handPanelTitle {
+    color: #86efac;
   }
 }

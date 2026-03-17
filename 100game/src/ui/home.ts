@@ -1,5 +1,6 @@
 // src/ui/home.ts
 import type { Difficulty, GameType, GameState } from "../core/types";
+import { DEFAULT_PLAYER_ICON_ID, PLAYER_ICON_PRESETS, iconContentHtml, resolveIconId } from "../icons/iconPresets";
 
 export type HomeConfig = {
   playerName: string;
@@ -55,32 +56,6 @@ function toWsBase(httpBase: string) {
   return httpBase.replace(/^http/i, "ws");
 }
 
-// アイコンプリセット（絵文字 or 画像）
-const HOST_DEFAULT_SRC = new URL("../icons/01.男の子.png", import.meta.url).href;
-const PLAYER_DEFAULT = new URL("../icons/02.女の子.png", import.meta.url).href;
-
-type IconPreset = { id: string; label: string; emoji?: string; src?: string };
-
-const ICON_PRESETS: IconPreset[] = [
-  { id: "host_default", src: HOST_DEFAULT_SRC, emoji: "👑", label: "HOST" },
-  { id: "player_default", src: PLAYER_DEFAULT, emoji: "🙂", label: "PLAYER" },
-  { id: "npc_default", emoji: "🤖", label: "NPC" },
-  { id: "icon_01", emoji: "😀", label: "A" },
-  { id: "icon_02", emoji: "😺", label: "B" },
-  { id: "icon_03", emoji: "🐉", label: "C" },
-];
-
-const ICON_BY_ID = new Map(ICON_PRESETS.map((p) => [p.id, p] as const));
-
-function iconHtml(iconId: string, sizePx: number) {
-  const p = ICON_BY_ID.get(iconId) ?? ICON_BY_ID.get("player_default")!;
-  if (p.src) {
-    return `<img src="${escapeHtml(p.src)}" alt="${escapeHtml(p.label)}"
-      style="width:${sizePx}px;height:${sizePx}px;object-fit:contain;display:block;" />`;
-  }
-  return escapeHtml(p.emoji ?? "🙂");
-}
-
 function seatLabel(i: number) {
   if (i === 0) return "HOST";
   return `P${i}`;
@@ -117,9 +92,9 @@ export function renderHome(
 
   let pendingRedirect = false;
   const ICON_STORAGE_KEY = "100game.iconId";
-  let localIconId = "player_default";
+  let localIconId = DEFAULT_PLAYER_ICON_ID;
   try {
-    localIconId = localStorage.getItem(ICON_STORAGE_KEY) ?? "player_default";
+    localIconId = resolveIconId(localStorage.getItem(ICON_STORAGE_KEY) ?? DEFAULT_PLAYER_ICON_ID);
   } catch { }
 
 
@@ -231,11 +206,11 @@ export function renderHome(
           <span style="color:rgba(255,255,255,0.75);font-weight:800;">プレイヤー</span>
 
           <div id="profileRow" style="display:flex;gap:10px;align-items:center;position:relative;">
-            <button id="iconBtn" type="button"
+            <button id="iconBtn" type="button" data-icon-id="${escapeHtml(localIconId)}"
               style="width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);
                      background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;
                      font-size:18px;cursor:pointer;">
-              ${iconHtml(localIconId, 44)}
+              ${iconContentHtml(localIconId, 50)}
             </button>
 
             <div id="iconPicker"
@@ -243,12 +218,12 @@ export function renderHome(
                      padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.16);
                      background:rgba(10,10,10,0.98);box-shadow:0 8px 30px rgba(0,0,0,0.45);">
               <div style="display:grid;grid-template-columns:repeat(6, 44px);gap:8px;">
-                ${ICON_PRESETS.map((p) => `
+                ${PLAYER_ICON_PRESETS.map((p) => `
                   <button type="button" class="iconOpt" data-icon="${escapeHtml(p.id)}"
                     title="${escapeHtml(p.label)}"
                     style="width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,0.16);
                            background:rgba(255,255,255,0.06);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">
-                    ${iconHtml(p.id, 44)}
+                    ${iconContentHtml(p.id, 44)}
                   </button>
                 `).join("")}
               </div>
@@ -287,8 +262,8 @@ export function renderHome(
             <div>・J/Q/Kは10、Aは1</div>
             <div>・ジョーカーは1〜49（宣言）</div>
             <div>・ジョーカー直後に♠3でジョーカーを0化、♠3も0</div>
-            <div>・Jは出した後、負けてなければ加算/減算を反転</div>
-            <div>・<b>ゲームタイプ100以外</b> の場合、山札が尽きた瞬間に全員の手札が4枚になるように「再配布」</div>
+            <div>・Jは +10 → 負けてなければ加算/減算を反転</div>
+            <div>・<b>ゲームタイプ：100以外</b> の場合、山札が尽きた瞬間に「再配布」</div>
             <div>・再配布できるカードが無い場合は無効試合</div>
           </div>
         </details>
@@ -376,6 +351,7 @@ export function renderHome(
   // --- elements ---
   const profileRow = app.querySelector<HTMLDivElement>("#profileRow")!;
   const iconBtn = app.querySelector<HTMLButtonElement>("#iconBtn")!;
+  iconBtn.dataset.iconId = localIconId;
   const iconPicker = app.querySelector<HTMLDivElement>("#iconPicker")!;
   const iconOptButtons = Array.from(app.querySelectorAll<HTMLButtonElement>(".iconOpt"));
 
@@ -465,7 +441,7 @@ export function renderHome(
           <div data-seat-index="${seatIndex}" style="display:flex;align-items:center;gap:10px;padding:10px;border:${border};border-radius:12px;background:${bg};cursor:${cursor};">
             <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
                         background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:16px;">
-              ${iconHtml(seat.iconId, 35)}
+              ${iconContentHtml(seat.iconId, 45)}
             </div>
             <div style="flex:1;font-weight:850;display:flex;align-items:center;gap:6px;">
               <span>${escapeHtml(shortName(seat.name))}</span>
@@ -580,13 +556,14 @@ export function renderHome(
   iconOptButtons.forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const iconId = btn.dataset.icon || "player_default";
+      const iconId = resolveIconId(btn.dataset.icon || DEFAULT_PLAYER_ICON_ID);
 
       localIconId = iconId;
       try {
         localStorage.setItem(ICON_STORAGE_KEY, iconId);
       } catch { }
-      iconBtn.innerHTML = iconHtml(iconId, 44);
+      iconBtn.dataset.iconId = iconId;
+      iconBtn.innerHTML = iconContentHtml(iconId, 44);
       closePicker();
 
       if (ws && ws.readyState === WebSocket.OPEN && mySeatIndex != null) {
@@ -654,8 +631,9 @@ export function renderHome(
 
         const me = lobby.seats[mySeatIndex];
         if (me) {
-          localIconId = me.iconId;
-          iconBtn.innerHTML = iconHtml(me.iconId, 44);
+          localIconId = resolveIconId(me.iconId);
+          iconBtn.dataset.iconId = localIconId;
+          iconBtn.innerHTML = iconContentHtml(localIconId, 44);
           if (document.activeElement !== nameEl) nameEl.value = me.name;
         }
 
@@ -679,7 +657,7 @@ export function renderHome(
           const me = lobby.seats[mySeatIndex];
           if (me) {
             localIconId = me.iconId;
-            iconBtn.innerHTML = iconHtml(me.iconId, 44);
+            iconBtn.innerHTML = iconContentHtml(me.iconId, 44);
             if (document.activeElement !== nameEl) nameEl.value = me.name;
           }
         }

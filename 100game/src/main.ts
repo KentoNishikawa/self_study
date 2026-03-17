@@ -194,6 +194,17 @@ function playMpFrames(session: MpSession, frames: GameState[], intervalMs: numbe
       draw();
       return;
     }
+
+    const shouldDelayUnlockForSingleHumanFrame =
+      frames.length === 1 &&
+      Array.isArray(frames[0]?.history) &&
+      frames[0].history.length > 0;
+
+    if (shouldDelayUnlockForSingleHumanFrame) {
+      await sleep(250);
+      if (token !== mpAnimToken) return;
+    }
+
     uiLocked = false;
     draw();
   })();
@@ -355,10 +366,7 @@ function beginGameStartOverlayPhase(runNpcAfterUnlock = false) {
     gameStartUnlockTimerId = null;
 
     if (!state || screen !== "GAME" || state.result.status !== "PLAYING") return;
-    if (nowTurnKey(state) !== capturedKey) {
-      draw();
-      return;
-    }
+    if (nowTurnKey(state) !== capturedKey) return;
 
     uiLocked = false;
     draw();

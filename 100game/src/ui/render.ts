@@ -1,5 +1,6 @@
 // src/ui/render.ts
 import type { Card, Difficulty, GameState, SystemLog } from "../core/types";
+import { iconContentHtml } from "../icons/iconPresets";
 
 let prevHistoryLen = -1;
 let gameStartOverlayTimer: number | null = null;
@@ -175,21 +176,6 @@ export function resetRenderTransientState() {
   handPlaceholderSeq = 0;
 
   document.getElementById("gameStartOverlay")?.remove();
-}
-
-// アイコンID→絵文字（ホーム画面と同じプリセット）
-const ICON_EMOJI_MAP: Record<string, string> = {
-  host_default: "👑",
-  player_default: "🙂",
-  npc_default: "🤖",
-  icon_01: "😀",
-  icon_02: "😺",
-  icon_03: "🐉",
-};
-
-function iconEmoji(iconId: unknown): string {
-  const key = typeof iconId === "string" ? iconId : "";
-  return ICON_EMOJI_MAP[key] ?? "🙂";
 }
 
 // =====================
@@ -746,6 +732,7 @@ export function render(
     const diffText = difficulty === "SMART" ? "SMART" : "CASUAL";
     const isPlaying = state.result.status === "PLAYING";
     const canOperate = isPlaying && state.turn === 0 && !uiLocked;
+    const isMyTurnHandPanel = canOperate;
     const shouldHideHandUntilTurnLimitStarts = Boolean((state as any).__hideHandUntilTurnLimitStarts);
 
     const last = state.history.length > 0 ? state.history[state.history.length - 1] : null;
@@ -849,12 +836,12 @@ export function render(
       }">
                 ${lastCard
         ? cardInnerHtml(lastCard, lastCard.rank === "JOKER" ? lastValue : undefined)
-        : `<div class="center"><div class="rank">—</div><div class="suit">まだ場にカードなし</div></div>`
+        : `<div class="center"><div class="rank">—</div><div class="suit emptyFieldText"><span>場にカード</span><span>なし</span></div></div>`
       }
               </div>
 
               <div class="playMeta">
-                <div class="title">場の最新カード</div>
+                <div class="title latestCardTitle"><span>場の最新</span><span>カード</span></div>
                 <div class="sub">${last
         ? `${escapeHtml(lastName)} / ${escapeHtml(cardLogLabel(last.card, last.value))}`
         : "—"
@@ -877,7 +864,7 @@ export function render(
           return `
                   <div class=\"playerRow\">
                     <div>
-                      <div class=\"name\" style=\"display:flex;align-items:center;gap:6px;\"><span style=\"width:18px;display:inline-flex;justify-content:center;\">${escapeHtml(iconEmoji((s as any).iconId))}</span><span>${escapeHtml(shortName(s.name))}</span></div>
+                      <div class=\"name\" style=\"display:flex;align-items:center;gap:6px;\"><span style=\"width:18px;display:inline-flex;justify-content:center;\">${iconContentHtml((s as any).iconId, 30)}</span><span>${escapeHtml(shortName(s.name))}</span></div>
                       <div class=\"muted\">手札 ${s.hand.length}枚</div>
                     </div>
                     <div class=\"turn\" style=\"opacity:${isTurn ? 1 : 0};\">▶</div>
@@ -891,8 +878,8 @@ export function render(
 
       <div style="height:12px;"></div>
 
-      <div class="panel">
-        <div style="font-weight:950;margin-bottom:10px;">あなたの手札（${escapeHtml(shortName(me.name))}）</div>
+      <div class="panel handPanel${isMyTurnHandPanel ? " isMyTurn" : ""}">
+        <div class="handPanelTitle">あなたの手札（${escapeHtml(shortName(me.name))}）</div>
         <div id="hand" class="handGrid"></div>
 
         <div style="height:10px;"></div>
@@ -1084,7 +1071,10 @@ export function render(
     drawBtn.disabled = !canOperate || state.deck.length === 0;
     drawBtn.onclick = () => handlers.onDrawPlay();
 
-    restartBtn.disabled = isPlaying;
+    const mpIsHost = (state as any).__mpIsHost;
+    const restartDisabled = isPlaying || (mpIsHost === false);
+
+    restartBtn.disabled = restartDisabled;
     restartBtn.onclick = () => {
       if (restartBtn.disabled) return;
       handlers.onRestart();
