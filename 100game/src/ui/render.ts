@@ -732,7 +732,6 @@ export function render(
     const diffText = difficulty === "SMART" ? "SMART" : "CASUAL";
     const isPlaying = state.result.status === "PLAYING";
     const canOperate = isPlaying && state.turn === 0 && !uiLocked;
-    const isMyTurnHandPanel = canOperate;
     const shouldHideHandUntilTurnLimitStarts = Boolean((state as any).__hideHandUntilTurnLimitStarts);
 
     const last = state.history.length > 0 ? state.history[state.history.length - 1] : null;
@@ -748,8 +747,8 @@ export function render(
       state.result.status === "PLAYING"
         ? `<span style="color:#22c55e;font-weight:900;">進行中</span>`
         : state.result.status === "LOSE"
-          ? `<span style="color:#ff4d6d;font-weight:950;">敗北：${escapeHtml(shortName(state.seats[state.result.loserSeat].name))}（${escapeHtml(state.result.reason ?? "")}）</span>`
-          : `<span style="color:#ff4d6d;font-weight:950;">無効試合：${escapeHtml(
+          ? `<span style="color:#ff4d6d;font-weight:950;">敗北:${escapeHtml(shortName(state.seats[state.result.loserSeat].name))}(${escapeHtml(state.result.reason ?? "")}</span>`
+          : `<span style="color:#ff4d6d;font-weight:950;">無効試合:${escapeHtml(
             state.result.reason ?? ""
           )}</span>`;
 
@@ -823,7 +822,7 @@ export function render(
 
         <!-- ★結果表示の高さは常に確保 -->
         <div class="kpiResult"
-          style="height:24px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:6px;">
+          style="height:24px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;margin-top:6px;">
           ${state.result.status === "PLAYING" ? "" : resultHtml}
         </div>
       </div>
@@ -836,18 +835,18 @@ export function render(
       }">
                 ${lastCard
         ? cardInnerHtml(lastCard, lastCard.rank === "JOKER" ? lastValue : undefined)
-        : `<div class="center"><div class="rank">—</div><div class="suit emptyFieldText"><span>場にカード</span><span>なし</span></div></div>`
+        : `<div class="center emptyPlayCard"><div class="rank">—</div><div class="suit"><span>場にカード</span><span>なし</span></div></div>`
       }
               </div>
 
               <div class="playMeta">
-                <div class="title latestCardTitle"><span>場の最新</span><span>カード</span></div>
+                <div class="title"><span class="titlePc">場の最新カード</span><span class="titleMobile">場の最新カード</span></div>
                 <div class="sub">${last
-        ? `${escapeHtml(lastName)} / ${escapeHtml(cardLogLabel(last.card, last.value))}`
+        ? `${escapeHtml(lastName)} <br> ${escapeHtml(cardLogLabel(last.card, last.value))}`
         : "—"
       }</div>
                 ${lastNote
-        ? `<div class="sub">※${escapeHtml(lastNote)}</div>`
+        ? `<div class="sub">${lastNote.includes("反転") ? "※反転" : `※${escapeHtml(lastNote)}`}</div>`
         : `<div class="sub" style="opacity:.7;">&nbsp;</div>`
       }
               </div>
@@ -878,7 +877,7 @@ export function render(
 
       <div style="height:12px;"></div>
 
-      <div class="panel handPanel${isMyTurnHandPanel ? " isMyTurn" : ""}">
+      <div class="panel handPanel${canOperate ? " isMyTurn" : ""}">
         <div class="handPanelTitle">あなたの手札（${escapeHtml(shortName(me.name))}）</div>
         <div id="hand" class="handGrid"></div>
 
