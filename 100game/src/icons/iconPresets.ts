@@ -44,12 +44,16 @@ const iconImageModules = import.meta.glob("./iconlist/*.{png,jpg,jpeg,webp,avif,
 }) as Record<string, string>;
 
 const imagePresets = Object.entries(iconImageModules)
+  .sort(([pathA], [pathB]) => {
+    const fileA = decodeURIComponent(pathA.split("/").pop() ?? "");
+    const fileB = decodeURIComponent(pathB.split("/").pop() ?? "");
+    return fileA.localeCompare(fileB, "ja", { numeric: true, sensitivity: "base" });
+  })
   .map(([path, src]) => ({
     id: createIconIdFromPath(path),
     label: createLabelFromPath(path),
     src,
-  }))
-  .sort((a, b) => a.label.localeCompare(b.label, "ja", { numeric: true, sensitivity: "base" }));
+  }));
 
 const fallbackPlayerPreset: IconPreset = {
   id: "img_builtin_default",

@@ -665,12 +665,18 @@ export function render(
     let modalTitle = "";
     let modalBodyHtml = "";
 
+    const popupShortName = (name: string) => {
+      const chars = Array.from(name);
+      if (chars.length <= 6) return name;
+      return chars.slice(0, 6).join("") + "…";
+    };
+
     if (state.result.status === "LOSE") {
-      const loserName = state.seats[state.result.loserSeat].name;
+      const loserName = popupShortName(state.seats[state.result.loserSeat].name);
       modalTitle = `LOSER：${loserName}`;
 
       if (lastPlay) {
-        const who = state.seats[lastPlay.seat].name;
+        const who = popupShortName(state.seats[lastPlay.seat].name);
         const o = originText(lastPlay.origin);
         const cardTxt = cardLogLabel(lastPlay.card, lastPlay.value);
         const after = lastPlay.afterTotal ?? state.total;
@@ -678,7 +684,7 @@ export function render(
         modalBodyHtml =
           `${escapeHtml(who)}が${escapeHtml(o)}から ` +
           `<span class="mono">${escapeHtml(cardTxt)}</span> を出し、` +
-          `場の数が <span class="mono">${escapeHtml(String(after))}</span> になった！`;
+          `場の数が<br><span class="mono">${escapeHtml(String(after))}</span> になった！`;
       } else {
         modalBodyHtml = "決着しました。";
       }
@@ -743,13 +749,30 @@ export function render(
     const targetLabel =
       state.gameType === "EXTRA" && state.result.status === "PLAYING" ? "???" : String(state.target);
 
+    const formatResultReason = (reason: string) => {
+      let text = reason.trim();
+
+      text = text.replace(/\s+$/g, "");
+      text = text.replace(/（+/g, "（");
+      text = text.replace(/）+/g, "）");
+      text = text.replace(/（EXTRA上限値=[^）]*）/g, "");
+
+      const openCount = (text.match(/（/g) ?? []).length;
+      const closeCount = (text.match(/）/g) ?? []).length;
+      if (openCount > closeCount) {
+        text += "）".repeat(openCount - closeCount);
+      }
+
+      return text;
+    };
+
     const resultHtml =
       state.result.status === "PLAYING"
         ? `<span style="color:#22c55e;font-weight:900;">進行中</span>`
         : state.result.status === "LOSE"
-          ? `<span style="color:#ff4d6d;font-weight:950;">敗北:${escapeHtml(shortName(state.seats[state.result.loserSeat].name))}(${escapeHtml(state.result.reason ?? "")}</span>`
+          ? `<span style="color:#ff4d6d;font-weight:950;">【敗北】${escapeHtml(shortName(state.seats[state.result.loserSeat].name))}：${escapeHtml(formatResultReason(state.result.reason ?? ""))}</span>`
           : `<span style="color:#ff4d6d;font-weight:950;">無効試合:${escapeHtml(
-            state.result.reason ?? ""
+            formatResultReason(state.result.reason ?? "")
           )}</span>`;
 
     app.innerHTML = `
