@@ -62,12 +62,6 @@ html {
   gap: 14px;
 }
 
-@media (max-width: 860px) {
-  .grid2 {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* ---------- Badges / KPI ---------- */
 .badge {
   width: 160px;
@@ -290,9 +284,9 @@ html {
 /* ---------- Card visuals (hand) ---------- */
 .handGrid {
   display: flex;
-  min-height: 128px;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
 .cardBtn {
@@ -951,7 +945,7 @@ html {
   }
 
   .playerRow .name {
-    font-size: 11.5px;
+    font-size: 13px;
   }
 
   .playerRow .muted {
