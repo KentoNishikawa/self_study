@@ -286,7 +286,6 @@ html {
   display: flex;
   gap: 10px;
   flex-wrap: nowrap;
-  overflow-x: auto;
 }
 
 .cardBtn {
