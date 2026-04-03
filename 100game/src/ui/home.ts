@@ -1,6 +1,7 @@
 // src/ui/home.ts
 import type { Difficulty, GameType, GameState } from "../core/types";
 import { DEFAULT_PLAYER_ICON_ID, PLAYER_ICON_PRESETS, iconContentHtml, resolveIconId } from "../icons/iconPresets";
+import { playButtonSe } from "../core/sound";
 
 export type HomeConfig = {
   playerName: string;
@@ -216,7 +217,8 @@ export function renderHome(
             <div id="iconPicker"
               style="display:none;position:absolute;left:0;top:52px;z-index:50;
                      padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.16);
-                     background:rgba(10,10,10,0.98);box-shadow:0 8px 30px rgba(0,0,0,0.45);">
+                     background:rgba(10,10,10,0.98);box-shadow:0 8px 30px rgba(0,0,0,0.45);
+                     max-height:116px;overflow-y:auto;overflow-x:hidden;">
               <div style="display:grid;grid-template-columns:repeat(6, 44px);gap:8px;">
                 ${PLAYER_ICON_PRESETS.map((p) => `
                   <button type="button" class="iconOpt" data-icon="${escapeHtml(p.id)}"
@@ -342,6 +344,7 @@ export function renderHome(
     }, 0);
   }
   mpNoticeOk.onclick = () => {
+    playButtonSe();
     mpNotice.style.display = "none";
   };
   mpNotice.addEventListener("click", (e) => {
@@ -383,6 +386,7 @@ export function renderHome(
     joinFailText.textContent = message;
     joinFailModal.style.display = "flex";
     joinFailOk.onclick = () => {
+      playButtonSe();
       joinFailModal.style.display = "none";
       redirectToHome(); // 既存の関数（?room=消してソロHOMEに戻す）
     };
@@ -549,12 +553,14 @@ export function renderHome(
   };
 
   iconBtn.addEventListener("click", (e) => {
+    playButtonSe();
     e.stopPropagation();
     pickerOpen ? closePicker() : openPicker();
   });
 
   iconOptButtons.forEach((btn) => {
     btn.addEventListener("click", (e) => {
+      playButtonSe();
       e.stopPropagation();
       const iconId = resolveIconId(btn.dataset.icon || DEFAULT_PLAYER_ICON_ID);
 
@@ -790,6 +796,7 @@ export function renderHome(
   };
 
   startBtn.onclick = () => {
+    playButtonSe();
     const cfg: HomeConfig = {
       playerName: nameEl.value,
       difficulty: diffEl.value as Difficulty,
@@ -809,6 +816,7 @@ export function renderHome(
   };
 
   createRoomBtn.onclick = async () => {
+    playButtonSe();
     try {
       const res = await fetch(`${apiBase}/api/rooms`, { method: "POST" });
       const data = await res.json();
@@ -829,6 +837,7 @@ export function renderHome(
   };
 
   copyInviteBtn.onclick = async () => {
+    playButtonSe();
     const text = inviteUrlEl.value.trim();
     if (!text) return;
     try {
@@ -838,7 +847,10 @@ export function renderHome(
     }
   };
 
-  leaveRoomBtn.onclick = () => leaveOrDisbandAndRedirect();
+  leaveRoomBtn.onclick = () => {
+    playButtonSe();
+    leaveOrDisbandAndRedirect();
+  };
 
   const isMobile = () => window.matchMedia("(max-width: 520px)").matches;
 
@@ -899,6 +911,7 @@ export function renderHome(
       btn.style.fontWeight = "900";
       btn.style.whiteSpace = "nowrap";
       btn.onclick = () => {
+        playButtonSe();
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
         if (!lobby) return;
         if (mySeatIndex !== 0) return;

@@ -55,17 +55,23 @@ const imagePresets = Object.entries(iconImageModules)
     src,
   }));
 
+const npcImagePreset = imagePresets.find((preset) => preset.id === "img_999_npc");
+const selectablePlayerPresets = imagePresets.filter((preset) => preset.id !== "img_999_npc");
+
 const fallbackPlayerPreset: IconPreset = {
   id: "img_builtin_default",
   label: "Player",
   emoji: "🙂",
 };
 
-export const PLAYER_ICON_PRESETS: IconPreset[] = imagePresets.length > 0 ? imagePresets : [fallbackPlayerPreset];
+export const PLAYER_ICON_PRESETS: IconPreset[] =
+  selectablePlayerPresets.length > 0 ? selectablePlayerPresets : [fallbackPlayerPreset];
 export const DEFAULT_PLAYER_ICON_ID = PLAYER_ICON_PRESETS[0]?.id ?? fallbackPlayerPreset.id;
 
 export const SYSTEM_ICON_PRESETS: IconPreset[] = [
-  { id: "npc_default", label: "NPC", emoji: "🤖" },
+  npcImagePreset
+    ? { id: "npc_default", label: "NPC", src: npcImagePreset.src }
+    : { id: "npc_default", label: "NPC", emoji: "🤖" },
 ];
 
 export const ICON_PRESETS: IconPreset[] = [...PLAYER_ICON_PRESETS, ...SYSTEM_ICON_PRESETS];

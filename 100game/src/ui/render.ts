@@ -1,9 +1,13 @@
 // src/ui/render.ts
 import type { Card, Difficulty, GameState, SystemLog } from "../core/types";
 import { iconContentHtml } from "../icons/iconPresets";
+import { playButtonSe, playCardDealSe, playCardPlaySe, playResultSe } from "../core/sound";
 
 let prevHistoryLen = -1;
 let gameStartOverlayTimer: number | null = null;
+let prevHideHandUntilTurnLimitStarts = false;
+let prevLatestReshuffleLogId: number | null | undefined = undefined;
+let lastPlayedResultSeKey: string | null = null;
 
 type HandVisualSlot =
   | { kind: "card"; card: Card }
@@ -174,6 +178,9 @@ export function resetRenderTransientState() {
 
   handVisualSlots = [];
   handPlaceholderSeq = 0;
+  prevHideHandUntilTurnLimitStarts = false;
+  prevLatestReshuffleLogId = undefined;
+  lastPlayedResultSeKey = null;
 
   document.getElementById("gameStartOverlay")?.remove();
 }
@@ -633,7 +640,10 @@ function renderResultModal(show: boolean, key: string, title: string, bodyHtml: 
     if (resultRoot) resultRoot.innerHTML = "";
   };
 
-  closeBtn?.addEventListener("click", close);
+  closeBtn?.addEventListener("click", () => {
+    playButtonSe();
+    close();
+  });
   overlay?.addEventListener("click", (ev: MouseEvent) => {
     if (ev.target === overlay) close();
   });
@@ -661,6 +671,13 @@ export function render(
     if (state.result.status === "PLAYING") dismissedResultKey = null;
 
     const lastPlay = state.history.length > 0 ? state.history[state.history.length - 1] : null;
+    const currentLen = state.history.length;
+
+    if (prevHistoryLen > currentLen) {
+      prevHideHandUntilTurnLimitStarts = false;
+      prevLatestReshuffleLogId = undefined;
+      lastPlayedResultSeKey = null;
+    }
 
     let modalTitle = "";
     let modalBodyHtml = "";
@@ -695,6 +712,11 @@ export function render(
 
     const showResultModal =
       !!resultKey && dismissedResultKey !== resultKey && state.result.status !== "PLAYING";
+
+    if (showResultModal && resultKey && lastPlayedResultSeKey !== resultKey) {
+      playResultSe();
+      lastPlayedResultSeKey = resultKey;
+    }
 
     if (resultKey) renderResultModal(showResultModal, resultKey, modalTitle, modalBodyHtml);
     else renderResultModal(false, "", "", "");
@@ -737,8 +759,25 @@ export function render(
 
     const diffText = difficulty === "SMART" ? "SMART" : "CASUAL";
     const isPlaying = state.result.status === "PLAYING";
+    if (isPlaying) lastPlayedResultSeKey = null;
     const canOperate = isPlaying && state.turn === 0 && !uiLocked;
     const shouldHideHandUntilTurnLimitStarts = Boolean((state as any).__hideHandUntilTurnLimitStarts);
+
+    if (prevHideHandUntilTurnLimitStarts && !shouldHideHandUntilTurnLimitStarts && me.hand.length > 0) {
+      playCardDealSe();
+    }
+    prevHideHandUntilTurnLimitStarts = shouldHideHandUntilTurnLimitStarts;
+
+    const latestReshuffleLog = [...(state.systemLogs ?? [])].reverse().find((log) => log.kind !== "INFO") ?? null;
+    const latestReshuffleLogId = latestReshuffleLog?.id ?? null;
+    if (prevLatestReshuffleLogId === undefined) {
+      prevLatestReshuffleLogId = latestReshuffleLogId;
+    } else {
+      if (latestReshuffleLogId != null && latestReshuffleLogId !== prevLatestReshuffleLogId) {
+        playCardDealSe();
+      }
+      prevLatestReshuffleLogId = latestReshuffleLogId;
+    }
 
     const last = state.history.length > 0 ? state.history[state.history.length - 1] : null;
     const lastName = last ? shortName(state.seats[last.seat].name) : "—";
@@ -938,12 +977,12 @@ export function render(
 
     // ===== 場札アニメ =====
     const playCardEl = app.querySelector<HTMLDivElement>(".playCard");
-    const currentLen = state.history.length;
 
     if (playCardEl) {
       if (prevHistoryLen === -1) prevHistoryLen = currentLen;
 
       if (currentLen > prevHistoryLen) {
+        playCardPlaySe();
         playCardEl.getAnimations().forEach((a) => a.cancel());
 
         requestAnimationFrame(() => {
@@ -1099,11 +1138,13 @@ export function render(
     restartBtn.disabled = restartDisabled;
     restartBtn.onclick = () => {
       if (restartBtn.disabled) return;
+      playButtonSe();
       handlers.onRestart();
     };
 
     homeBtn.disabled = false;
     homeBtn.onclick = () => {
+      playButtonSe();
       if (isPlaying) {
         const ok = confirm("対戦中です。ホーム画面に戻りますか？");
         if (!ok) return;
