@@ -1,7 +1,11 @@
+//　カード出すときの効果音
 import cardDealSeFile from "../assets/sound_effects/カードを扇状に開く.mp3";
+//　カード配布時の効果音
 import cardPlaySeFile from "../assets/sound_effects/カードをめくる.mp3";
-import resultSeFile from "../assets/sound_effects/居合抜き1.mp3";
-import buttonSeFile from "../assets/sound_effects/決定ボタンを押す31.mp3";
+//　リザルトモーダル出現時の効果音
+import resultSeFile from "../assets/sound_effects/cncl07.mp3";
+//　決定ボタンを押すときの効果音
+import buttonSeFile from "../assets/sound_effects/決定ボタンを押す49.mp3";
 
 function createAudio(src: string) {
     const audio = new Audio(src);
