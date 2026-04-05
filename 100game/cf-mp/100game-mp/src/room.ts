@@ -66,6 +66,7 @@ const EXTRA_CANDIDATES: Array<Exclude<GameType, "EXTRA">> = [100, 200, 300, 400,
 // ---------------- Turn limit (MP) ----------------
 // ローカルはクライアントで強制手を実行しているが、MPではサーバ側（DO）で強制する。
 const TURN_LIMIT_MS = 60 * 1000;
+const GAME_START_NPC_DELAY_MS = 3000;
 
 function turnKey(g: GameState) {
     return `${g.turn}|${g.history.length}`;
@@ -209,7 +210,7 @@ export class RoomDO {
             send(server, "WELCOME", { seatIndex, state: publicRoomState(st) });
             this.broadcastRoomState(st);
 
-            server.addEventListener("message", async (ev) => {
+            server.addEventListener("message", async (ev: MessageEvent) => {
                 const cur = await this.ctx.storage.get<RoomState>("state");
                 if (!cur) return;
 
@@ -295,15 +296,13 @@ export class RoomDO {
                     await this.ctx.storage.put("game", game0);
                     this.broadcastGameState(game0);
 
-                    // ★開始直後がNPC手番なら、ここでNPCを自動実行して進める
+                    // ★開始直後がNPC手番なら、開始ポップアップが消えてから自動実行する
                     if (isNpcTurn(game0)) {
-                        const npc = this.runNpcSteps(cur.npcDifficulty, game0);
-                        if (npc.steps.length) {
-                            await this.ctx.storage.put("game", npc.final);
-                            await this.broadcastGameStates(npc.steps, 250);
-                            await this.scheduleTurnAlarm(cur, npc.final);
-                            return;
-                        }
+                        const deadline = Date.now() + GAME_START_NPC_DELAY_MS;
+                        await this.ctx.storage.put("turnDeadlineAt", deadline);
+                        await this.ctx.storage.put("turnKey", turnKey(game0));
+                        await this.ctx.storage.setAlarm(Math.min(cur.expiresAt, deadline));
+                        return;
                     }
 
                     await this.scheduleTurnAlarm(cur, game0);
@@ -321,15 +320,13 @@ export class RoomDO {
                     await this.ctx.storage.put("game", game0);
                     this.broadcastGameState(game0);
 
-                    // ★開始直後がNPC手番なら、ここでNPCを自動実行して進める
+                    // ★開始直後がNPC手番なら、開始ポップアップが消えてから自動実行する
                     if (isNpcTurn(game0)) {
-                        const npc = this.runNpcSteps(cur.npcDifficulty, game0);
-                        if (npc.steps.length) {
-                            await this.ctx.storage.put("game", npc.final);
-                            await this.broadcastGameStates(npc.steps, 250);
-                            await this.scheduleTurnAlarm(cur, npc.final);
-                            return;
-                        }
+                        const deadline = Date.now() + GAME_START_NPC_DELAY_MS;
+                        await this.ctx.storage.put("turnDeadlineAt", deadline);
+                        await this.ctx.storage.put("turnKey", turnKey(game0));
+                        await this.ctx.storage.setAlarm(Math.min(cur.expiresAt, deadline));
+                        return;
                     }
 
                     await this.scheduleTurnAlarm(cur, game0);
@@ -470,11 +467,12 @@ export class RoomDO {
 
         // --- ルーム初期化 ---
         if (url.pathname === "/init" && request.method === "POST") {
-            const { roomId, hostToken, expiresAt } = await request.json<{
+            const body = (await request.json()) as {
                 roomId: string;
                 hostToken: string;
                 expiresAt: number;
-            }>();
+            };
+            const { roomId, hostToken, expiresAt } = body;
 
             const state = makeInitialState(roomId, hostToken, expiresAt);
             await this.ctx.storage.put("state", state);

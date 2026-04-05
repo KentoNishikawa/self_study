@@ -367,12 +367,13 @@ function beginGameStartOverlayPhase(runNpcAfterUnlock = false) {
     gameStartUnlockTimerId = null;
 
     if (!state || screen !== "GAME" || state.result.status !== "PLAYING") return;
-    if (nowTurnKey(state) !== capturedKey) return;
+
+    const shouldRunNpc = nowTurnKey(state) === capturedKey;
 
     uiLocked = false;
     draw();
 
-    if (runNpcAfterUnlock && state && state.result.status === "PLAYING" && state.turn !== 0) {
+    if (shouldRunNpc && runNpcAfterUnlock && state && state.result.status === "PLAYING" && state.turn !== 0) {
       void runNpcTurnsAnimated();
     }
   }, GAME_START_TURN_LIMIT_DELAY_MS);

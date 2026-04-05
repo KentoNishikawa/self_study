@@ -1,4 +1,30 @@
-import { playButtonSe, startButtonSe } from "../core/sound";
+import { playButtonSe } from "../core/sound";
+
+type TitleCardSpec = {
+  rank: string;
+  suit: "S" | "H" | "D" | "C";
+  left: number;
+  top: number;
+  rotate: number;
+  scale: number;
+  faceDown?: boolean;
+  blur?: number;
+  opacity?: number;
+  zIndex?: number;
+};
+
+const TITLE_CARD_SPECS: TitleCardSpec[] = [
+  { rank: "A", suit: "S", left: 8, top: 66, rotate: -18, scale: 1.05, blur: 0.2, opacity: 0.92, zIndex: 1 },
+  { rank: "K", suit: "H", left: 18, top: 58, rotate: -8, scale: 0.98, blur: 0.35, opacity: 0.9, zIndex: 2 },
+  { rank: "10", suit: "D", left: 34, top: 74, rotate: 10, scale: 1.08, blur: 0.1, opacity: 0.94, zIndex: 3 },
+  { rank: "7", suit: "C", left: 47, top: 60, rotate: -12, scale: 1.02, blur: 0.15, opacity: 0.9, zIndex: 4 },
+  { rank: "Q", suit: "D", left: 58, top: 69, rotate: 14, scale: 0.96, blur: 0.3, opacity: 0.86, zIndex: 2 },
+  { rank: "J", suit: "S", left: 70, top: 56, rotate: -10, scale: 1.04, blur: 0.2, opacity: 0.92, zIndex: 4 },
+  { rank: "4", suit: "H", left: 79, top: 72, rotate: 18, scale: 0.95, blur: 0.45, opacity: 0.82, zIndex: 1 },
+  { rank: "9", suit: "C", left: 88, top: 61, rotate: -16, scale: 1.0, blur: 0.25, opacity: 0.88, zIndex: 3 },
+  { rank: "", suit: "S", left: 27, top: 51, rotate: 12, scale: 1.06, faceDown: true, blur: 0.55, opacity: 0.76, zIndex: 0 },
+  { rank: "", suit: "S", left: 83, top: 52, rotate: 8, scale: 1.02, faceDown: true, blur: 0.65, opacity: 0.72, zIndex: 0 },
+];
 
 type TitleModalKey = "privacy" | "terms" | "credits" | "contact";
 
@@ -9,6 +35,76 @@ type TitleModalContent = {
   actionNote?: string;
   actionDisabled?: boolean;
 };
+
+
+function titleSuitSymbol(suit: TitleCardSpec["suit"]) {
+  switch (suit) {
+    case "S":
+      return "♠";
+    case "H":
+      return "♥";
+    case "D":
+      return "♦";
+    case "C":
+      return "♣";
+  }
+}
+
+function titleSuitColor(suit: TitleCardSpec["suit"]) {
+  return suit === "H" || suit === "D" ? "#c53d52" : "#1c2230";
+}
+
+function renderTitleCardSvg(card: TitleCardSpec) {
+  if (card.faceDown) {
+    return `
+      <svg viewBox="0 0 140 200" class="titleBgCardSvg" aria-hidden="true">
+        <rect x="4" y="4" width="132" height="192" rx="14" fill="#f6f7fb" stroke="rgba(18,22,30,0.35)" stroke-width="2" />
+        <rect x="15" y="15" width="110" height="170" rx="10" fill="#9d202a" />
+        <rect x="20" y="20" width="100" height="160" rx="8" fill="#c73945" opacity="0.92" />
+        <path d="M20 40h100M20 80h100M20 120h100M20 160h100M40 20v160M80 20v160" stroke="rgba(255,255,255,0.22)" stroke-width="3" />
+        <rect x="32" y="32" width="76" height="136" rx="8" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2.5" />
+        <path d="M70 58l18 18-18 18-18-18 18-18zm0 48l18 18-18 18-18-18 18-18z" fill="rgba(255,255,255,0.28)" />
+      </svg>
+    `;
+  }
+
+  const suit = titleSuitSymbol(card.suit);
+  const color = titleSuitColor(card.suit);
+  const rank = card.rank;
+  const rankFontSize = rank.length >= 2 ? 19 : 22;
+  const suitFontSize = rank.length >= 2 ? 18 : 20;
+
+  return `
+    <svg viewBox="0 0 140 200" class="titleBgCardSvg" aria-hidden="true">
+      <rect x="4" y="4" width="132" height="192" rx="14" fill="#f7f7fa" stroke="rgba(18,22,30,0.35)" stroke-width="2" />
+      <rect x="10" y="10" width="120" height="180" rx="12" fill="#fffdfb" opacity="0.94" />
+      <g fill="${color}" style="paint-order:stroke;stroke:rgba(255,255,255,0.16);stroke-width:0.35;">
+        <text x="18" y="32" font-size="${rankFontSize}" font-weight="900" font-family="Georgia, serif">${rank}</text>
+        <text x="18" y="52" font-size="${suitFontSize}" font-family="Georgia, serif">${suit}</text>
+        <g transform="rotate(180 112 168)">
+          <text x="112" y="168" text-anchor="end" font-size="${rankFontSize}" font-weight="900" font-family="Georgia, serif">${rank}</text>
+          <text x="112" y="188" text-anchor="end" font-size="${suitFontSize}" font-family="Georgia, serif">${suit}</text>
+        </g>
+        <text x="70" y="116" text-anchor="middle" font-size="54" font-family="Georgia, serif">${suit}</text>
+      </g>
+    </svg>
+  `;
+}
+
+function renderTitleBackdropCards() {
+  return TITLE_CARD_SPECS.map((card, index) => {
+    const style = [
+      `left:${card.left}%`,
+      `top:${card.top}%`,
+      `transform:translate(-50%, -50%) rotate(${card.rotate}deg) scale(${card.scale})`,
+      `filter:blur(${card.blur ?? 0}px)`,
+      `opacity:${card.opacity ?? 1}`,
+      `z-index:${card.zIndex ?? index}`,
+    ].join(";");
+
+    return `<div class="titleBgCard" style="${style}">${renderTitleCardSvg(card)}</div>`;
+  }).join("");
+}
 
 const TITLE_MODAL_CONTENT: Record<TitleModalKey, TitleModalContent> = {
   privacy: {
@@ -33,7 +129,7 @@ const TITLE_MODAL_CONTENT: Record<TitleModalKey, TitleModalContent> = {
     title: "クレジット",
     bodyHtml: `
       <p><strong>タイトル</strong><br>100GAME⁺</p>
-      <p><strong>企画・開発</strong><br>考え中</p>
+      <p><strong>企画・開発</strong><br>100GAME Project</p>
       <p><strong>使用技術</strong><br>TypeScript / Vite / Cloudflare</p>
       <p>クレジット表記は、今後の追加要素に応じて更新する予定です。</p>
     `,
@@ -53,6 +149,13 @@ const TITLE_MODAL_CONTENT: Record<TitleModalKey, TitleModalContent> = {
 export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void }) {
   app.innerHTML = `
     <div class="titleScreen">
+      <div class="titleBackdrop" aria-hidden="true">
+        <div class="titleBackdropAmbient"></div>
+        <div class="titleBackdropTable"></div>
+        <div class="titleBackdropCards">${renderTitleBackdropCards()}</div>
+        <div class="titleBackdropShade"></div>
+      </div>
+
       <div class="titleTopLinks" aria-label="タイトルメニュー">
         <button class="titleTopLink" type="button" data-modal-key="privacy">プライバシーポリシー</button>
         <span class="titleTopLinkDivider" aria-hidden="true">｜</span>
@@ -189,7 +292,7 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
   };
 
   startBtn.addEventListener("click", () => {
-    startButtonSe();
+    playButtonSe();
     handlers.onStart();
   });
 
