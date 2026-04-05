@@ -1,4 +1,4 @@
-import { playButtonSe } from "../core/sound";
+import { playButtonSe, startButtonSe } from "../core/sound";
 
 type TitleCardSpec = {
   rank: string;
@@ -292,7 +292,7 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
   };
 
   startBtn.addEventListener("click", () => {
-    playButtonSe();
+    startButtonSe();
     handlers.onStart();
   });
 
