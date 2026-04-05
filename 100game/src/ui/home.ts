@@ -1,7 +1,8 @@
 // src/ui/home.ts
 import type { Difficulty, GameType, GameState } from "../core/types";
 import { DEFAULT_PLAYER_ICON_ID, PLAYER_ICON_PRESETS, iconContentHtml, resolveIconId } from "../icons/iconPresets";
-import { playButtonSe } from "../core/sound";
+import { playButtonSe, startButtonSe } from "../core/sound";
+import { HOME_HOST_DISBANDED_NOTICE, getInviteExpiredNotice, getJoinFailedNotice, getLockedRoomNotice, getPreflightStatusNotice, getPreflightUnexpectedStatusNotice, getRoomFullNotice, renderMpNoticeModalHtml, setupMpNoticeModal, stashMpNotice, type MpNotice } from "./mpNotice";
 
 export type HomeConfig = {
   playerName: string;
@@ -109,16 +110,9 @@ export function renderHome(
     location.replace(next);
   };
 
-  const flashAndRedirectHome = (message: string) => {
-    sessionStorage.setItem("mp_notice", message);
+  const flashAndRedirectHome = (notice: MpNotice) => {
+    stashMpNotice(notice);
     redirectToHome();
-  };
-
-  const showNoticeModal = (title: string, message: string) => {
-    mpNoticeTitle.textContent = title;
-    mpNoticeTitle.style.display = title ? "block" : "none";
-    mpNoticeText.textContent = message;
-    mpNotice.style.display = "flex";
   };
 
   const resetLobbyConnectionState = () => {
@@ -162,7 +156,7 @@ export function renderHome(
 
   const handleHostDisbandedAtHome = () => {
     resetLobbyConnectionState();
-    showNoticeModal("", "HOSTが部屋を解散したため、マルチプレイを終了します。");
+    mpNoticeModal.show(HOME_HOST_DISBANDED_NOTICE, { hideTitle: true });
   };
 
   const leaveOrDisbandAndRedirect = () => {
@@ -185,19 +179,12 @@ export function renderHome(
 
   app.innerHTML = `
     <header class="appHeader">
-      <h1 class="appTitle">100GAME⁺</h1>
-      <div class="appTag">HOME</div>
+        <h1 class="appTitle">100GAME⁺</h1>
+        <div class="appTag">HOME</div>
     </header>
 
     <!-- 通知モーダル（満員など） -->
-    <div id="mpNotice" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.60);align-items:center;justify-content:center;">
-      <div style="width:calc(100% - 40px);max-width:520px;border:1px solid rgba(255,255,255,0.18);
-                  background:rgba(12,12,12,0.96);border-radius:16px;padding:16px;color:rgba(255,255,255,0.92);">
-        <div id="mpNoticeTitle" style="font-weight:950;margin-bottom:8px;">入室できませんでした</div>
-        <div id="mpNoticeText" style="font-weight:800;line-height:1.7;"></div>
-        <button id="mpNoticeOk" class="btn" type="button" style="width:100%;margin-top:12px;">OK</button>
-      </div>
-    </div>
+    ${renderMpNoticeModalHtml()}
 
     <div class="panel">
       <div style="font-weight:950;margin-bottom:10px;">ゲーム設定</div>
@@ -315,41 +302,11 @@ export function renderHome(
       <div id="participants" style="display:grid;gap:8px;"></div>
     </div>
 
-    <div id="joinFailModal"style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;">
-      <div style="width:calc(100% - 40px);max-width:520px;border:1px solid rgba(255,255,255,0.18);background:rgba(12,12,12,0.96);border-radius:16px;padding:16px;">
-        <div id="joinFailText" style="font-weight:900;line-height:1.7;"></div>
-        <button id="joinFailOk" class="btn" type="button" style="width:100%;margin-top:12px;">OK</button>
-      </div>
-    </div>
   `;
 
   // --- notice modal ---
-  const mpNotice = app.querySelector<HTMLDivElement>("#mpNotice")!;
-  const mpNoticeTitle = app.querySelector<HTMLDivElement>("#mpNoticeTitle")!;
-  const mpNoticeText = app.querySelector<HTMLDivElement>("#mpNoticeText")!;
-  const mpNoticeOk = app.querySelector<HTMLButtonElement>("#mpNoticeOk")!;
-  const notice = sessionStorage.getItem("mp_notice");
-  const noticeTitle = sessionStorage.getItem("mp_notice_title");
-  if (notice) {
-    sessionStorage.removeItem("mp_notice");
-    sessionStorage.removeItem("mp_notice_title");
-
-    const hideTitle = (!noticeTitle && notice.includes("HOSTが部屋を解散したため")) || noticeTitle === "";
-    mpNoticeTitle.textContent = hideTitle ? "" : (noticeTitle || "入室できませんでした");
-    mpNoticeTitle.style.display = hideTitle ? "none" : "block";
-    mpNoticeText.textContent = notice;
-    // 描画後に表示（環境差で見えないのを避ける）
-    setTimeout(() => {
-      mpNotice.style.display = "flex";
-    }, 0);
-  }
-  mpNoticeOk.onclick = () => {
-    playButtonSe();
-    mpNotice.style.display = "none";
-  };
-  mpNotice.addEventListener("click", (e) => {
-    if (e.target === mpNotice) mpNotice.style.display = "none";
-  });
+  const mpNoticeModal = setupMpNoticeModal(app);
+  mpNoticeModal.showStashed();
 
   // --- elements ---
   const profileRow = app.querySelector<HTMLDivElement>("#profileRow")!;
@@ -375,21 +332,17 @@ export function renderHome(
   const connStatusEl = app.querySelector<HTMLDivElement>("#connStatus")!;
   const leaveRoomBtn = app.querySelector<HTMLButtonElement>("#leaveRoomBtn")!;
 
-  const joinFailModal = app.querySelector<HTMLDivElement>("#joinFailModal")!;
-  const joinFailText = app.querySelector<HTMLDivElement>("#joinFailText")!;
-  const joinFailOk = app.querySelector<HTMLButtonElement>("#joinFailOk")!;
-
   diffEl.value = config.difficulty;
   gameTypeEl.value = String(config.gameType);
 
-  const showJoinFailAndReturnHome = (message: string) => {
-    joinFailText.textContent = message;
-    joinFailModal.style.display = "flex";
-    joinFailOk.onclick = () => {
-      playButtonSe();
-      joinFailModal.style.display = "none";
-      redirectToHome(); // 既存の関数（?room=消してソロHOMEに戻す）
-    };
+  const showJoinFailAndReturnHome = (notice: MpNotice) => {
+    mpNoticeModal.show(notice, {
+      hideTitle: true,
+      closeOnOverlay: false,
+      onClose: () => {
+        redirectToHome(); // 既存の関数（?room=消してソロHOMEに戻す）
+      },
+    });
   };
 
   const parseGameType = (v: string): GameType => {
@@ -702,55 +655,39 @@ export function renderHome(
       const res = await fetch(`${apiBase}/api/rooms/${rid}/state`, { method: "GET" });
       const hasHostToken = !!sessionStorage.getItem(`hostToken:${rid}`);
 
-      if (res.status === 410) {
-        if (hasHostToken) {
-          showJoinFailAndReturnHome("マルチプレイを終了しました。ホーム画面へ戻ります。");
-        } else {
-          showJoinFailAndReturnHome("HOSTが部屋を解散しました。ホーム画面に戻ります。");
-        }
-        return;
-      }
-
-      if (res.status === 404) {
-        if (hasHostToken) {
-          showJoinFailAndReturnHome("マルチプレイを終了しました。ホーム画面へ戻ります。");
-        } else {
-          showJoinFailAndReturnHome("roomが見つからないため入室できませんでした。ホーム画面に戻ります");
-        }
+      const statusNotice = getPreflightStatusNotice(res.status, hasHostToken);
+      if (statusNotice) {
+        showJoinFailAndReturnHome(statusNotice);
         return;
       }
 
       if (!res.ok) {
-        if (hasHostToken) {
-          showJoinFailAndReturnHome("マルチプレイが終了しました。ホーム画面へ戻ります。");
-        } else {
-          showJoinFailAndReturnHome("入室できませんでした。ホーム画面に戻ります");
-        }
+        showJoinFailAndReturnHome(getPreflightUnexpectedStatusNotice(hasHostToken));
         return;
       }
 
       const st = (await res.json()) as LobbyState;
 
       if (Date.now() > st.expiresAt) {
-        showJoinFailAndReturnHome("招待URLの期限が切れているため入室できませんでした。ホーム画面に戻ります");
+        showJoinFailAndReturnHome(getInviteExpiredNotice());
         return;
       }
 
       if (st.locked) {
-        showJoinFailAndReturnHome("ゲームが開始済みのため入室できませんでした。ホーム画面に戻ります");
+        showJoinFailAndReturnHome(getLockedRoomNotice());
         return;
       }
 
       const full = st.seats.slice(1).every((s) => s.kind !== "NPC");
       if (full) {
-        showJoinFailAndReturnHome("roomが満員のため入室できませんでした。ホーム画面に戻ります");
+        showJoinFailAndReturnHome(getRoomFullNotice());
         return;
       }
 
       inviteUrlEl.value = `${location.origin}?room=${rid}`;
       connectWs(rid);
     } catch {
-      flashAndRedirectHome("入室できませんでした。ホーム画面に戻ります");
+      flashAndRedirectHome(getJoinFailedNotice());
       return;
     }
   }
@@ -796,7 +733,7 @@ export function renderHome(
   };
 
   startBtn.onclick = () => {
-    playButtonSe();
+    startButtonSe();
     const cfg: HomeConfig = {
       playerName: nameEl.value,
       difficulty: diffEl.value as Difficulty,

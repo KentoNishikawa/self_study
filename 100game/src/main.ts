@@ -5,12 +5,13 @@ import { createInitialState } from "./core/game";
 import { reducer } from "./core/reducer";
 import { chooseNpcAction } from "./ai/npc";
 import { renderHome, type HomeConfig } from "./ui/home";
+import { renderTitle } from "./ui/title";
 import { GAME_START_OVERLAY_FADE_MS, GAME_START_OVERLAY_HOLD_MS, render, resetRenderTransientState } from "./ui/render";
 import { pickJokerValue } from "./ui/jokerPicker";
 
-type Screen = "HOME" | "GAME";
+type Screen = "TITLE" | "HOME" | "GAME";
 
-let screen: Screen = "HOME";
+let screen: Screen = new URLSearchParams(location.search).get("room") ? "HOME" : "TITLE";
 let state: GameState | null = null;
 
 type MpSession = {
@@ -740,6 +741,19 @@ async function mpDrawPlayAsync() {
 // 描画
 // ==============================
 function draw() {
+  if (screen === "TITLE") {
+    stopTurnLimit();
+
+    renderTitle(app, {
+      onStart: () => {
+        screen = "HOME";
+        draw();
+      },
+    });
+
+    return;
+  }
+
   if (screen === "HOME") {
     stopTurnLimit();
 

@@ -1,7 +1,7 @@
 // src/ui/render.ts
 import type { Card, Difficulty, GameState, SystemLog } from "../core/types";
 import { iconContentHtml } from "../icons/iconPresets";
-import { playButtonSe, playCardDealSe, playCardPlaySe, playResultSe } from "../core/sound";
+import { playButtonSe, playCardDealSe, playCardPlaySe, playResultSe, startButtonSe } from "../core/sound";
 
 let prevHistoryLen = -1;
 let gameStartOverlayTimer: number | null = null;
@@ -1138,7 +1138,7 @@ export function render(
     restartBtn.disabled = restartDisabled;
     restartBtn.onclick = () => {
       if (restartBtn.disabled) return;
-      playButtonSe();
+      startButtonSe();
       handlers.onRestart();
     };
 

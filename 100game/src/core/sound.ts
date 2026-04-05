@@ -6,6 +6,8 @@ import cardPlaySeFile from "../assets/sound_effects/カードをめくる.mp3";
 import resultSeFile from "../assets/sound_effects/cncl07.mp3";
 //　決定ボタンを押すときの効果音
 import buttonSeFile from "../assets/sound_effects/決定ボタンを押す49.mp3";
+// スタート関連のボタンを押すときの効果音
+import startbuttonSeFile from "../assets/sound_effects/決定ボタンを押す47.mp3";
 
 function createAudio(src: string) {
     const audio = new Audio(src);
@@ -17,6 +19,7 @@ const cardDealSe = createAudio(cardDealSeFile);
 const cardPlaySe = createAudio(cardPlaySeFile);
 const resultSe = createAudio(resultSeFile);
 const buttonSe = createAudio(buttonSeFile);
+const startSe = createAudio(startbuttonSeFile);
 
 function playAudio(audio: HTMLAudioElement) {
     try {
@@ -54,4 +57,8 @@ export function playResultSe() {
 export function playButtonSe() {
     if (!isPcScreen()) return;
     playAudio(buttonSe);
+}
+
+export function startButtonSe() {
+    playAudio(startSe);
 }

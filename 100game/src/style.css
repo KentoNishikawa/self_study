@@ -679,6 +679,254 @@ html {
   color: rgba(255, 255, 255, 0.65);
 }
 
+
+.titleScreen {
+  position: relative;
+  min-height: calc(100vh - 36px);
+  display: grid;
+  place-items: center;
+}
+
+.titleTopLinks {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 6px 12px;
+}
+
+.titleTopLink {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  padding: 4px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.titleTopLink:hover {
+  color: rgba(255, 255, 255, 1);
+}
+
+.titleTopLinkDivider {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0 2px;
+}
+
+.titleMenuAnchor {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 20;
+  display: none;
+}
+
+.titleMenuBtn {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+}
+
+.titleMenuBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.titleMenuOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10030;
+  display: none;
+}
+
+.titleMenuOverlay.is-open {
+  display: block;
+}
+
+.titleMenuPanel {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  min-width: 260px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(12, 16, 24, 0.96);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+  display: grid;
+  gap: 10px;
+}
+
+.titleMenuPanelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.titleMenuPanelTitle {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.titleMenuClose {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 22px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.titleMenuItem {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 15px;
+  font-weight: 900;
+  text-align: left;
+  padding: 14px 16px;
+  cursor: pointer;
+}
+
+.titleMenuItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.titleHero {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+  padding: 24px 18px;
+}
+
+.titleHeroLogo {
+  font-size: clamp(54px, 10vw, 104px);
+  margin-bottom: 0;
+}
+
+.titleHeroLogo::after {
+  width: min(52vw, 340px);
+}
+
+.titleHeroKana {
+  margin-top: 4px;
+  font-size: clamp(10px, 2.6vw, 15px);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.titleStartBtn {
+  min-width: min(320px, calc(100vw - 60px));
+  min-height: 54px;
+  margin-top: 10px;
+  font-size: 18px;
+}
+
+.titleInfoModal {
+  position: fixed;
+  inset: 0;
+  z-index: 10040;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.titleInfoModal.is-open {
+  display: flex;
+}
+
+.titleInfoDialog {
+  width: min(720px, calc(100vw - 40px));
+  height: min(78vh, 760px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(12, 16, 24, 0.98);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.45);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  overflow: hidden;
+}
+
+.titleInfoHeader {
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.titleInfoHeading {
+  font-size: clamp(18px, 3vw, 24px);
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+.titleInfoBody {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.8;
+}
+
+.titleInfoBody p {
+  margin: 0 0 1em;
+}
+
+.titleInfoBody p:last-child {
+  margin-bottom: 0;
+}
+
+.titleInfoAction {
+  gap: 8px;
+  padding: 0 18px 14px;
+}
+
+.titleInfoActionBtn {
+  width: 100%;
+}
+
+.titleInfoActionNote {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.titleInfoFooter {
+  padding: 0 18px 18px;
+}
+
+.titleInfoFooter .btn {
+  width: 100%;
+}
+
 /* ===== カードホバー吹き出し ===== */
 .cardTip {
   position: fixed;
@@ -889,6 +1137,97 @@ html {
   .appTag {
     font-size: 9px;
     padding: 2px 8px;
+  }
+
+
+  .titleScreen {
+    min-height: calc(100vh - 24px);
+  }
+
+  .titleTopLinks {
+    display: none;
+  }
+
+  .titleMenuAnchor {
+    display: block;
+    top: 2px;
+    right: 0;
+  }
+
+  .titleMenuBtn {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 24px;
+  }
+
+  .titleMenuPanel {
+    position: fixed;
+    inset: 0;
+    min-width: 0;
+    border-radius: 0;
+    border: 0;
+    background: rgba(10, 14, 22, 0.98);
+    padding: 20px 16px 24px;
+    box-shadow: none;
+    align-content: start;
+    gap: 12px;
+  }
+
+  .titleMenuClose {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .titleMenuItem {
+    min-height: 52px;
+    font-size: 16px;
+  }
+
+  .titleHero {
+    gap: 12px;
+    padding: 16px 8px 20px;
+  }
+
+  .titleHeroLogo {
+    font-size: clamp(40px, 13vw, 58px);
+  }
+
+  .titleHeroKana {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+
+  .titleStartBtn {
+    min-width: 100%;
+    font-size: 16px;
+  }
+
+  .titleInfoModal {
+    padding: 12px;
+  }
+
+  .titleInfoDialog {
+    width: 100%;
+    height: min(82vh, 760px);
+    border-radius: 18px;
+  }
+
+  .titleInfoHeader {
+    padding: 16px 16px 10px;
+  }
+
+  .titleInfoBody {
+    padding: 16px;
+  }
+
+  .titleInfoAction {
+    padding: 0 16px 12px;
+  }
+
+  .titleInfoFooter {
+    padding: 0 16px 16px;
   }
 
   /* ===== KPI (slightly smaller) ===== */
