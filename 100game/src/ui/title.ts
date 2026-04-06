@@ -1,4 +1,4 @@
-import { playButtonSe, startButtonSe } from "../core/sound";
+import { isSoundEnabled, playButtonSe, startButtonSe, toggleSound } from "../core/sound";
 
 type TitleCardSpec = {
   rank: string;
@@ -167,6 +167,7 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
       </div>
 
       <div class="titleMenuAnchor">
+        <button id="titleSoundBtn" class="soundBtn titleSoundBtn" type="button" aria-label="音の切り替え">🔊</button>
         <button id="titleMenuBtn" class="titleMenuBtn" type="button" aria-label="メニュー" aria-expanded="false">≡</button>
       </div>
 
@@ -208,6 +209,7 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
   `;
 
   const startBtn = app.querySelector<HTMLButtonElement>("#titleStartBtn");
+  const soundBtn = app.querySelector<HTMLButtonElement>("#titleSoundBtn");
   const menuBtn = app.querySelector<HTMLButtonElement>("#titleMenuBtn");
   const menuOverlay = app.querySelector<HTMLDivElement>("#titleMenuOverlay");
   const menuPanel = app.querySelector<HTMLDivElement>("#titleMenuPanel");
@@ -224,6 +226,7 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
 
   if (
     !startBtn ||
+    !soundBtn ||
     !menuBtn ||
     !menuOverlay ||
     !menuPanel ||
@@ -239,6 +242,13 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
   ) {
     throw new Error("title screen elements not found");
   }
+
+
+  const updateSoundButton = () => {
+    soundBtn.textContent = isSoundEnabled() ? "🔊" : "🔇";
+  };
+
+  updateSoundButton();
 
   const setMenuOpen = (open: boolean) => {
     menuOverlay.classList.toggle("is-open", open);
@@ -294,6 +304,14 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
   startBtn.addEventListener("click", () => {
     startButtonSe();
     handlers.onStart();
+  });
+
+  soundBtn.addEventListener("click", () => {
+    const next = toggleSound();
+    updateSoundButton();
+    if (next) {
+      playButtonSe();
+    }
   });
 
   menuBtn.addEventListener("click", () => {

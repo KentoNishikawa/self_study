@@ -1,7 +1,7 @@
 // src/ui/home.ts
 import type { Difficulty, GameType, GameState } from "../core/types";
 import { DEFAULT_PLAYER_ICON_ID, PLAYER_ICON_PRESETS, iconContentHtml, resolveIconId } from "../icons/iconPresets";
-import { playButtonSe, startButtonSe } from "../core/sound";
+import { isSoundEnabled, playButtonSe, startButtonSe, toggleSound } from "../core/sound";
 import { HOME_HOST_DISBANDED_NOTICE, getInviteExpiredNotice, getJoinFailedNotice, getLockedRoomNotice, getPreflightStatusNotice, getPreflightUnexpectedStatusNotice, getRoomFullNotice, renderMpNoticeModalHtml, setupMpNoticeModal, stashMpNotice, type MpNotice } from "./mpNotice";
 
 export type HomeConfig = {
@@ -93,6 +93,7 @@ export function renderHome(
   let draftOrder: number[] = [];
 
   let pendingRedirect = false;
+  const FORCE_HOME_SCREEN_KEY = "100game.forceHomeScreen";
   const ICON_STORAGE_KEY = "100game.iconId";
   let localIconId = DEFAULT_PLAYER_ICON_ID;
   try {
@@ -100,19 +101,24 @@ export function renderHome(
   } catch { }
 
 
-  const redirectToHome = () => {
+  const redirectToHome = (forceHomeScreen = false) => {
     // ルーム情報を消して、ソロHOMEへ（再生成を必ず押させる方針）
     if (roomId) {
       sessionStorage.removeItem(`hostToken:${roomId}`);
+    }
+    if (forceHomeScreen) {
+      try {
+        sessionStorage.setItem(FORCE_HOME_SCREEN_KEY, "1");
+      } catch { }
     }
     const next = location.origin + location.pathname + (location.hash ?? "");
     // ここで確実に“戻った後”の表示を走らせたいので、replaceで遷移
     location.replace(next);
   };
 
-  const flashAndRedirectHome = (notice: MpNotice) => {
+  const flashAndRedirectHome = (notice: MpNotice, forceHomeScreen = false) => {
     stashMpNotice(notice);
-    redirectToHome();
+    redirectToHome(forceHomeScreen);
   };
 
   const resetLobbyConnectionState = () => {
@@ -161,7 +167,7 @@ export function renderHome(
 
   const leaveOrDisbandAndRedirect = () => {
     if (!ws || ws.readyState !== WebSocket.OPEN || mySeatIndex == null) {
-      redirectToHome();
+      redirectToHome(true);
       return;
     }
 
@@ -171,7 +177,7 @@ export function renderHome(
 
     setTimeout(() => {
       if (!pendingRedirect) return;
-      redirectToHome();
+      redirectToHome(true);
     }, 3000);
   };
 
@@ -187,7 +193,10 @@ export function renderHome(
     ${renderMpNoticeModalHtml()}
 
     <div class="panel">
-      <div style="font-weight:950;margin-bottom:10px;">ゲーム設定</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
+        <div style="font-weight:950;min-width:0;">ゲーム設定</div>
+        <button id="soundToggleBtn" class="soundBtn" type="button" aria-label="音の切り替え">🔊</button>
+      </div>
 
       <div style="display:grid;gap:12px;">
         <div style="display:grid;gap:6px;">
@@ -276,7 +285,7 @@ export function renderHome(
 
         <label style="display:grid;gap:6px;">
           <span style="color:rgba(255,255,255,0.75);font-weight:800;">招待URL</span>
-          <div style="display:flex;gap:8px;">
+          <div id="inviteUrlRow" style="display:flex;gap:8px;">
             <input id="inviteUrl" class="input" readonly value="" />
             <button id="copyInviteBtn" class="btn" type="button" style="white-space:nowrap;">コピー</button>
           </div>
@@ -315,6 +324,7 @@ export function renderHome(
   const iconPicker = app.querySelector<HTMLDivElement>("#iconPicker")!;
   const iconOptButtons = Array.from(app.querySelectorAll<HTMLButtonElement>(".iconOpt"));
 
+  const soundBtn = app.querySelector<HTMLButtonElement>("#soundToggleBtn")!;
   const nameEl = app.querySelector<HTMLInputElement>("#playerName")!;
   const diffEl = app.querySelector<HTMLSelectElement>("#difficulty")!;
   const gameTypeEl = app.querySelector<HTMLSelectElement>("#gameType")!;
@@ -332,15 +342,29 @@ export function renderHome(
   const connStatusEl = app.querySelector<HTMLDivElement>("#connStatus")!;
   const leaveRoomBtn = app.querySelector<HTMLButtonElement>("#leaveRoomBtn")!;
 
+  const updateSoundButton = () => {
+    soundBtn.textContent = isSoundEnabled() ? "🔊" : "🔇";
+  };
+
+  updateSoundButton();
+
+  soundBtn.onclick = () => {
+    const next = toggleSound();
+    updateSoundButton();
+    if (next) {
+      playButtonSe();
+    }
+  };
+
   diffEl.value = config.difficulty;
   gameTypeEl.value = String(config.gameType);
 
-  const showJoinFailAndReturnHome = (notice: MpNotice) => {
+  const showJoinFailAndReturnHome = (notice: MpNotice, forceHomeScreen = false) => {
     mpNoticeModal.show(notice, {
       hideTitle: true,
       closeOnOverlay: false,
       onClose: () => {
-        redirectToHome(); // 既存の関数（?room=消してソロHOMEに戻す）
+        redirectToHome(forceHomeScreen); // 既存の関数（?room=消してソロHOMEに戻す）
       },
     });
   };
@@ -651,18 +675,19 @@ export function renderHome(
   };
 
   async function preflightAndJoin(rid: string) {
+    const hasHostToken = !!sessionStorage.getItem(`hostToken:${rid}`);
+
     try {
       const res = await fetch(`${apiBase}/api/rooms/${rid}/state`, { method: "GET" });
-      const hasHostToken = !!sessionStorage.getItem(`hostToken:${rid}`);
 
       const statusNotice = getPreflightStatusNotice(res.status, hasHostToken);
       if (statusNotice) {
-        showJoinFailAndReturnHome(statusNotice);
+        showJoinFailAndReturnHome(statusNotice, hasHostToken);
         return;
       }
 
       if (!res.ok) {
-        showJoinFailAndReturnHome(getPreflightUnexpectedStatusNotice(hasHostToken));
+        showJoinFailAndReturnHome(getPreflightUnexpectedStatusNotice(hasHostToken), hasHostToken);
         return;
       }
 
@@ -687,7 +712,7 @@ export function renderHome(
       inviteUrlEl.value = `${location.origin}?room=${rid}`;
       connectWs(rid);
     } catch {
-      flashAndRedirectHome(getJoinFailedNotice());
+      flashAndRedirectHome(getJoinFailedNotice(), hasHostToken);
       return;
     }
   }

@@ -11,7 +11,21 @@ import { pickJokerValue } from "./ui/jokerPicker";
 
 type Screen = "TITLE" | "HOME" | "GAME";
 
-let screen: Screen = new URLSearchParams(location.search).get("room") ? "HOME" : "TITLE";
+const FORCE_HOME_SCREEN_KEY = "100game.forceHomeScreen";
+
+function consumeForceHomeScreen(): boolean {
+  try {
+    if (sessionStorage.getItem(FORCE_HOME_SCREEN_KEY) !== "1") return false;
+    sessionStorage.removeItem(FORCE_HOME_SCREEN_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const hasInitialRoom = !!new URLSearchParams(location.search).get("room");
+const forceInitialHome = consumeForceHomeScreen();
+let screen: Screen = hasInitialRoom || forceInitialHome ? "HOME" : "TITLE";
 let state: GameState | null = null;
 
 type MpSession = {

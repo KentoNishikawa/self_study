@@ -20,8 +20,28 @@ const cardPlaySe = createAudio(cardPlaySeFile);
 const resultSe = createAudio(resultSeFile);
 const buttonSe = createAudio(buttonSeFile);
 const startSe = createAudio(startbuttonSeFile);
+const SOUND_KEY = "100game.sound";
+
+export function isSoundEnabled(): boolean {
+    try {
+        return sessionStorage.getItem(SOUND_KEY) !== "off";
+    } catch {
+        return true;
+    }
+}
+
+export function toggleSound(): boolean {
+    const next = !isSoundEnabled();
+    try {
+        sessionStorage.setItem(SOUND_KEY, next ? "on" : "off");
+    } catch {
+        // no-op
+    }
+    return next;
+}
 
 function playAudio(audio: HTMLAudioElement) {
+    if (!isSoundEnabled()) return;
     try {
         audio.pause();
         audio.currentTime = 0;
@@ -29,16 +49,6 @@ function playAudio(audio: HTMLAudioElement) {
         p?.catch?.(() => { });
     } catch {
         // no-op
-    }
-}
-
-function isPcScreen() {
-    try {
-        const noHover = window.matchMedia?.("(hover: none)")?.matches ?? false;
-        const coarse = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
-        return !(noHover || coarse);
-    } catch {
-        return true;
     }
 }
 
@@ -55,7 +65,6 @@ export function playResultSe() {
 }
 
 export function playButtonSe() {
-    if (!isPcScreen()) return;
     playAudio(buttonSe);
 }
 
