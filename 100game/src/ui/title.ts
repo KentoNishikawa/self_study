@@ -129,7 +129,7 @@ const TITLE_MODAL_CONTENT: Record<TitleModalKey, TitleModalContent> = {
     title: "クレジット",
     bodyHtml: `
       <p><strong>タイトル</strong><br>100GAME⁺</p>
-      <p><strong>企画・開発</strong><br>100GAME Project</p>
+      <p><strong>企画・開発</strong><br>チーム名考え中・・・</p>
       <p><strong>使用技術</strong><br>TypeScript / Vite / Cloudflare</p>
       <p>クレジット表記は、今後の追加要素に応じて更新する予定です。</p>
     `,

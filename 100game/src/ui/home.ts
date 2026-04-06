@@ -2,6 +2,7 @@
 import type { Difficulty, GameType, GameState } from "../core/types";
 import { DEFAULT_PLAYER_ICON_ID, PLAYER_ICON_PRESETS, iconContentHtml, resolveIconId } from "../icons/iconPresets";
 import { isSoundEnabled, playButtonSe, startButtonSe, toggleSound } from "../core/sound";
+import { validatePlayerName } from "../core/nameValidation";
 import { HOME_HOST_DISBANDED_NOTICE, getInviteExpiredNotice, getJoinFailedNotice, getLockedRoomNotice, getPreflightStatusNotice, getPreflightUnexpectedStatusNotice, getRoomFullNotice, renderMpNoticeModalHtml, setupMpNoticeModal, stashMpNotice, type MpNotice } from "./mpNotice";
 
 export type HomeConfig = {
@@ -69,6 +70,13 @@ function shortName(name: string) {
   return chars.slice(0, 6).join("") + "…";
 }
 
+function defaultPlayerName(seatIndex: number | null, isConnected: boolean) {
+  if (!isConnected) return "プレイヤー";
+  if (seatIndex === 0) return "HOST";
+  if (seatIndex != null && seatIndex >= 1 && seatIndex <= 3) return `プレイヤー${seatIndex}`;
+  return "プレイヤー";
+}
+
 export function renderHome(
   app: HTMLDivElement,
   config: HomeConfig,
@@ -93,6 +101,7 @@ export function renderHome(
   let draftOrder: number[] = [];
 
   let pendingRedirect = false;
+  let committedName = config.playerName;
   const FORCE_HOME_SCREEN_KEY = "100game.forceHomeScreen";
   const ICON_STORAGE_KEY = "100game.iconId";
   let localIconId = DEFAULT_PLAYER_ICON_ID;
@@ -227,10 +236,13 @@ export function renderHome(
               </div>
             </div>
 
-            <input id="playerName" class="input" style="flex:1;" value="${escapeHtml(config.playerName)}" />
+            <div style="display:flex;gap:8px;align-items:center;flex:1;">
+              <input id="playerName" class="input" style="flex:1;" value="${escapeHtml(config.playerName)}" />
+              <button id="nameCommitBtn" class="btn" type="button" style="white-space:nowrap;">決定</button>
+            </div>
           </div>
 
-          <div style="font-size:12px;opacity:0.75;">※入力中は即時反映 / 確定（フォーカス外れ）で空欄補正</div>
+          <div id="nameError" style="min-height:18px;margin-left:54px;width:calc(100% - 54px);text-align:left;font-size:12px;color:#ff8080;visibility:hidden;"></div>
         </div>
 
         <label style="display:grid;gap:6px;">
@@ -326,6 +338,8 @@ export function renderHome(
 
   const soundBtn = app.querySelector<HTMLButtonElement>("#soundToggleBtn")!;
   const nameEl = app.querySelector<HTMLInputElement>("#playerName")!;
+  const nameCommitBtn = app.querySelector<HTMLButtonElement>("#nameCommitBtn")!;
+  const nameErrorEl = app.querySelector<HTMLDivElement>("#nameError")!;
   const diffEl = app.querySelector<HTMLSelectElement>("#difficulty")!;
   const gameTypeEl = app.querySelector<HTMLSelectElement>("#gameType")!;
   const startBtn = app.querySelector<HTMLButtonElement>("#startBtn")!;
@@ -364,7 +378,7 @@ export function renderHome(
       hideTitle: true,
       closeOnOverlay: false,
       onClose: () => {
-        redirectToHome(forceHomeScreen); // 既存の関数（?room=消してソロHOMEに戻す）
+        redirectToHome(forceHomeScreen);
       },
     });
   };
@@ -510,12 +524,67 @@ export function renderHome(
         : "参加者として接続中（名前/アイコンのみ変更可能）";
   };
 
-  const updateConfigLocal = () => {
+  const updateConfigLocal = (playerName = committedName) => {
     handlers.onChange({
-      playerName: nameEl.value,
+      playerName,
       difficulty: diffEl.value as Difficulty,
       gameType: parseGameType(gameTypeEl.value),
     });
+  };
+
+  const setNameError = (message: string | null) => {
+    if (message) {
+      nameErrorEl.textContent = message;
+      nameErrorEl.style.visibility = "visible";
+      return;
+    }
+
+    nameErrorEl.textContent = "";
+    nameErrorEl.style.visibility = "hidden";
+  };
+
+  const updateNameControls = () => {
+    const result = validatePlayerName(nameEl.value);
+    const hasDraft = nameEl.value !== committedName;
+
+    if (result === "ng") setNameError("この名前は使用できません");
+    else setNameError(null);
+
+    nameCommitBtn.disabled = result !== "ok" || !hasDraft;
+  };
+
+  const syncCommittedName = (nextName: string) => {
+    const hadDraft = nameEl.value !== committedName;
+    committedName = nextName;
+
+    if (!hadDraft || document.activeElement !== nameEl) {
+      nameEl.value = nextName;
+    }
+
+    updateConfigLocal(committedName);
+    updateNameControls();
+  };
+
+  const commitName = () => {
+    const result = validatePlayerName(nameEl.value);
+    if (result !== "ok") return;
+
+    const nextName = nameEl.value.trim();
+    committedName = nextName;
+    nameEl.value = nextName;
+    setNameError(null);
+    updateConfigLocal(committedName);
+
+    if (lobby && mySeatIndex != null && lobby.seats[mySeatIndex]) {
+      lobby.seats[mySeatIndex].name = committedName;
+      renderParticipants(lobby);
+    }
+
+    if (ws && ws.readyState === WebSocket.OPEN && mySeatIndex != null) {
+      ws.send(JSON.stringify({ type: "COMMIT_NAME", name: committedName }));
+    }
+
+    updateNameControls();
   };
 
   // ---- icon picker ----
@@ -617,7 +686,7 @@ export function renderHome(
           localIconId = resolveIconId(me.iconId);
           iconBtn.dataset.iconId = localIconId;
           iconBtn.innerHTML = iconContentHtml(localIconId, 44);
-          if (document.activeElement !== nameEl) nameEl.value = me.name;
+          syncCommittedName(me.name);
         }
 
         diffEl.value = lobby.npcDifficulty;
@@ -641,7 +710,7 @@ export function renderHome(
           if (me) {
             localIconId = me.iconId;
             iconBtn.innerHTML = iconContentHtml(me.iconId, 44);
-            if (document.activeElement !== nameEl) nameEl.value = me.name;
+            syncCommittedName(me.name);
           }
         }
 
@@ -667,7 +736,7 @@ export function renderHome(
 
       if (pendingRedirect) {
         pendingRedirect = false;
-        redirectToHome();
+        redirectToHome(true);
       }
     };
 
@@ -719,16 +788,20 @@ export function renderHome(
 
   // ---- events ----
   nameEl.oninput = () => {
-    updateConfigLocal();
-    if (ws && ws.readyState === WebSocket.OPEN && mySeatIndex != null) {
-      ws.send(JSON.stringify({ type: "UPDATE_NAME", name: nameEl.value }));
-    }
+    updateNameControls();
   };
 
-  nameEl.onblur = () => {
-    if (ws && ws.readyState === WebSocket.OPEN && mySeatIndex != null) {
-      ws.send(JSON.stringify({ type: "COMMIT_NAME", name: nameEl.value }));
-    }
+  nameEl.onkeydown = (ev) => {
+    if (ev.key !== "Enter") return;
+    if (nameCommitBtn.disabled) return;
+
+    ev.preventDefault();
+    commitName();
+  };
+
+  nameCommitBtn.onclick = () => {
+    playButtonSe();
+    commitName();
   };
 
   diffEl.onchange = () => {
@@ -758,15 +831,28 @@ export function renderHome(
   };
 
   startBtn.onclick = () => {
+    const validation = validatePlayerName(nameEl.value);
+    if (validation === "empty") {
+      setNameError("名前を入力してください");
+      return;
+    }
+    if (validation === "ng") {
+      setNameError("この名前は使用できません");
+      return;
+    }
+
     startButtonSe();
-    const cfg: HomeConfig = {
-      playerName: nameEl.value,
-      difficulty: diffEl.value as Difficulty,
-      gameType: parseGameType(gameTypeEl.value),
-    };
 
     const isConnected = !!ws && ws.readyState === WebSocket.OPEN && !!lobby;
     const isHost = isConnected && mySeatIndex === 0;
+    const hasDraft = nameEl.value !== committedName;
+    const playerName = hasDraft ? defaultPlayerName(mySeatIndex, isConnected) : committedName;
+
+    const cfg: HomeConfig = {
+      playerName,
+      difficulty: diffEl.value as Difficulty,
+      gameType: parseGameType(gameTypeEl.value),
+    };
 
     if (!isConnected) {
       handlers.onStart(cfg);
@@ -896,6 +982,9 @@ export function renderHome(
     reorderBtn.disabled = false;
   };
 
+  committedName = config.playerName;
+  updateConfigLocal(committedName);
+  updateNameControls();
 
   if (roomId) {
     preflightAndJoin(roomId);
