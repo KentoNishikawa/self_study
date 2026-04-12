@@ -193,10 +193,6 @@ export function renderHome(
   const targetLabel = config.gameType === "EXTRA" ? "???" : String(config.gameType);
 
   app.innerHTML = `
-    <header class="appHeader">
-        <h1 class="appTitle">100GAME⁺</h1>
-        <div class="appTag">HOME</div>
-    </header>
 
     <!-- 通知モーダル（満員など） -->
     ${renderMpNoticeModalHtml()}
@@ -278,7 +274,7 @@ export function renderHome(
           </div>
         </details>
 
-        <button id="startBtn" class="btn" style="width:100%;font-weight:950;">
+        <button id="startBtn" class="btn" type="button" style="width:100%;font-weight:950;">
           ゲーム開始
         </button>
 
