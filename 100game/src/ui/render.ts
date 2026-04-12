@@ -815,10 +815,6 @@ export function render(
           )}</span>`;
 
     app.innerHTML = `
-      <header class="appHeader">
-        <h1 class="appTitle">100GAME⁺</h1>
-        <div class="appTag">BATTLE</div>
-      </header>
 
       <div class="panel">
         <div class="row kpiRow">
@@ -897,7 +893,7 @@ export function render(
       }">
                 ${lastCard
         ? cardInnerHtml(lastCard, lastCard.rank === "JOKER" ? lastValue : undefined)
-        : `<div class="center emptyPlayCard"><div class="rank">—</div><div class="suit"><span>場にカード</span><span>なし</span></div></div>`
+        : `<div class="center emptyPlayCard"><div class="rank">—</div><div class="suit"><span>なし</span></div></div>`
       }
               </div>
 
