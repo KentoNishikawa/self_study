@@ -8,6 +8,8 @@ import resultSeFile from "../assets/sound_effects/cncl07.mp3";
 import buttonSeFile from "../assets/sound_effects/決定ボタンを押す49.mp3";
 // スタート関連のボタンを押すときの効果音
 import startbuttonSeFile from "../assets/sound_effects/決定ボタンを押す47.mp3";
+// 自分のターン開始の効果音
+import myturnSeFile from "../assets/sound_effects/cncl01.mp3";
 
 function createAudio(src: string) {
     const audio = new Audio(src);
@@ -20,6 +22,8 @@ const cardPlaySe = createAudio(cardPlaySeFile);
 const resultSe = createAudio(resultSeFile);
 const buttonSe = createAudio(buttonSeFile);
 const startSe = createAudio(startbuttonSeFile);
+const myturnSe = createAudio(myturnSeFile);
+
 const SOUND_KEY = "100game.sound";
 
 export function isSoundEnabled(): boolean {
@@ -71,3 +75,8 @@ export function playButtonSe() {
 export function startButtonSe() {
     playAudio(startSe);
 }
+
+export function playMyturnSe() {
+    playAudio(myturnSe);
+}
+

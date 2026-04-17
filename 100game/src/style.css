@@ -1060,6 +1060,73 @@ html {
   width: 100%;
 }
 
+
+.noticeModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10040;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.noticeModalOverlay.is-open {
+  display: flex;
+}
+
+.noticeModalDialog {
+  width: min(720px, calc(100vw - 40px));
+  max-height: min(78vh, 760px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(12, 16, 24, 0.98);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.45);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+
+.noticeModalDialog.is-compact {
+  width: min(620px, calc(100vw - 40px));
+}
+
+.noticeModalHeader {
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.noticeModalHeading {
+  font-size: clamp(18px, 3vw, 24px);
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+.noticeModalBody {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.8;
+}
+
+.noticeModalBody.is-center {
+  text-align: center;
+}
+
+.noticeModalBody p {
+  margin: 0;
+}
+
+.noticeModalFooter {
+  padding: 0 18px 18px;
+}
+
+.noticeModalFooter .btn {
+  width: 100%;
+}
+
 /* ===== カードホバー吹き出し ===== */
 .cardTip {
   position: fixed;
@@ -1390,6 +1457,30 @@ html {
   }
 
   .titleInfoFooter {
+    padding: 0 16px 16px;
+  }
+
+
+  .noticeModalOverlay {
+    padding: 12px;
+  }
+
+  .noticeModalDialog,
+  .noticeModalDialog.is-compact {
+    width: 100%;
+    max-height: min(82vh, 760px);
+    border-radius: 18px;
+  }
+
+  .noticeModalHeader {
+    padding: 16px 16px 10px;
+  }
+
+  .noticeModalBody {
+    padding: 16px;
+  }
+
+  .noticeModalFooter {
     padding: 0 16px 16px;
   }
 

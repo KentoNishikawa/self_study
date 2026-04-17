@@ -36,6 +36,22 @@ type TitleModalContent = {
   actionDisabled?: boolean;
 };
 
+const SOUND_NOTICE_SHOWN_KEY = "100game.soundNoticeShown";
+
+function hasShownSoundNotice() {
+  try {
+    return sessionStorage.getItem(SOUND_NOTICE_SHOWN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markSoundNoticeShown() {
+  try {
+    sessionStorage.setItem(SOUND_NOTICE_SHOWN_KEY, "1");
+  } catch { }
+}
+
 
 function titleSuitSymbol(suit: TitleCardSpec["suit"]) {
   switch (suit) {
@@ -128,8 +144,8 @@ const TITLE_MODAL_CONTENT: Record<TitleModalKey, TitleModalContent> = {
   credits: {
     title: "クレジット",
     bodyHtml: `
-      <p><strong>タイトル</strong><br>100GAME⁺</p>
-      <p><strong>企画・開発</strong><br>チーム名考え中・・・</p>
+      <p><strong>タイトル</strong><br>100GAME⁺(100ゲームプラス)</p>
+      <p><strong>企画・開発</strong><br>Acceble</p>
       <p><strong>使用技術</strong><br>TypeScript / Vite / Cloudflare</p>
       <p>クレジット表記は、今後の追加要素に応じて更新する予定です。</p>
     `,
@@ -205,6 +221,21 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
           </div>
         </div>
       </div>
+
+      <div id="titleSoundNoticeModal" class="noticeModalOverlay" aria-hidden="true">
+        <div id="titleSoundNoticeDialog" class="noticeModalDialog is-compact" role="dialog" aria-modal="true" aria-labelledby="titleSoundNoticeHeading">
+          <div class="noticeModalHeader">
+            <div id="titleSoundNoticeHeading" class="noticeModalHeading">ご案内</div>
+          </div>
+          <div class="noticeModalBody is-center">
+            <p>このゲームでは音が発生します</p>
+            <p>画面右上の音ON/OFFボタンやブラウザのタブごとのミュート機能などで調整できます</p>
+          </div>
+          <div class="noticeModalFooter">
+            <button id="titleSoundNoticeClose" class="btn" type="button">閉じる</button>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 
@@ -216,6 +247,9 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
   const menuClose = app.querySelector<HTMLButtonElement>("#titleMenuClose");
   const modal = app.querySelector<HTMLDivElement>("#titleInfoModal");
   const modalDialog = app.querySelector<HTMLDivElement>("#titleInfoDialog");
+  const soundNoticeModal = app.querySelector<HTMLDivElement>("#titleSoundNoticeModal");
+  const soundNoticeDialog = app.querySelector<HTMLDivElement>("#titleSoundNoticeDialog");
+  const soundNoticeClose = app.querySelector<HTMLButtonElement>("#titleSoundNoticeClose");
   const modalHeading = app.querySelector<HTMLDivElement>("#titleInfoHeading");
   const modalBody = app.querySelector<HTMLDivElement>("#titleInfoBody");
   const modalAction = app.querySelector<HTMLDivElement>("#titleInfoAction");
@@ -233,6 +267,9 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
     !menuClose ||
     !modal ||
     !modalDialog ||
+    !soundNoticeModal ||
+    !soundNoticeDialog ||
+    !soundNoticeClose ||
     !modalHeading ||
     !modalBody ||
     !modalAction ||
@@ -277,6 +314,16 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
   const setModalOpen = (open: boolean) => {
     modal.classList.toggle("is-open", open);
     modal.setAttribute("aria-hidden", open ? "false" : "true");
+  };
+
+  const setSoundNoticeOpen = (open: boolean) => {
+    soundNoticeModal.classList.toggle("is-open", open);
+    soundNoticeModal.setAttribute("aria-hidden", open ? "false" : "true");
+  };
+
+  const closeSoundNotice = () => {
+    markSoundNoticeShown();
+    setSoundNoticeOpen(false);
   };
 
   const openModal = (key: TitleModalKey) => {
@@ -356,4 +403,21 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
   modalDialog.addEventListener("click", (event) => {
     event.stopPropagation();
   });
+
+  soundNoticeClose.addEventListener("click", () => {
+    closeSoundNotice();
+  });
+
+  soundNoticeModal.addEventListener("click", (event) => {
+    if (event.target !== soundNoticeModal) return;
+    closeSoundNotice();
+  });
+
+  soundNoticeDialog.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+
+  if (!hasShownSoundNotice()) {
+    setSoundNoticeOpen(true);
+  }
 }

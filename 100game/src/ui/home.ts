@@ -30,6 +30,22 @@ type LobbyState = {
 type WelcomeMsg = { type: "WELCOME"; seatIndex: number; state: LobbyState };
 type RoomStateMsg = { type: "ROOM_STATE"; state: LobbyState };
 
+const SOUND_NOTICE_SHOWN_KEY = "100game.soundNoticeShown";
+
+function hasShownSoundNotice() {
+  try {
+    return sessionStorage.getItem(SOUND_NOTICE_SHOWN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markSoundNoticeShown() {
+  try {
+    sessionStorage.setItem(SOUND_NOTICE_SHOWN_KEY, "1");
+  } catch { }
+}
+
 function isLobbyState(v: any): v is LobbyState {
   return (
     v &&
@@ -197,6 +213,41 @@ export function renderHome(
     <!-- 通知モーダル（満員など） -->
     ${renderMpNoticeModalHtml()}
 
+    <div id="homeSoundNoticeModal" class="noticeModalOverlay" aria-hidden="true">
+      <div id="homeSoundNoticeDialog" class="noticeModalDialog is-compact" role="dialog" aria-modal="true" aria-labelledby="homeSoundNoticeHeading">
+        <div class="noticeModalHeader">
+          <div id="homeSoundNoticeHeading" class="noticeModalHeading">ご案内</div>
+        </div>
+        <div class="noticeModalBody is-center">
+          <p>このゲームでは音が発生します</p>
+          <p>ゲーム設定右上の音ON/OFFボタンやブラウザのタブごとのミュート機能などで調整できます</p>
+        </div>
+        <div class="noticeModalFooter">
+          <button id="homeSoundNoticeClose" class="btn" type="button">閉じる</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="ruleModalOverlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,0.62);z-index:10040;">
+      <div style="width:min(720px, calc(100vw - 40px));max-height:min(78vh, 760px);border-radius:20px;border:1px solid rgba(255,255,255,0.14);background:rgba(12, 16, 24, 0.98);box-shadow:0 24px 56px rgba(0, 0, 0, 0.45);display:grid;grid-template-rows:auto minmax(0, 1fr) auto;overflow:hidden;">
+        <div style="padding:18px 18px 12px;border-bottom:1px solid rgba(255,255,255,0.08);">
+          <div style="font-size:clamp(18px, 3vw, 24px);font-weight:950;letter-spacing:0.04em;">ルール要点</div>
+        </div>
+        <div style="min-height:0;overflow-y:auto;padding:18px;color:rgba(255,255,255,0.88);line-height:1.8;">
+          <div>・順番にカードを出し、合計が <b>${escapeHtml(targetLabel)}以上</b> で負け（加算時）</div>
+          <div>・J/Q/Kは10、Aは1</div>
+          <div>・ジョーカーは1〜49（宣言）</div>
+          <div>・ジョーカー直後に♠3でジョーカーを0化、♠3も0</div>
+          <div>・Jは +10 → 負けてなければ加算/減算を反転</div>
+          <div>・<b>ゲームタイプ：100以外</b> の場合、山札が尽きた瞬間に「再配布」</div>
+          <div>・再配布できるカードが無い場合は無効試合</div>
+        </div>
+        <div style="padding:0 18px 18px;">
+          <button id="ruleModalCloseBtn" class="btn" type="button" style="width:100%;">閉じる</button>
+        </div>
+      </div>
+    </div>
+
     <div class="panel">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
         <div style="font-weight:950;min-width:0;">ゲーム設定</div>
@@ -261,22 +312,14 @@ export function renderHome(
           </select>
         </label>
 
-        <details class="details">
-          <summary>ルール要点</summary>
-          <div style="margin-top:8px;color:rgba(255,255,255,0.8);line-height:1.7;">
-            <div>・順番にカードを出し、合計が <b>${escapeHtml(targetLabel)}以上</b> で負け（加算時）</div>
-            <div>・J/Q/Kは10、Aは1</div>
-            <div>・ジョーカーは1〜49（宣言）</div>
-            <div>・ジョーカー直後に♠3でジョーカーを0化、♠3も0</div>
-            <div>・Jは +10 → 負けてなければ加算/減算を反転</div>
-            <div>・<b>ゲームタイプ：100以外</b> の場合、山札が尽きた瞬間に「再配布」</div>
-            <div>・再配布できるカードが無い場合は無効試合</div>
-          </div>
-        </details>
-
-        <button id="startBtn" class="btn" type="button" style="width:100%;font-weight:950;">
-          ゲーム開始
-        </button>
+        <div style="display:flex;gap:8px;align-items:stretch;">
+          <button id="ruleBtn" class="btn" type="button" style="flex:1;">
+            ルール確認
+          </button>
+          <button id="startBtn" class="btn" type="button" style="flex:1;font-weight:950;">
+            ゲーム開始
+          </button>
+        </div>
 
         <!-- 高さ固定：接続状態の文言が変わっても折り返して高さが変動しないようにする -->
         <div id="roleHint" style="font-size:12px;opacity:0.8;min-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
@@ -333,6 +376,12 @@ export function renderHome(
   const iconOptButtons = Array.from(app.querySelectorAll<HTMLButtonElement>(".iconOpt"));
 
   const soundBtn = app.querySelector<HTMLButtonElement>("#soundToggleBtn")!;
+  const homeSoundNoticeModal = app.querySelector<HTMLDivElement>("#homeSoundNoticeModal")!;
+  const homeSoundNoticeDialog = app.querySelector<HTMLDivElement>("#homeSoundNoticeDialog")!;
+  const homeSoundNoticeClose = app.querySelector<HTMLButtonElement>("#homeSoundNoticeClose")!;
+  const ruleBtn = app.querySelector<HTMLButtonElement>("#ruleBtn")!;
+  const ruleModalOverlay = app.querySelector<HTMLDivElement>("#ruleModalOverlay")!;
+  const ruleModalCloseBtn = app.querySelector<HTMLButtonElement>("#ruleModalCloseBtn")!;
   const nameEl = app.querySelector<HTMLInputElement>("#playerName")!;
   const nameCommitBtn = app.querySelector<HTMLButtonElement>("#nameCommitBtn")!;
   const nameErrorEl = app.querySelector<HTMLDivElement>("#nameError")!;
@@ -364,6 +413,56 @@ export function renderHome(
     if (next) {
       playButtonSe();
     }
+  };
+
+  const setHomeSoundNoticeOpen = (open: boolean) => {
+    homeSoundNoticeModal.classList.toggle("is-open", open);
+    homeSoundNoticeModal.setAttribute("aria-hidden", open ? "false" : "true");
+  };
+
+  const closeHomeSoundNotice = () => {
+    markSoundNoticeShown();
+    setHomeSoundNoticeOpen(false);
+  };
+
+  homeSoundNoticeClose.onclick = () => {
+    closeHomeSoundNotice();
+  };
+
+  homeSoundNoticeModal.onclick = (ev) => {
+    if (ev.target !== homeSoundNoticeModal) return;
+    closeHomeSoundNotice();
+  };
+
+  homeSoundNoticeDialog.onclick = (ev) => {
+    ev.stopPropagation();
+  };
+
+  if (!hasShownSoundNotice()) {
+    setHomeSoundNoticeOpen(true);
+  }
+
+  const openRuleModal = () => {
+    ruleModalOverlay.style.display = "flex";
+  };
+
+  const closeRuleModal = () => {
+    ruleModalOverlay.style.display = "none";
+  };
+
+  ruleBtn.onclick = () => {
+    playButtonSe();
+    openRuleModal();
+  };
+
+  ruleModalCloseBtn.onclick = () => {
+    playButtonSe();
+    closeRuleModal();
+  };
+
+  ruleModalOverlay.onclick = (ev) => {
+    if (ev.target !== ruleModalOverlay) return;
+    closeRuleModal();
   };
 
   diffEl.value = config.difficulty;
