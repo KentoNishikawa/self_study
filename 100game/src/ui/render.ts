@@ -185,7 +185,6 @@ export function resetRenderTransientState() {
   lastPlayedMyTurnSeKey = null;
 
   document.getElementById("gameStartOverlay")?.remove();
-  closeActionConfirmModal();
 }
 
 // =====================
@@ -652,91 +651,6 @@ function renderResultModal(show: boolean, key: string, title: string, bodyHtml: 
   });
 }
 
-let actionConfirmRoot = document.querySelector<HTMLDivElement>("#actionConfirmModalRoot");
-if (!actionConfirmRoot) {
-  actionConfirmRoot = document.createElement("div");
-  actionConfirmRoot.id = "actionConfirmModalRoot";
-  document.body.appendChild(actionConfirmRoot);
-}
-
-function closeActionConfirmModal() {
-  if (!actionConfirmRoot) return;
-  actionConfirmRoot.innerHTML = "";
-}
-
-function showActionConfirmModal(options: {
-  title: string;
-  bodyHtml: string;
-  confirmLabel: string;
-  cancelLabel?: string;
-  onConfirm: () => void;
-}) {
-  if (!actionConfirmRoot) return;
-
-  const cancelLabel = options.cancelLabel ?? "キャンセル";
-
-  actionConfirmRoot.innerHTML = `
-    <div id="acOverlay"
-      style="
-        position:fixed; inset:0;
-        display:flex; align-items:center; justify-content:center;
-        background:rgba(0,0,0,.55);
-        z-index:10010;
-        padding:16px;
-      ">
-      <div
-        style="
-          width:min(560px, 100%);
-          border-radius:16px;
-          background:rgba(15,18,26,.92);
-          border:1px solid rgba(255,255,255,.14);
-          box-shadow:0 18px 60px rgba(0,0,0,.55);
-          padding:18px 18px 14px 18px;
-          color:#fff;
-        "
-        role="dialog" aria-modal="true"
-      >
-        <div style="font-weight:950;font-size:16px;margin-bottom:10px;text-align:center;">
-          ${escapeHtml(options.title)}
-        </div>
-
-        <div style="color:rgba(255,255,255,.88);line-height:1.6;margin-bottom:14px;text-align:center">
-          ${options.bodyHtml}
-        </div>
-
-        <div style="display:flex;justify-content:center;gap:8px;">
-          <button id="acCancel" class="btn" style="min-width:116px;display:inline-flex;align-items:center;justify-content:center;">${escapeHtml(cancelLabel)}</button>
-          <button id="acConfirm" class="btn" style="min-width:116px;display:inline-flex;align-items:center;justify-content:center;">${escapeHtml(options.confirmLabel)}</button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  const overlay = document.querySelector<HTMLDivElement>("#acOverlay");
-  const cancelBtn = document.querySelector<HTMLButtonElement>("#acCancel");
-  const confirmBtn = document.querySelector<HTMLButtonElement>("#acConfirm");
-
-  const close = () => {
-    closeActionConfirmModal();
-  };
-
-  cancelBtn?.addEventListener("click", () => {
-    playButtonSe();
-    close();
-  });
-
-  confirmBtn?.addEventListener("click", () => {
-    close();
-    options.onConfirm();
-  });
-
-  overlay?.addEventListener("click", (ev: MouseEvent) => {
-    if (ev.target !== overlay) return;
-    close();
-  });
-}
-
-
 // =====================
 // render main
 // =====================
@@ -754,6 +668,7 @@ export function render(
 ) {
   try {
     hideTip();
+    void difficulty;
 
     const resultKey = makeResultKey(state);
     if (state.result.status === "PLAYING") dismissedResultKey = null;
@@ -845,25 +760,28 @@ export function render(
       return msg;
     };
 
-    const diffText = difficulty === "SMART" ? "SMART" : "CASUAL";
     const isPlaying = state.result.status === "PLAYING";
     if (isPlaying) lastPlayedResultSeKey = null;
     const canOperate = isPlaying && state.turn === 0 && !uiLocked;
     const shouldHideHandUntilTurnLimitStarts = Boolean((state as any).__hideHandUntilTurnLimitStarts);
 
-    const myTurnSeKey = isPlaying && state.turn === 0 && !shouldHideHandUntilTurnLimitStarts
-      ? `${state.history.length}|${state.turn}`
-      : null;
+    if (prevHideHandUntilTurnLimitStarts && !shouldHideHandUntilTurnLimitStarts && me.hand.length > 0) {
+      playCardDealSe();
+    }
+    prevHideHandUntilTurnLimitStarts = shouldHideHandUntilTurnLimitStarts;
+
+    const myTurnSeKey =
+      isPlaying && state.turn === 0 && !shouldHideHandUntilTurnLimitStarts
+        ? `${state.history.length}|${state.turn}`
+        : null;
 
     if (myTurnSeKey && lastPlayedMyTurnSeKey !== myTurnSeKey) {
       playMyturnSe();
       lastPlayedMyTurnSeKey = myTurnSeKey;
     }
-
-    if (prevHideHandUntilTurnLimitStarts && !shouldHideHandUntilTurnLimitStarts && me.hand.length > 0) {
-      playCardDealSe();
+    if (!myTurnSeKey && (state.turn !== 0 || !isPlaying)) {
+      lastPlayedMyTurnSeKey = null;
     }
-    prevHideHandUntilTurnLimitStarts = shouldHideHandUntilTurnLimitStarts;
 
     const latestReshuffleLog = [...(state.systemLogs ?? [])].reverse().find((log) => log.kind !== "INFO") ?? null;
     const latestReshuffleLogId = latestReshuffleLog?.id ?? null;
@@ -914,44 +832,9 @@ export function render(
     app.innerHTML = `
 
       <div class="panel">
-        <div class="row kpiRow">
-          <span class="badge ${state.mode === "UP" ? "up" : "down"}">
-            ${modeText(state.mode, escapeHtml(targetLabel))}
-          </span>
-
-          <div class="kpi">
-            <span class="label">合計</span>
-            <span class="value">${state.total}</span>
-          </div>
-
-          <div class="kpi">
-            <span class="label">山札</span>
-            <span class="value small">${state.deck.length}</span>
-          </div>
-
-          <div class="kpi">
-            <span class="label">手番</span>
-            <span class="value small" style="white-space:nowrap;">${escapeHtml(shortName(turnSeat.name))}</span>
-          </div>
-
-          <div class="kpi">
-            <span class="label">難易度</span>
-            <span class="value small">${diffText}</span>
-          </div>
-
-          <div class="spacer"></div>
-
-          <div class="status">
-            ${state.result.status === "PLAYING"
-        ? `<span class="statusText playing">進行中</span>`
-        : `<span class="statusText ended">決着</span>`
-      }
-          </div>
-        </div>
-
         <!-- ★LIMIT：角丸HPバー -->
         <div id="limitRow"
-          style="height:24px;display:flex;align-items:center;gap:10px;margin-top:6px;user-select:none;"
+          style="height:24px;display:flex;align-items:center;gap:10px;user-select:none;"
         >
           <div style="font-weight:950;opacity:.85;letter-spacing:.5px;">LIMIT</div>
           <div
@@ -977,15 +860,26 @@ export function render(
 
         <!-- ★結果表示の高さは常に確保 -->
         <div class="kpiResult"
-          style="height:24px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;margin-top:6px;">
-          ${state.result.status === "PLAYING" ? "" : resultHtml}
+          style="height:24px;display:flex;align-items:center;justify-content:space-between;gap:12px;white-space:nowrap;overflow:hidden;margin-top:6px;">
+          <div style="min-width:0;overflow:hidden;text-overflow:ellipsis;">${state.result.status === "PLAYING" ? "" : resultHtml}</div>
+          <div class="status" style="flex:0 0 auto;">
+            ${state.result.status === "PLAYING"
+        ? `<span class="statusText playing">進行中</span>`
+        : `<span class="statusText ended">決着</span>`
+      }
+          </div>
         </div>
       </div>
 
       <div class="grid2" id="topPanels" style="position:relative;">
         <div class="panel">
-          <div class="row" style="align-items:flex-start;">
-            <div class="cardArea">
+          <div class="latestCardModeRow">
+            <span class="badge ${state.mode === "UP" ? "up" : "down"} latestCardModeBadge">
+              ${modeText(state.mode, escapeHtml(targetLabel))}
+            </span>
+          </div>
+          <div class="row latestCardArea" style="align-items:flex-start;">
+            <div class="latestCardTop">
               <div class="playCard ${lastCard ? cardClass(lastCard) : "black"} ${lastCard?.rank === "JOKER" ? "joker" : ""
       }">
                 ${lastCard
@@ -994,16 +888,27 @@ export function render(
       }
               </div>
 
-              <div class="playMeta">
+              <div class="playMeta latestCardMeta">
                 <div class="title"><span class="titlePc">場の最新カード</span><span class="titleMobile">場の最新カード</span></div>
-                <div class="sub">${last
+                <div class="sub latestCardMainText">${last
         ? `${escapeHtml(lastName)} <br> ${escapeHtml(cardLogLabel(last.card, last.value))}`
         : "—"
       }</div>
+                <div class="latestCardTurn">手番：${escapeHtml(shortName(turnSeat.name))}</div>
                 ${lastNote
-        ? `<div class="sub">${lastNote.includes("反転") ? "※反転" : `※${escapeHtml(lastNote)}`}</div>`
-        : `<div class="sub" style="opacity:.7;">&nbsp;</div>`
+        ? `<div class="latestCardNote">${lastNote.includes("反転") ? "※反転" : `※${escapeHtml(lastNote)}`}</div>`
+        : `<div class="latestCardNote latestCardNotePlaceholder">&nbsp;</div>`
       }
+              </div>
+            </div>
+            <div class="latestCardStats">
+              <div class="latestCardStat">
+                <div class="latestCardStatLabel">合計</div>
+                <div class="latestCardStatValue">${state.total}</div>
+              </div>
+              <div class="latestCardStat">
+                <div class="latestCardStatLabel">山札</div>
+                <div class="latestCardStatValue">${state.deck.length}</div>
               </div>
             </div>
           </div>
@@ -1231,38 +1136,18 @@ export function render(
     restartBtn.disabled = restartDisabled;
     restartBtn.onclick = () => {
       if (restartBtn.disabled) return;
-      playButtonSe();
-      showActionConfirmModal({
-        title: "",
-        bodyHtml: "もう一度プレイしますか？",
-        confirmLabel: "もう一度プレイ",
-        onConfirm: () => {
-          startButtonSe();
-          handlers.onRestart();
-        },
-      });
+      startButtonSe();
+      handlers.onRestart();
     };
 
     homeBtn.disabled = false;
     homeBtn.onclick = () => {
       playButtonSe();
-
-      const isMultiplayer = typeof mpIsHost === "boolean";
-      const bodyHtml = isPlaying
-        ? "対戦中です。ホーム画面に戻りますか？"
-        : isMultiplayer
-          ? "マルチプレイを終了してホームに戻りますか？<br>HOSTの場合は他プレイヤーもマルチプレイを終了します。"
-          : "ゲームを終了してホームに戻りますか？";
-
-      showActionConfirmModal({
-        title: "ホーム画面に戻る",
-        bodyHtml,
-        confirmLabel: "ホームに戻る",
-        onConfirm: () => {
-          playButtonSe();
-          handlers.onGoHome();
-        },
-      });
+      if (isPlaying) {
+        const ok = confirm("対戦中です。ホーム画面に戻りますか？");
+        if (!ok) return;
+      }
+      handlers.onGoHome();
     };
 
     // =====================
