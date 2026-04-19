@@ -185,7 +185,6 @@ export function resetRenderTransientState() {
   lastPlayedMyTurnSeKey = null;
 
   document.getElementById("gameStartOverlay")?.remove();
-  closeActionConfirmModal();
 }
 
 // =====================
@@ -649,90 +648,6 @@ function renderResultModal(show: boolean, key: string, title: string, bodyHtml: 
   });
   overlay?.addEventListener("click", (ev: MouseEvent) => {
     if (ev.target === overlay) close();
-  });
-}
-
-let actionConfirmRoot = document.querySelector<HTMLDivElement>("#actionConfirmModalRoot");
-if (!actionConfirmRoot) {
-  actionConfirmRoot = document.createElement("div");
-  actionConfirmRoot.id = "actionConfirmModalRoot";
-  document.body.appendChild(actionConfirmRoot);
-}
-
-function closeActionConfirmModal() {
-  if (!actionConfirmRoot) return;
-  actionConfirmRoot.innerHTML = "";
-}
-
-function showActionConfirmModal(options: {
-  title: string;
-  bodyHtml: string;
-  confirmLabel: string;
-  cancelLabel?: string;
-  onConfirm: () => void;
-}) {
-  if (!actionConfirmRoot) return;
-
-  const cancelLabel = options.cancelLabel ?? "キャンセル";
-
-  actionConfirmRoot.innerHTML = `
-    <div id="acOverlay"
-      style="
-        position:fixed; inset:0;
-        display:flex; align-items:center; justify-content:center;
-        background:rgba(0,0,0,.55);
-        z-index:10010;
-        padding:16px;
-      ">
-      <div
-        style="
-          width:min(560px, 100%);
-          border-radius:16px;
-          background:rgba(15,18,26,.92);
-          border:1px solid rgba(255,255,255,.14);
-          box-shadow:0 18px 60px rgba(0,0,0,.55);
-          padding:18px 18px 14px 18px;
-          color:#fff;
-        "
-        role="dialog" aria-modal="true"
-      >
-        <div style="font-weight:950;font-size:16px;margin-bottom:10px;text-align:center;">
-          ${escapeHtml(options.title)}
-        </div>
-
-        <div style="color:rgba(255,255,255,.88);line-height:1.6;margin-bottom:14px;text-align:center">
-          ${options.bodyHtml}
-        </div>
-
-        <div style="display:flex;justify-content:center;gap:8px;">
-          <button id="acCancel" class="btn" style="min-width:116px;display:inline-flex;align-items:center;justify-content:center;">${escapeHtml(cancelLabel)}</button>
-          <button id="acConfirm" class="btn" style="min-width:116px;display:inline-flex;align-items:center;justify-content:center;">${escapeHtml(options.confirmLabel)}</button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  const overlay = document.querySelector<HTMLDivElement>("#acOverlay");
-  const cancelBtn = document.querySelector<HTMLButtonElement>("#acCancel");
-  const confirmBtn = document.querySelector<HTMLButtonElement>("#acConfirm");
-
-  const close = () => {
-    closeActionConfirmModal();
-  };
-
-  cancelBtn?.addEventListener("click", () => {
-    playButtonSe();
-    close();
-  });
-
-  confirmBtn?.addEventListener("click", () => {
-    close();
-    options.onConfirm();
-  });
-
-  overlay?.addEventListener("click", (ev: MouseEvent) => {
-    if (ev.target !== overlay) return;
-    close();
   });
 }
 
@@ -1221,38 +1136,18 @@ export function render(
     restartBtn.disabled = restartDisabled;
     restartBtn.onclick = () => {
       if (restartBtn.disabled) return;
-      playButtonSe();
-      showActionConfirmModal({
-        title: "",
-        bodyHtml: "もう一度プレイしますか？",
-        confirmLabel: "もう一度プレイ",
-        onConfirm: () => {
-          startButtonSe();
-          handlers.onRestart();
-        },
-      });
+      startButtonSe();
+      handlers.onRestart();
     };
 
     homeBtn.disabled = false;
     homeBtn.onclick = () => {
       playButtonSe();
-
-      const isMultiplayer = typeof mpIsHost === "boolean";
-      const bodyHtml = isPlaying
-        ? "対戦中です。ホーム画面に戻りますか？"
-        : isMultiplayer
-          ? "マルチプレイを終了してホームに戻りますか？<br>HOSTの場合は他プレイヤーもマルチプレイを終了します。"
-          : "ゲームを終了してホームに戻りますか？";
-
-      showActionConfirmModal({
-        title: "ホーム画面に戻る",
-        bodyHtml,
-        confirmLabel: "ホームに戻る",
-        onConfirm: () => {
-          playButtonSe();
-          handlers.onGoHome();
-        },
-      });
+      if (isPlaying) {
+        const ok = confirm("対戦中です。ホーム画面に戻りますか？");
+        if (!ok) return;
+      }
+      handlers.onGoHome();
     };
 
     // =====================
