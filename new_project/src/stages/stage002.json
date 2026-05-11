@@ -1,0 +1,1266 @@
+{
+  "id": "stage002",
+  "name": "Stage 002 - 見えない落とし穴",
+  "viewCycle": [
+    "SIDE",
+    "FRONT"
+  ],
+  "blocks": [
+    {
+      "_comment": "道ブロック1",
+      "id": "ground--08",
+      "pos": {
+        "x": -8,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック2",
+      "id": "ground--07",
+      "pos": {
+        "x": -7,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック3",
+      "id": "ground--06",
+      "pos": {
+        "x": -6,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック4",
+      "id": "ground--05",
+      "pos": {
+        "x": -5,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック5",
+      "id": "ground--04",
+      "pos": {
+        "x": -4,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック6",
+      "id": "ground--03",
+      "pos": {
+        "x": -3,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック7",
+      "id": "ground--02",
+      "pos": {
+        "x": -2,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック8",
+      "id": "ground--01",
+      "pos": {
+        "x": -1,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック9",
+      "id": "ground-+00",
+      "pos": {
+        "x": 0,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック10",
+      "id": "ground-+01",
+      "pos": {
+        "x": 1,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック11",
+      "id": "ground-+02",
+      "pos": {
+        "x": 2,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック12",
+      "id": "ground-+04",
+      "pos": {
+        "x": 4,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック13",
+      "id": "ground-+05",
+      "pos": {
+        "x": 5,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック14",
+      "id": "ground-+06",
+      "pos": {
+        "x": 6,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック15",
+      "id": "ground-+07",
+      "pos": {
+        "x": 7,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック16",
+      "id": "ground-+09",
+      "pos": {
+        "x": 9,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック17",
+      "id": "ground-+10",
+      "pos": {
+        "x": 10,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック18",
+      "id": "ground-+11",
+      "pos": {
+        "x": 11,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック19",
+      "id": "ground-+12",
+      "pos": {
+        "x": 12,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック20",
+      "id": "ground-+14",
+      "pos": {
+        "x": 14,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック21",
+      "id": "ground-+15",
+      "pos": {
+        "x": 15,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック22",
+      "id": "ground-+16",
+      "pos": {
+        "x": 16,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック23",
+      "id": "ground-+17",
+      "pos": {
+        "x": 17,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック24",
+      "id": "ground-+18",
+      "pos": {
+        "x": 18,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック25",
+      "id": "ground-+20",
+      "pos": {
+        "x": 20,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック26",
+      "id": "ground-+21",
+      "pos": {
+        "x": 21,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック27",
+      "id": "ground-+22",
+      "pos": {
+        "x": 22,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック28",
+      "id": "ground-+23",
+      "pos": {
+        "x": 23,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック29",
+      "id": "ground-+24",
+      "pos": {
+        "x": 24,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック30",
+      "id": "ground-+25",
+      "pos": {
+        "x": 25,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック31",
+      "id": "ground-+28",
+      "pos": {
+        "x": 28,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック32",
+      "id": "ground-+29",
+      "pos": {
+        "x": 29,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック33",
+      "id": "ground-+30",
+      "pos": {
+        "x": 30,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック34",
+      "id": "ground-+31",
+      "pos": {
+        "x": 31,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック35",
+      "id": "ground-+32",
+      "pos": {
+        "x": 32,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック36",
+      "id": "ground-+33",
+      "pos": {
+        "x": 33,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック37",
+      "id": "ground-+34",
+      "pos": {
+        "x": 34,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック38",
+      "id": "ground-+35",
+      "pos": {
+        "x": 35,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック39",
+      "id": "ground-+36",
+      "pos": {
+        "x": 36,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック40",
+      "id": "ground-+37",
+      "pos": {
+        "x": 37,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック41",
+      "id": "ground-+38",
+      "pos": {
+        "x": 38,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック42",
+      "id": "ground-+39",
+      "pos": {
+        "x": 39,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック43",
+      "id": "ground-+40",
+      "pos": {
+        "x": 40,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック44",
+      "id": "ground-+41",
+      "pos": {
+        "x": 41,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック45",
+      "id": "ground-+42",
+      "pos": {
+        "x": 42,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック46",
+      "id": "ground-+43",
+      "pos": {
+        "x": 43,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック47",
+      "id": "ground-+44",
+      "pos": {
+        "x": 44,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック48",
+      "id": "ground-+45",
+      "pos": {
+        "x": 45,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック49",
+      "id": "ground-+46",
+      "pos": {
+        "x": 46,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック50",
+      "id": "ground-+47",
+      "pos": {
+        "x": 47,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック51",
+      "id": "ground-+48",
+      "pos": {
+        "x": 48,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック52",
+      "id": "ground-+49",
+      "pos": {
+        "x": 49,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "壁ブロック1",
+      "id": "front-required-wall-a-5",
+      "pos": {
+        "x": -2.0,
+        "y": 0.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック2",
+      "id": "front-required-wall-a-15",
+      "pos": {
+        "x": -2.0,
+        "y": 1.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック3",
+      "id": "front-required-wall-a-25",
+      "pos": {
+        "x": -2.0,
+        "y": 2.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック4",
+      "id": "floating-wall-shadow-a",
+      "pos": {
+        "x": -2.0,
+        "y": -0.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック1",
+      "id": "air-block-first-01",
+      "pos": {
+        "x": 1.0,
+        "y": 2.7,
+        "z": -1.2
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック2",
+      "id": "air-block-first-02",
+      "pos": {
+        "x": 2.0,
+        "y": 2.7,
+        "z": -1.2
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック3",
+      "id": "hole-guide-left-air",
+      "pos": {
+        "x": 4.0,
+        "y": 3.0,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "階段ブロック1",
+      "id": "stage2-stair-13-0",
+      "pos": {
+        "x": 13,
+        "y": 0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "階段ブロック2",
+      "id": "stage2-stair-14-0",
+      "pos": {
+        "x": 14,
+        "y": 0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "階段ブロック3",
+      "id": "stage2-stair-14-1",
+      "pos": {
+        "x": 14,
+        "y": 1.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "階段ブロック4",
+      "id": "stage2-stair-15-0",
+      "pos": {
+        "x": 15,
+        "y": 0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "階段ブロック5",
+      "id": "stage2-stair-15-1",
+      "pos": {
+        "x": 15,
+        "y": 1.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "階段ブロック6",
+      "id": "stage2-stair-15-2",
+      "pos": {
+        "x": 15,
+        "y": 2.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "壁ブロック5",
+      "id": "stage2-stair-trick-wall-17-5",
+      "pos": {
+        "x": 17.0,
+        "y": 0.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック6",
+      "id": "stage2-stair-trick-wall-17-15",
+      "pos": {
+        "x": 17.0,
+        "y": 1.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック7",
+      "id": "stage2-stair-trick-wall-17-25",
+      "pos": {
+        "x": 17.0,
+        "y": 2.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック8",
+      "id": "stage2-stair-trick-wall-17-35",
+      "pos": {
+        "x": 17.0,
+        "y": 3.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック9",
+      "id": "stage2-stair-trick-wall-17-45",
+      "pos": {
+        "x": 17.0,
+        "y": 4.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック10",
+      "id": "stage2-stair-trick-wall-18-5",
+      "pos": {
+        "x": 18.0,
+        "y": 0.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック11",
+      "id": "stage2-stair-trick-wall-18-15",
+      "pos": {
+        "x": 18.0,
+        "y": 1.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック12",
+      "id": "stage2-stair-trick-wall-18-25",
+      "pos": {
+        "x": 18.0,
+        "y": 2.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック13",
+      "id": "stage2-stair-trick-wall-18-35",
+      "pos": {
+        "x": 18.0,
+        "y": 3.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック14",
+      "id": "stage2-stair-trick-wall-18-45",
+      "pos": {
+        "x": 18.0,
+        "y": 4.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "道ブロック53",
+      "id": "stage2-stair-back-route-visual-01",
+      "pos": {
+        "x": 17.0,
+        "y": -0.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック54",
+      "id": "stage2-stair-back-route-visual-02",
+      "pos": {
+        "x": 18.0,
+        "y": -0.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック55",
+      "id": "illusion-pit-fake-floor-26",
+      "pos": {
+        "x": 26.0,
+        "y": -0.5,
+        "z": -1.05
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "fake-side-road"
+      ]
+    },
+    {
+      "_comment": "道ブロック56",
+      "id": "illusion-pit-fake-floor-27",
+      "pos": {
+        "x": 27.0,
+        "y": -0.5,
+        "z": -1.05
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "fake-side-road"
+      ]
+    },
+    {
+      "_comment": "空中ブロック5",
+      "id": "illusion-pit-warning-air-01",
+      "pos": {
+        "x": 25.0,
+        "y": 2.6,
+        "z": -1.05
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック6",
+      "id": "illusion-pit-warning-air-02",
+      "pos": {
+        "x": 26.0,
+        "y": 2.6,
+        "z": -1.05
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック7",
+      "id": "illusion-pit-warning-air-03",
+      "pos": {
+        "x": 27.0,
+        "y": 2.6,
+        "z": -1.05
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "壁ブロック15",
+      "id": "front-required-wall-b-5",
+      "pos": {
+        "x": 35.0,
+        "y": 0.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック16",
+      "id": "front-required-wall-b-15",
+      "pos": {
+        "x": 35.0,
+        "y": 1.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "壁ブロック17",
+      "id": "front-required-wall-b-25",
+      "pos": {
+        "x": 35.0,
+        "y": 2.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "空中ブロック8",
+      "id": "air-block-10-32",
+      "pos": {
+        "x": 10,
+        "y": 3.2,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック9",
+      "id": "air-block-11-32",
+      "pos": {
+        "x": 11,
+        "y": 3.2,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック10",
+      "id": "air-block-22-30",
+      "pos": {
+        "x": 22,
+        "y": 3.0,
+        "z": -1.2
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック11",
+      "id": "air-block-23-30",
+      "pos": {
+        "x": 23,
+        "y": 3.0,
+        "z": -1.2
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック12",
+      "id": "air-block-30-41",
+      "pos": {
+        "x": 30,
+        "y": 4.1,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック13",
+      "id": "air-block-31-41",
+      "pos": {
+        "x": 31,
+        "y": 4.1,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック14",
+      "id": "air-block-39-34",
+      "pos": {
+        "x": 39,
+        "y": 3.4,
+        "z": -1.2
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック15",
+      "id": "air-block-40-34",
+      "pos": {
+        "x": 40,
+        "y": 3.4,
+        "z": -1.2
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック16",
+      "id": "air-block-44-40",
+      "pos": {
+        "x": 44,
+        "y": 4.0,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    }
+  ],
+  "doors": [
+    {
+      "id": "door-real-goal-stage002",
+      "aabb": {
+        "min": {
+          "x": 48.7,
+          "y": 0.0,
+          "z": -0.35
+        },
+        "max": {
+          "x": 49.4,
+          "y": 1.8,
+          "z": 0.35
+        }
+      },
+      "visibleViews": [
+        "SIDE",
+        "FRONT"
+      ],
+      "kind": "REAL"
+    }
+  ],
+  "enemies": [
+    {
+      "id": "stage2-walker-01",
+      "type": "WALKER",
+      "posByView": {
+        "SIDE": {
+          "x": 6.8,
+          "y": 0.4,
+          "z": 0.0
+        },
+        "FRONT": {
+          "x": 6.8,
+          "y": 0.4,
+          "z": 0.0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 4.2,
+        "max": 7.2,
+        "speed": 1.9,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "stage2-walker-02",
+      "type": "WALKER",
+      "posByView": {
+        "SIDE": {
+          "x": 11.8,
+          "y": 0.4,
+          "z": 0.0
+        },
+        "FRONT": {
+          "x": 11.8,
+          "y": 0.4,
+          "z": 0.0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 9.2,
+        "max": 12.2,
+        "speed": 2.0,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "stage2-walker-03",
+      "type": "WALKER",
+      "posByView": {
+        "SIDE": {
+          "x": 24.8,
+          "y": 0.4,
+          "z": 0.0
+        },
+        "FRONT": {
+          "x": 24.8,
+          "y": 0.4,
+          "z": 0.0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 20.2,
+        "max": 25.2,
+        "speed": 2.2,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "stage2-walker-04",
+      "type": "WALKER",
+      "posByView": {
+        "SIDE": {
+          "x": 34.5,
+          "y": 0.4,
+          "z": 0.0
+        },
+        "FRONT": {
+          "x": 34.5,
+          "y": 0.4,
+          "z": 0.0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 28.3,
+        "max": 34.8,
+        "speed": 1.8,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "stage2-walker-05",
+      "type": "WALKER",
+      "posByView": {
+        "SIDE": {
+          "x": 46.8,
+          "y": 0.4,
+          "z": 0.0
+        },
+        "FRONT": {
+          "x": 46.8,
+          "y": 0.4,
+          "z": 0.0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 39.2,
+        "max": 47.2,
+        "speed": 2.3,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    }
+  ],
+  "checkpoints": [],
+  "start": {
+    "spawn": {
+      "x": -7.0,
+      "y": 1.0,
+      "z": 0.0
+    }
+  }
+}

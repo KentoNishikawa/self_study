@@ -1,0 +1,814 @@
+{
+  "id": "stage007",
+  "name": "Stage 007 - 上昇と下降のパネル",
+  "viewCycle": [
+    "SIDE",
+    "FRONT"
+  ],
+  "blocks": [
+    {
+      "_comment": "道ブロック1",
+      "id": "ground--08-z0",
+      "pos": {
+        "x": -8,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック2",
+      "id": "ground--07-z0",
+      "pos": {
+        "x": -7,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック3",
+      "id": "ground--06-z0",
+      "pos": {
+        "x": -6,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック4",
+      "id": "ground--05-z0",
+      "pos": {
+        "x": -5,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック5",
+      "id": "ground--04-z0",
+      "pos": {
+        "x": -4,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック6",
+      "id": "ground--03-z0",
+      "pos": {
+        "x": -3,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック7",
+      "id": "ground--02-z0",
+      "pos": {
+        "x": -2,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック8",
+      "id": "ground--01-z0",
+      "pos": {
+        "x": -1,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック9",
+      "id": "ground-+00-z0",
+      "pos": {
+        "x": 0,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック10",
+      "id": "ground-+01-z0",
+      "pos": {
+        "x": 1,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック11",
+      "id": "ground-+02-z0",
+      "pos": {
+        "x": 2,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック12",
+      "id": "ground-+03-z0",
+      "pos": {
+        "x": 3,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "上昇パネル（通常）1：画面外下から上へ繰り返し上昇する床（横幅3倍の細長いパネル）",
+      "id": "panel-up-normal-01",
+      "pos": {
+        "x": 5,
+        "y": -0.175,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "up-panel-normal"
+      ],
+      "scale": {
+        "x": 3.0,
+        "y": 0.35,
+        "z": 1.0
+      }
+    },
+    {
+      "_comment": "高所道ブロック1：上昇パネル通常で到達する足場",
+      "id": "high-ground-08",
+      "pos": {
+        "x": 8,
+        "y": 4.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所道ブロック2：上昇パネル通常で到達する足場",
+      "id": "high-ground-09",
+      "pos": {
+        "x": 9,
+        "y": 4.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所道ブロック3：上昇パネル通常で到達する足場",
+      "id": "high-ground-10",
+      "pos": {
+        "x": 10,
+        "y": 4.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所道ブロック4：上昇パネル通常で到達する足場",
+      "id": "high-ground-11",
+      "pos": {
+        "x": 11,
+        "y": 4.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "下降パネル（通常）1：画面外上から下へ繰り返し下降する床（横幅3倍の細長いパネル）",
+      "id": "panel-down-normal-01",
+      "pos": {
+        "x": 14,
+        "y": 6.825,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "down-panel-normal"
+      ],
+      "scale": {
+        "x": 3.0,
+        "y": 0.35,
+        "z": 1.0
+      }
+    },
+    {
+      "_comment": "道ブロック13",
+      "id": "ground-+17-z0",
+      "pos": {
+        "x": 17,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック14",
+      "id": "ground-+18-z0",
+      "pos": {
+        "x": 18,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック15",
+      "id": "ground-+19-z0",
+      "pos": {
+        "x": 19,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック16",
+      "id": "ground-+20-z0",
+      "pos": {
+        "x": 20,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック17",
+      "id": "ground-+21-z0",
+      "pos": {
+        "x": 21,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック18",
+      "id": "ground-+22-z0",
+      "pos": {
+        "x": 22,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック19",
+      "id": "ground-+23-z0",
+      "pos": {
+        "x": 23,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック20",
+      "id": "ground-+24-z0",
+      "pos": {
+        "x": 24,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "奥ズレ上昇パネル：横視点では目の前に見えるが、正面視点では奥側にあり乗れない（横幅3倍の細長いパネル）",
+      "id": "panel-up-normal-offset-dummy-01",
+      "pos": {
+        "x": 25.5,
+        "y": -0.175,
+        "z": 1.45
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "up-panel-normal"
+      ],
+      "scale": {
+        "x": 3.0,
+        "y": 0.35,
+        "z": 1.0
+      }
+    },
+    {
+      "_comment": "上昇パネル（反転）1：乗った状態でジャンプすると上昇と下降が反転する（横幅3倍の細長いパネル）",
+      "id": "panel-up-reverse-01",
+      "pos": {
+        "x": 28,
+        "y": -0.175,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "up-panel-reverse"
+      ],
+      "scale": {
+        "x": 3.0,
+        "y": 0.35,
+        "z": 1.0
+      }
+    },
+    {
+      "_comment": "道ブロック21",
+      "id": "ground-+31-z0",
+      "pos": {
+        "x": 31,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック22",
+      "id": "ground-+32-z0",
+      "pos": {
+        "x": 32,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック23",
+      "id": "ground-+33-z0",
+      "pos": {
+        "x": 33,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "下降パネル（反転）1：乗った状態でジャンプすると下降と上昇が反転する（横幅3倍の細長いパネル）",
+      "id": "panel-down-reverse-01",
+      "pos": {
+        "x": 36,
+        "y": 6.825,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "down-panel-reverse"
+      ],
+      "scale": {
+        "x": 3.0,
+        "y": 0.35,
+        "z": 1.0
+      }
+    },
+    {
+      "_comment": "道ブロック：しゃがみ通路24",
+      "id": "ground-+39-z0",
+      "pos": {
+        "x": 39,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック：しゃがみ通路25",
+      "id": "ground-+40-z0",
+      "pos": {
+        "x": 40,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック：しゃがみ通路26",
+      "id": "ground-+41-z0",
+      "pos": {
+        "x": 41,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック：しゃがみ通路27",
+      "id": "ground-+42-z0",
+      "pos": {
+        "x": 42,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック：しゃがみ通路の天井1",
+      "id": "crouch-ceiling-01",
+      "pos": {
+        "x": 39,
+        "y": 1.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック：しゃがみ通路の天井2",
+      "id": "crouch-ceiling-02",
+      "pos": {
+        "x": 40,
+        "y": 1.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック：しゃがみ通路の天井3",
+      "id": "crouch-ceiling-03",
+      "pos": {
+        "x": 41,
+        "y": 1.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック：しゃがみ通路の天井4",
+      "id": "crouch-ceiling-04",
+      "pos": {
+        "x": 42,
+        "y": 1.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "上昇パネル（重力）1：通常は上昇するが、乗るとゆっくり沈む（横幅3倍の細長いパネル）",
+      "id": "panel-up-gravity-01",
+      "pos": {
+        "x": 46,
+        "y": 1.825,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "up-panel-gravity"
+      ],
+      "scale": {
+        "x": 3.0,
+        "y": 0.35,
+        "z": 1.0
+      }
+    },
+    {
+      "_comment": "道ブロック：重力上昇パネル後の道28",
+      "id": "ground-+50-z0",
+      "pos": {
+        "x": 50,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック：重力上昇パネル後の道29",
+      "id": "ground-+51-z0",
+      "pos": {
+        "x": 51,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック：重力上昇パネル後の道30",
+      "id": "ground-+52-z0",
+      "pos": {
+        "x": 52,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "下降パネル（重力）1：通常は下降し、乗ると急速に下降する（横幅3倍の細長いパネル）",
+      "id": "panel-down-gravity-01",
+      "pos": {
+        "x": 56,
+        "y": 5.825,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "down-panel-gravity"
+      ],
+      "scale": {
+        "x": 3.0,
+        "y": 0.35,
+        "z": 1.0
+      }
+    },
+    {
+      "_comment": "道ブロック：ゴール前の道31",
+      "id": "ground-+60-z0",
+      "pos": {
+        "x": 60,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック：ゴール前の道32",
+      "id": "ground-+61-z0",
+      "pos": {
+        "x": 61,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック：ゴール前の道33",
+      "id": "ground-+62-z0",
+      "pos": {
+        "x": 62,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック：ゴール前の道34",
+      "id": "ground-+63-z0",
+      "pos": {
+        "x": 63,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック：ゴール前の道35",
+      "id": "ground-+64-z0",
+      "pos": {
+        "x": 64,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック：ゴール前の道36",
+      "id": "ground-+65-z0",
+      "pos": {
+        "x": 65,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "壁ブロック1：横視点では塞いで見えるが正面視点では奥にずれている",
+      "id": "illusion-wall-01",
+      "pos": {
+        "x": 22,
+        "y": 0.5,
+        "z": 1.35
+      },
+      "size": "L",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "壁ブロック2：ゴール前の視点切り替え確認用",
+      "id": "illusion-wall-02",
+      "pos": {
+        "x": 61,
+        "y": 0.5,
+        "z": 1.35
+      },
+      "size": "L",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "空中ブロック1：反転パネルの高さ確認用",
+      "id": "air-block-01",
+      "pos": {
+        "x": 32,
+        "y": 3.0,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック2：重力パネル後のジャンプ足場",
+      "id": "air-block-02",
+      "pos": {
+        "x": 51,
+        "y": 2.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック3：ゴール前の飾り兼足場",
+      "id": "air-block-03",
+      "pos": {
+        "x": 63,
+        "y": 2.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    }
+  ],
+  "doors": [
+    {
+      "id": "goal-door-007",
+      "aabb": {
+        "min": {
+          "x": 64.3,
+          "y": 0.0,
+          "z": -0.5
+        },
+        "max": {
+          "x": 65.1,
+          "y": 2.2,
+          "z": 0.5
+        }
+      },
+      "visibleViews": [
+        "SIDE",
+        "FRONT"
+      ],
+      "kind": "REAL"
+    }
+  ],
+  "enemies": [
+    {
+      "id": "walker-7-01",
+      "type": "WALKER",
+      "posByView": {
+        "SIDE": {
+          "x": 20,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 20,
+          "y": 1,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 17,
+        "max": 23,
+        "speed": 1.8,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "hoppins-7-01",
+      "type": "HOPPINS",
+      "posByView": {
+        "SIDE": {
+          "x": 41,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 41,
+          "y": 1,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 39,
+        "max": 42,
+        "speed": 2.4,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "ochy-7-01",
+      "type": "OCHY",
+      "posByView": {
+        "SIDE": {
+          "x": 62,
+          "y": 8,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 62,
+          "y": 8,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "y",
+        "min": 0,
+        "max": 8,
+        "speed": 9,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-007-start",
+      "aabb": {
+        "min": {
+          "x": -8.5,
+          "y": 0.0,
+          "z": -0.5
+        },
+        "max": {
+          "x": -7.5,
+          "y": 2.0,
+          "z": 0.5
+        }
+      },
+      "respawn": {
+        "x": -8,
+        "y": 1,
+        "z": 0
+      }
+    }
+  ],
+  "items": [],
+  "start": {
+    "spawn": {
+      "x": -8,
+      "y": 1,
+      "z": 0
+    }
+  }
+}

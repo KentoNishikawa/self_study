@@ -1,0 +1,1578 @@
+{
+  "id": "stage006",
+  "name": "Stage 006 - 崩れる床",
+  "viewCycle": [
+    "SIDE",
+    "FRONT"
+  ],
+  "blocks": [
+    {
+      "_comment": "道ブロック1",
+      "id": "ground--08-z+00",
+      "pos": {
+        "x": -8,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック2",
+      "id": "ground--07-z+00",
+      "pos": {
+        "x": -7,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック3",
+      "id": "ground--06-z+00",
+      "pos": {
+        "x": -6,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック4",
+      "id": "ground--05-z+00",
+      "pos": {
+        "x": -5,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック5",
+      "id": "ground--04-z+00",
+      "pos": {
+        "x": -4,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック6",
+      "id": "ground--03-z+00",
+      "pos": {
+        "x": -3,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック7",
+      "id": "ground--02-z+00",
+      "pos": {
+        "x": -2,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック8",
+      "id": "ground--01-z+00",
+      "pos": {
+        "x": -1,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック9",
+      "id": "ground-+00-z+00",
+      "pos": {
+        "x": 0,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック10",
+      "id": "ground-+01-z+00",
+      "pos": {
+        "x": 1,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック11",
+      "id": "ground-+02-z+00",
+      "pos": {
+        "x": 2,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック12",
+      "id": "ground-+03-z+00",
+      "pos": {
+        "x": 3,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック13",
+      "id": "ground-+04-z+00",
+      "pos": {
+        "x": 4,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック14",
+      "id": "ground-+05-z+00",
+      "pos": {
+        "x": 5,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック15",
+      "id": "ground-+06-z+00",
+      "pos": {
+        "x": 6,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック16",
+      "id": "ground-+10-z+00",
+      "pos": {
+        "x": 10,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック17",
+      "id": "ground-+11-z+00",
+      "pos": {
+        "x": 11,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック18",
+      "id": "ground-+12-z+00",
+      "pos": {
+        "x": 12,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック19",
+      "id": "ground-+13-z+00",
+      "pos": {
+        "x": 13,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック20",
+      "id": "ground-+14-z+00",
+      "pos": {
+        "x": 14,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック21",
+      "id": "ground-+15-z+00",
+      "pos": {
+        "x": 15,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック22",
+      "id": "ground-+16-z+00",
+      "pos": {
+        "x": 16,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック23",
+      "id": "ground-+17-z+00",
+      "pos": {
+        "x": 17,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック24",
+      "id": "ground-+18-z+00",
+      "pos": {
+        "x": 18,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック25",
+      "id": "ground-+19-z+00",
+      "pos": {
+        "x": 19,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック26",
+      "id": "ground-+20-z+00",
+      "pos": {
+        "x": 20,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック27",
+      "id": "ground-+21-z+00",
+      "pos": {
+        "x": 21,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック1：しゃがみ通路の天井",
+      "id": "s6-crouch-ceiling-01",
+      "pos": {
+        "x": 17,
+        "y": 1.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック2：しゃがみ通路の天井",
+      "id": "s6-crouch-ceiling-02",
+      "pos": {
+        "x": 18,
+        "y": 1.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック3：しゃがみ通路の天井",
+      "id": "s6-crouch-ceiling-03",
+      "pos": {
+        "x": 19,
+        "y": 1.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック4：しゃがみ通路の天井",
+      "id": "s6-crouch-ceiling-04",
+      "pos": {
+        "x": 20,
+        "y": 1.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック28",
+      "id": "ground-+22-z+00",
+      "pos": {
+        "x": 22,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック29",
+      "id": "ground-+23-z+00",
+      "pos": {
+        "x": 23,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック30",
+      "id": "ground-+24-z+00",
+      "pos": {
+        "x": 24,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック31",
+      "id": "ground-+25-z+00",
+      "pos": {
+        "x": 25,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック32",
+      "id": "ground-+26-z+00",
+      "pos": {
+        "x": 26,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック33",
+      "id": "ground-+27-z+00",
+      "pos": {
+        "x": 27,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "壁ブロック1：横視点では通路上の壁に見えるが正面視点では奥にずれている",
+      "id": "s6-illusion-wall-01",
+      "pos": {
+        "x": 23,
+        "y": 0.5,
+        "z": 1.45
+      },
+      "size": "L",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "道ブロック34：崩れる床。見た目は普通の床と同じ",
+      "id": "s6-crumble-bridge-a-01",
+      "pos": {
+        "x": 28,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "道ブロック35：崩れる床。見た目は普通の床と同じ",
+      "id": "s6-crumble-bridge-a-02",
+      "pos": {
+        "x": 29,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "道ブロック36：崩れる床。見た目は普通の床と同じ",
+      "id": "s6-crumble-bridge-a-03",
+      "pos": {
+        "x": 30,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "道ブロック37",
+      "id": "ground-+31-z+00",
+      "pos": {
+        "x": 31,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック38",
+      "id": "ground-+32-z+00",
+      "pos": {
+        "x": 32,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック39",
+      "id": "ground-+33-z+00",
+      "pos": {
+        "x": 33,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック40",
+      "id": "ground-+34-z+00",
+      "pos": {
+        "x": 34,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック41",
+      "id": "ground-+35-z+00",
+      "pos": {
+        "x": 35,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック42",
+      "id": "ground-+36-z+00",
+      "pos": {
+        "x": 36,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック43",
+      "id": "ground-+37-z+00",
+      "pos": {
+        "x": 37,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック44",
+      "id": "ground-+38-z+00",
+      "pos": {
+        "x": 38,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック45",
+      "id": "ground-+39-z+00",
+      "pos": {
+        "x": 39,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック46",
+      "id": "ground-+40-z+00",
+      "pos": {
+        "x": 40,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック47",
+      "id": "ground-+44-z+00",
+      "pos": {
+        "x": 44,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック48",
+      "id": "ground-+45-z+00",
+      "pos": {
+        "x": 45,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック49",
+      "id": "ground-+46-z+00",
+      "pos": {
+        "x": 46,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所足場ブロック1：ジャンプ台で上がる別ルート",
+      "id": "s6-high-route-01",
+      "pos": {
+        "x": 42,
+        "y": 6.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所足場ブロック2：ジャンプ台で上がる別ルート",
+      "id": "s6-high-route-02",
+      "pos": {
+        "x": 43,
+        "y": 6.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所足場ブロック3：ジャンプ台で上がる別ルート",
+      "id": "s6-high-route-03",
+      "pos": {
+        "x": 44,
+        "y": 5.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所足場ブロック4：ジャンプ台で上がる別ルート",
+      "id": "s6-high-route-04",
+      "pos": {
+        "x": 45,
+        "y": 4.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所足場ブロック5：ジャンプ台で上がる別ルート",
+      "id": "s6-high-route-05",
+      "pos": {
+        "x": 46,
+        "y": 3.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック50",
+      "id": "ground-+47-z+00",
+      "pos": {
+        "x": 47,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック51",
+      "id": "ground-+48-z+00",
+      "pos": {
+        "x": 48,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック52",
+      "id": "ground-+49-z+00",
+      "pos": {
+        "x": 49,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック53",
+      "id": "ground-+50-z+00",
+      "pos": {
+        "x": 50,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック54",
+      "id": "ground-+51-z+00",
+      "pos": {
+        "x": 51,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック55",
+      "id": "ground-+52-z+00",
+      "pos": {
+        "x": 52,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック56",
+      "id": "ground-+53-z+00",
+      "pos": {
+        "x": 53,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック57：崩れる床。見た目は普通の床と同じ",
+      "id": "s6-crumble-bridge-b-01",
+      "pos": {
+        "x": 54,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "道ブロック58：崩れる床。見た目は普通の床と同じ",
+      "id": "s6-crumble-bridge-b-02",
+      "pos": {
+        "x": 55,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "道ブロック59：崩れる床。見た目は普通の床と同じ",
+      "id": "s6-crumble-bridge-b-03",
+      "pos": {
+        "x": 56,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "道ブロック60：崩れる床。見た目は普通の床と同じ",
+      "id": "s6-crumble-bridge-b-04",
+      "pos": {
+        "x": 57,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "道ブロック61",
+      "id": "ground-+58-z+00",
+      "pos": {
+        "x": 58,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック62",
+      "id": "ground-+59-z+00",
+      "pos": {
+        "x": 59,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック63",
+      "id": "ground-+60-z+00",
+      "pos": {
+        "x": 60,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック64",
+      "id": "ground-+61-z+00",
+      "pos": {
+        "x": 61,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック65",
+      "id": "ground-+62-z+00",
+      "pos": {
+        "x": 62,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック66",
+      "id": "ground-+63-z+00",
+      "pos": {
+        "x": 63,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック67",
+      "id": "ground-+64-z+00",
+      "pos": {
+        "x": 64,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック68",
+      "id": "ground-+65-z+00",
+      "pos": {
+        "x": 65,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "壁ブロック2：横視点では大きな壁、正面視点では手前側にずれている",
+      "id": "s6-illusion-wall-02",
+      "pos": {
+        "x": 62,
+        "y": 0.5,
+        "z": -1.45
+      },
+      "size": "XL",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "道ブロック69",
+      "id": "ground-+66-z+00",
+      "pos": {
+        "x": 66,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック70",
+      "id": "ground-+67-z+00",
+      "pos": {
+        "x": 67,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック71",
+      "id": "ground-+68-z+00",
+      "pos": {
+        "x": 68,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック72",
+      "id": "ground-+69-z+00",
+      "pos": {
+        "x": 69,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック73",
+      "id": "ground-+70-z+00",
+      "pos": {
+        "x": 70,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック74",
+      "id": "ground-+71-z+00",
+      "pos": {
+        "x": 71,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック75",
+      "id": "ground-+72-z+00",
+      "pos": {
+        "x": 72,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック76",
+      "id": "ground-+73-z+00",
+      "pos": {
+        "x": 73,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック77",
+      "id": "ground-+74-z+00",
+      "pos": {
+        "x": 74,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック78",
+      "id": "ground-+75-z+00",
+      "pos": {
+        "x": 75,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック79",
+      "id": "ground-+76-z+00",
+      "pos": {
+        "x": 76,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック80",
+      "id": "ground-+77-z+00",
+      "pos": {
+        "x": 77,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック81",
+      "id": "ground-+78-z+00",
+      "pos": {
+        "x": 78,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック82",
+      "id": "ground-+79-z+00",
+      "pos": {
+        "x": 79,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック83",
+      "id": "ground-+80-z+00",
+      "pos": {
+        "x": 80,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック84",
+      "id": "ground-+81-z+00",
+      "pos": {
+        "x": 81,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "階段ブロック1：崩れる階段。見た目は普通の床と同じ",
+      "id": "s6-crumble-stair-01",
+      "pos": {
+        "x": 82,
+        "y": 0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "階段ブロック2：崩れる階段。見た目は普通の床と同じ",
+      "id": "s6-crumble-stair-02",
+      "pos": {
+        "x": 83,
+        "y": 1.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "階段ブロック3：崩れる階段。見た目は普通の床と同じ",
+      "id": "s6-crumble-stair-03",
+      "pos": {
+        "x": 84,
+        "y": 2.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "階段ブロック4",
+      "id": "s6-final-stair-04",
+      "pos": {
+        "x": 85,
+        "y": 2.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "階段ブロック5",
+      "id": "s6-final-stair-05",
+      "pos": {
+        "x": 86,
+        "y": 1.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "階段ブロック6",
+      "id": "s6-final-stair-06",
+      "pos": {
+        "x": 87,
+        "y": 0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック85",
+      "id": "ground-+88-z+00",
+      "pos": {
+        "x": 88,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック86",
+      "id": "ground-+89-z+00",
+      "pos": {
+        "x": 89,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック87",
+      "id": "ground-+90-z+00",
+      "pos": {
+        "x": 90,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック88",
+      "id": "ground-+91-z+00",
+      "pos": {
+        "x": 91,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック89",
+      "id": "ground-+92-z+00",
+      "pos": {
+        "x": 92,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック90",
+      "id": "ground-+93-z+00",
+      "pos": {
+        "x": 93,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック91",
+      "id": "ground-+94-z+00",
+      "pos": {
+        "x": 94,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック92",
+      "id": "ground-+95-z+00",
+      "pos": {
+        "x": 95,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック93",
+      "id": "ground-+96-z+00",
+      "pos": {
+        "x": 96,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック94",
+      "id": "ground-+97-z+00",
+      "pos": {
+        "x": 97,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック95",
+      "id": "ground-+98-z+00",
+      "pos": {
+        "x": 98,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック8",
+      "id": "s6-final-air-01",
+      "pos": {
+        "x": 90,
+        "y": 2.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック9",
+      "id": "s6-final-air-02",
+      "pos": {
+        "x": 92,
+        "y": 3.6,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック10",
+      "id": "s6-final-air-03",
+      "pos": {
+        "x": 94,
+        "y": 2.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    }
+  ],
+  "doors": [
+    {
+      "id": "goal-door-006",
+      "aabb": {
+        "min": {
+          "x": 97.4,
+          "y": 0.0,
+          "z": -0.5
+        },
+        "max": {
+          "x": 98.2,
+          "y": 2.2,
+          "z": 0.5
+        }
+      },
+      "visibleViews": [
+        "SIDE",
+        "FRONT"
+      ],
+      "kind": "REAL"
+    }
+  ],
+  "enemies": [
+    {
+      "id": "s6-walker-01",
+      "type": "WALKER",
+      "posByView": {
+        "SIDE": {
+          "x": 14,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 14,
+          "y": 1,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 10,
+        "max": 15,
+        "speed": 1.7,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "s6-ochy-01",
+      "type": "OCHY",
+      "posByView": {
+        "SIDE": {
+          "x": 35,
+          "y": 9,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 35,
+          "y": 9,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "y",
+        "min": 0,
+        "max": 9,
+        "speed": 9,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "s6-hoppins-01",
+      "type": "HOPPINS",
+      "posByView": {
+        "SIDE": {
+          "x": 52,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 52,
+          "y": 1,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 47,
+        "max": 57,
+        "speed": 2.6,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "s6-walker-02",
+      "type": "WALKER",
+      "posByView": {
+        "SIDE": {
+          "x": 75,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 75,
+          "y": 1,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 66,
+        "max": 76,
+        "speed": 2.1,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "s6-ochy-02",
+      "type": "OCHY",
+      "posByView": {
+        "SIDE": {
+          "x": 84,
+          "y": 9,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 84,
+          "y": 9,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "y",
+        "min": 0,
+        "max": 9,
+        "speed": 9.5,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "s6-hoppins-02",
+      "type": "HOPPINS",
+      "posByView": {
+        "SIDE": {
+          "x": 94,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 94,
+          "y": 1,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 88,
+        "max": 97,
+        "speed": 2.8,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-006-start",
+      "aabb": {
+        "min": {
+          "x": -8.5,
+          "y": 0.0,
+          "z": -0.5
+        },
+        "max": {
+          "x": -7.5,
+          "y": 2.0,
+          "z": 0.5
+        }
+      },
+      "respawn": {
+        "x": -8,
+        "y": 1,
+        "z": 0
+      }
+    }
+  ],
+  "items": [
+    {
+      "_comment": "ジャンプ台1：高所足場へ上がるための正規ルート",
+      "id": "s6-jump-pad-01",
+      "kind": "JUMP_PAD",
+      "aabb": {
+        "min": {
+          "x": 39.4,
+          "y": 0.0,
+          "z": -0.45
+        },
+        "max": {
+          "x": 40.4,
+          "y": 0.2,
+          "z": 0.45
+        }
+      }
+    },
+    {
+      "_comment": "トラップジャンプ台1：見た目はジャンプ台だが画面外へ飛ばされる",
+      "id": "s6-trap-jump-pad-01",
+      "kind": "TRAP_JUMP_PAD",
+      "aabb": {
+        "min": {
+          "x": 68.4,
+          "y": 0.0,
+          "z": -0.45
+        },
+        "max": {
+          "x": 69.4,
+          "y": 0.2,
+          "z": 0.45
+        }
+      }
+    },
+    {
+      "_comment": "移動する床1：右方向/正面時は前方向。崩れる橋へ押し出す",
+      "id": "s6-move-floor-right-01",
+      "kind": "MOVE_FLOOR_RIGHT",
+      "aabb": {
+        "min": {
+          "x": 31.0,
+          "y": 0.0,
+          "z": -0.45
+        },
+        "max": {
+          "x": 37.0,
+          "y": 0.2,
+          "z": 0.45
+        }
+      }
+    },
+    {
+      "_comment": "移動する床2：左方向/正面時は後退方向。敵とのすれ違い用",
+      "id": "s6-move-floor-left-01",
+      "kind": "MOVE_FLOOR_LEFT",
+      "aabb": {
+        "min": {
+          "x": 70.0,
+          "y": 0.0,
+          "z": -0.45
+        },
+        "max": {
+          "x": 75.5,
+          "y": 0.2,
+          "z": 0.45
+        }
+      }
+    }
+  ],
+  "start": {
+    "spawn": {
+      "x": -8,
+      "y": 1,
+      "z": 0
+    }
+  }
+}

@@ -1,0 +1,213 @@
+:root {
+  color: #eef2ff;
+  background: #0f172a;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+}
+
+.home-page {
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  height: 100vh;
+  padding: 24px;
+  background: radial-gradient(circle at top, #334155 0, #0f172a 54%);
+}
+
+.home-card {
+  width: min(720px, 100%);
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 24px;
+  background: rgba(15, 23, 42, 0.78);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+}
+
+.home-card h1 {
+  margin: 0 0 12px;
+  font-size: clamp(32px, 6vw, 56px);
+  letter-spacing: 0.04em;
+}
+
+.home-card p {
+  margin: 0 0 20px;
+  line-height: 1.8;
+  color: #cbd5e1;
+}
+
+.home-card button,
+.game-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 22px;
+  color: #0f172a;
+  background: #93c5fd;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.home-card button:hover,
+.game-button:hover {
+  background: #bfdbfe;
+}
+
+.game-page {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #020617;
+}
+
+.game-canvas-root {
+  width: 100%;
+  height: 100%;
+}
+
+.game-hud {
+  position: absolute;
+  inset: 16px auto auto 16px;
+  min-width: 240px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(12px);
+  line-height: 1.7;
+  pointer-events: none;
+}
+
+.game-help {
+  position: absolute;
+  inset: auto 16px 16px auto;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.72);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.status-message {
+  color: #fde68a;
+  font-weight: 700;
+}
+
+.stage-select-card {
+  display: grid;
+  gap: 18px;
+}
+
+.stage-list {
+  display: grid;
+  gap: 12px;
+}
+
+.stage-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  padding: 16px 18px;
+  color: #eef2ff;
+  background: rgba(30, 41, 59, 0.9);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.stage-button:hover:not(:disabled) {
+  background: rgba(51, 65, 85, 0.95);
+}
+
+.stage-button:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+.stage-button small {
+  color: #bfdbfe;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.secondary-button {
+  justify-self: start;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 10px 18px;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.8);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.secondary-button:hover {
+  background: rgba(30, 41, 59, 0.95);
+}
+
+.stage-clear-modal,
+.pause-modal {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(2, 6, 23, 0.64);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.stage-clear-modal[hidden],
+.pause-modal[hidden] {
+  display: none;
+}
+
+.stage-clear-card,
+.pause-card {
+  width: min(520px, 100%);
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
+  background: rgba(15, 23, 42, 0.94);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
+  text-align: center;
+}
+
+.stage-clear-card h2,
+.pause-card h2 {
+  margin: 0 0 12px;
+  font-size: 32px;
+}
+
+.stage-clear-card p,
+.pause-card p {
+  margin: 0 0 22px;
+  color: #cbd5e1;
+  line-height: 1.8;
+}
+
+.stage-clear-actions,
+.pause-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}

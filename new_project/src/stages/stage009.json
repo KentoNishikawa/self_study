@@ -1,0 +1,1584 @@
+{
+  "id": "stage009",
+  "name": "Stage 009 - 視点切替の山道",
+  "viewCycle": [
+    "SIDE",
+    "FRONT"
+  ],
+  "blocks": [
+    {
+      "_comment": "道ブロック1",
+      "id": "ground--08-z0",
+      "pos": {
+        "x": -8,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック2",
+      "id": "ground--07-z0",
+      "pos": {
+        "x": -7,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック3",
+      "id": "ground--06-z0",
+      "pos": {
+        "x": -6,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック4",
+      "id": "ground--05-z0",
+      "pos": {
+        "x": -5,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック5",
+      "id": "ground--04-z0",
+      "pos": {
+        "x": -4,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック6",
+      "id": "ground--03-z0",
+      "pos": {
+        "x": -3,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック7",
+      "id": "ground--02-z0",
+      "pos": {
+        "x": -2,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック8",
+      "id": "ground--01-z0",
+      "pos": {
+        "x": -1,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック9",
+      "id": "ground-+00-z0",
+      "pos": {
+        "x": 0,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック10",
+      "id": "ground-+01-z0",
+      "pos": {
+        "x": 1,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック11",
+      "id": "ground-+02-z0",
+      "pos": {
+        "x": 2,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック12",
+      "id": "ground-+03-z0",
+      "pos": {
+        "x": 3,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック13",
+      "id": "ground-+04-z0",
+      "pos": {
+        "x": 4,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック14",
+      "id": "ground-+06-z0",
+      "pos": {
+        "x": 6,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック15",
+      "id": "ground-+07-z0",
+      "pos": {
+        "x": 7,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック16",
+      "id": "ground-+08-z0",
+      "pos": {
+        "x": 8,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック17",
+      "id": "ground-+09-z0",
+      "pos": {
+        "x": 9,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック18",
+      "id": "ground-+10-z0",
+      "pos": {
+        "x": 10,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック19",
+      "id": "ground-+11-z0",
+      "pos": {
+        "x": 11,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック20",
+      "id": "ground-+12-z0",
+      "pos": {
+        "x": 12,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック21",
+      "id": "ground-+13-z0",
+      "pos": {
+        "x": 13,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック22",
+      "id": "ground-+14-z0",
+      "pos": {
+        "x": 14,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック23",
+      "id": "ground-+15-z0",
+      "pos": {
+        "x": 15,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック24",
+      "id": "ground-+16-z0",
+      "pos": {
+        "x": 16,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック25",
+      "id": "ground-+20-z0",
+      "pos": {
+        "x": 20,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック26",
+      "id": "ground-+21-z0",
+      "pos": {
+        "x": 21,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック27",
+      "id": "ground-+22-z0",
+      "pos": {
+        "x": 22,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック28",
+      "id": "ground-+23-z0",
+      "pos": {
+        "x": 23,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック29",
+      "id": "ground-+24-z0",
+      "pos": {
+        "x": 24,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック30",
+      "id": "ground-+25-z0",
+      "pos": {
+        "x": 25,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック31",
+      "id": "ground-+26-z0",
+      "pos": {
+        "x": 26,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック32",
+      "id": "ground-+27-z0",
+      "pos": {
+        "x": 27,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック33",
+      "id": "ground-+28-z0",
+      "pos": {
+        "x": 28,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック34",
+      "id": "ground-+29-z0",
+      "pos": {
+        "x": 29,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック35",
+      "id": "ground-+35-z0",
+      "pos": {
+        "x": 35,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック36",
+      "id": "ground-+36-z0",
+      "pos": {
+        "x": 36,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック37",
+      "id": "ground-+37-z0",
+      "pos": {
+        "x": 37,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック38",
+      "id": "ground-+38-z0",
+      "pos": {
+        "x": 38,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック39",
+      "id": "ground-+39-z0",
+      "pos": {
+        "x": 39,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック40",
+      "id": "ground-+40-z0",
+      "pos": {
+        "x": 40,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック41",
+      "id": "ground-+41-z0",
+      "pos": {
+        "x": 41,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック42",
+      "id": "ground-+42-z0",
+      "pos": {
+        "x": 42,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック43",
+      "id": "ground-+43-z0",
+      "pos": {
+        "x": 43,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック44",
+      "id": "ground-+44-z0",
+      "pos": {
+        "x": 44,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック45",
+      "id": "ground-+45-z0",
+      "pos": {
+        "x": 45,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック46",
+      "id": "ground-+46-z0",
+      "pos": {
+        "x": 46,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック47",
+      "id": "ground-+47-z0",
+      "pos": {
+        "x": 47,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック48",
+      "id": "ground-+53-z0",
+      "pos": {
+        "x": 53,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック49",
+      "id": "ground-+54-z0",
+      "pos": {
+        "x": 54,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック50",
+      "id": "ground-+55-z0",
+      "pos": {
+        "x": 55,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック51",
+      "id": "ground-+56-z0",
+      "pos": {
+        "x": 56,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック52",
+      "id": "ground-+57-z0",
+      "pos": {
+        "x": 57,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック53",
+      "id": "ground-+58-z0",
+      "pos": {
+        "x": 58,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック54",
+      "id": "ground-+59-z0",
+      "pos": {
+        "x": 59,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック55",
+      "id": "ground-+60-z0",
+      "pos": {
+        "x": 60,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック56",
+      "id": "ground-+61-z0",
+      "pos": {
+        "x": 61,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック57",
+      "id": "ground-+62-z0",
+      "pos": {
+        "x": 62,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック58",
+      "id": "ground-+63-z0",
+      "pos": {
+        "x": 63,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック59",
+      "id": "ground-+64-z0",
+      "pos": {
+        "x": 64,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック60",
+      "id": "ground-+65-z0",
+      "pos": {
+        "x": 65,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック61",
+      "id": "ground-+66-z0",
+      "pos": {
+        "x": 66,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック62",
+      "id": "ground-+70-z0",
+      "pos": {
+        "x": 70,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック63",
+      "id": "ground-+71-z0",
+      "pos": {
+        "x": 71,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック64",
+      "id": "ground-+72-z0",
+      "pos": {
+        "x": 72,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック65",
+      "id": "ground-+73-z0",
+      "pos": {
+        "x": 73,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック66",
+      "id": "ground-+74-z0",
+      "pos": {
+        "x": 74,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック67",
+      "id": "ground-+75-z0",
+      "pos": {
+        "x": 75,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック68",
+      "id": "ground-+76-z0",
+      "pos": {
+        "x": 76,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック69",
+      "id": "ground-+77-z0",
+      "pos": {
+        "x": 77,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック70",
+      "id": "ground-+78-z0",
+      "pos": {
+        "x": 78,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック71",
+      "id": "ground-+79-z0",
+      "pos": {
+        "x": 79,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック72",
+      "id": "ground-+80-z0",
+      "pos": {
+        "x": 80,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック73",
+      "id": "ground-+81-z0",
+      "pos": {
+        "x": 81,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック74",
+      "id": "ground-+82-z0",
+      "pos": {
+        "x": 82,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック75",
+      "id": "ground-+83-z0",
+      "pos": {
+        "x": 83,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック76",
+      "id": "ground-+84-z0",
+      "pos": {
+        "x": 84,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "中ブロック山1：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-01",
+      "pos": {
+        "x": 5,
+        "y": 0.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山2：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-02",
+      "pos": {
+        "x": 6,
+        "y": 0.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山3：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-03",
+      "pos": {
+        "x": 7,
+        "y": 0.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山4：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-04",
+      "pos": {
+        "x": 8,
+        "y": 0.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山5：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-05",
+      "pos": {
+        "x": 9,
+        "y": 0.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山6：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-06",
+      "pos": {
+        "x": 10,
+        "y": 0.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山7：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-07",
+      "pos": {
+        "x": 11,
+        "y": 0.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山8：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-08",
+      "pos": {
+        "x": 6,
+        "y": 1.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山9：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-09",
+      "pos": {
+        "x": 7,
+        "y": 1.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山10：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-10",
+      "pos": {
+        "x": 8,
+        "y": 1.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山11：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-11",
+      "pos": {
+        "x": 9,
+        "y": 1.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山12：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-12",
+      "pos": {
+        "x": 10,
+        "y": 1.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山13：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-13",
+      "pos": {
+        "x": 8,
+        "y": 2.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山14：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-14",
+      "pos": {
+        "x": 9,
+        "y": 2.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山15：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-15",
+      "pos": {
+        "x": 8,
+        "y": 3.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山16：参考画像ベース。横視点では山に見え、正面視点では奥側にずれている",
+      "id": "medium-mountain-16",
+      "pos": {
+        "x": 9,
+        "y": 3.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "中ブロック山通過後の高所道ブロック1",
+      "id": "high-path-a-01",
+      "pos": {
+        "x": 13,
+        "y": 2.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "中ブロック山通過後の高所道ブロック2",
+      "id": "high-path-a-02",
+      "pos": {
+        "x": 14,
+        "y": 2.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "中ブロック山通過後の高所道ブロック3",
+      "id": "high-path-a-03",
+      "pos": {
+        "x": 15,
+        "y": 2.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "中ブロック山通過後の高所道ブロック4",
+      "id": "high-path-a-04",
+      "pos": {
+        "x": 16,
+        "y": 2.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "視点切替壁1：横視点では長い壁、正面視点では奥にずれている",
+      "id": "illusion-long-wall-01",
+      "pos": {
+        "x": 12.0,
+        "y": 1.1,
+        "z": 1.45
+      },
+      "size": "M",
+      "solid": true,
+      "scale": {
+        "x": 5.5,
+        "y": 2.8,
+        "z": 0.8
+      },
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "視点切替壁2：横視点では道を塞ぐ、正面視点では奥側",
+      "id": "illusion-wall-02",
+      "pos": {
+        "x": 26.0,
+        "y": 0.8,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": true,
+      "scale": {
+        "x": 2.5,
+        "y": 2.2,
+        "z": 0.8
+      },
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "視点切替壁3：横視点では低い天井付きの壁、正面視点では通過可能",
+      "id": "illusion-wall-03",
+      "pos": {
+        "x": 42.0,
+        "y": 0.9,
+        "z": 1.45
+      },
+      "size": "M",
+      "solid": true,
+      "scale": {
+        "x": 4.0,
+        "y": 2.4,
+        "z": 0.8
+      },
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "視点切替壁4：終盤の長い錯視壁",
+      "id": "illusion-long-wall-04",
+      "pos": {
+        "x": 61.0,
+        "y": 1.0,
+        "z": 1.5
+      },
+      "size": "M",
+      "solid": true,
+      "scale": {
+        "x": 6.0,
+        "y": 2.6,
+        "z": 0.8
+      },
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "空中ブロック：しゃがみ通路の天井1",
+      "id": "s9-crouch-ceiling-01",
+      "pos": {
+        "x": 36,
+        "y": 4.0,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック：しゃがみ通路の天井2",
+      "id": "s9-crouch-ceiling-02",
+      "pos": {
+        "x": 37,
+        "y": 4.0,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック：しゃがみ通路の天井3",
+      "id": "s9-crouch-ceiling-03",
+      "pos": {
+        "x": 38,
+        "y": 4.0,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック：しゃがみ通路の天井4",
+      "id": "s9-crouch-ceiling-04",
+      "pos": {
+        "x": 39,
+        "y": 4.0,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック1",
+      "id": "s9-air-block-01",
+      "pos": {
+        "x": 23,
+        "y": 2.6,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック2",
+      "id": "s9-air-block-02",
+      "pos": {
+        "x": 24,
+        "y": 3.6,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック3",
+      "id": "s9-air-block-03",
+      "pos": {
+        "x": 45,
+        "y": 3.0,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック4",
+      "id": "s9-air-block-04",
+      "pos": {
+        "x": 46,
+        "y": 4.0,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック5",
+      "id": "s9-air-block-05",
+      "pos": {
+        "x": 72,
+        "y": 2.8,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック6",
+      "id": "s9-air-block-06",
+      "pos": {
+        "x": 73,
+        "y": 3.8,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "落下ブロック1：横視点では直撃、正面視点では奥側を落ちる",
+      "id": "falling-block-01",
+      "pos": {
+        "x": 21.6,
+        "y": 11.5,
+        "z": 1.35
+      },
+      "size": "M",
+      "solid": false,
+      "scale": {
+        "x": 0.65,
+        "y": 8.5,
+        "z": 0.7
+      },
+      "tags": [
+        "falling-block"
+      ],
+      "fallTriggerX": 20.9,
+      "fallStartY": 11.5,
+      "fallEndY": -5.0,
+      "fallSpeed": 28
+    },
+    {
+      "_comment": "落下ブロック2：横視点では直撃、正面視点では奥側を落ちる",
+      "id": "falling-block-02",
+      "pos": {
+        "x": 41.2,
+        "y": 11.5,
+        "z": 1.45
+      },
+      "size": "M",
+      "solid": false,
+      "scale": {
+        "x": 0.65,
+        "y": 8.5,
+        "z": 0.7
+      },
+      "tags": [
+        "falling-block"
+      ],
+      "fallTriggerX": 40.6,
+      "fallStartY": 11.5,
+      "fallEndY": -5.0,
+      "fallSpeed": 28
+    },
+    {
+      "_comment": "落下ブロック3：横視点では直撃、正面視点では奥側を落ちる",
+      "id": "falling-block-03",
+      "pos": {
+        "x": 58.5,
+        "y": 11.5,
+        "z": 1.4
+      },
+      "size": "M",
+      "solid": false,
+      "scale": {
+        "x": 0.65,
+        "y": 8.5,
+        "z": 0.7
+      },
+      "tags": [
+        "falling-block"
+      ],
+      "fallTriggerX": 57.8,
+      "fallStartY": 11.5,
+      "fallEndY": -5.0,
+      "fallSpeed": 28
+    },
+    {
+      "_comment": "落下ブロック4：横視点では直撃、正面視点では奥側を落ちる",
+      "id": "falling-block-04",
+      "pos": {
+        "x": 76.0,
+        "y": 11.5,
+        "z": 1.45
+      },
+      "size": "M",
+      "solid": false,
+      "scale": {
+        "x": 0.65,
+        "y": 8.5,
+        "z": 0.7
+      },
+      "tags": [
+        "falling-block"
+      ],
+      "fallTriggerX": 75.4,
+      "fallStartY": 11.5,
+      "fallEndY": -5.0,
+      "fallSpeed": 28
+    },
+    {
+      "_comment": "復帰用小ブロック1",
+      "id": "recovery-small-01",
+      "pos": {
+        "x": 52,
+        "y": 0.25,
+        "z": 0
+      },
+      "size": "S",
+      "solid": true
+    },
+    {
+      "_comment": "復帰用小ブロック2",
+      "id": "recovery-small-02",
+      "pos": {
+        "x": 52.5,
+        "y": 0.75,
+        "z": 0
+      },
+      "size": "S",
+      "solid": true
+    },
+    {
+      "_comment": "復帰用小ブロック3",
+      "id": "recovery-small-03",
+      "pos": {
+        "x": 53,
+        "y": 1.25,
+        "z": 0
+      },
+      "size": "S",
+      "solid": true
+    },
+    {
+      "_comment": "復帰用小ブロック4",
+      "id": "recovery-small-04",
+      "pos": {
+        "x": 67,
+        "y": 0.5,
+        "z": 0
+      },
+      "size": "S",
+      "solid": true
+    },
+    {
+      "_comment": "復帰用小ブロック5",
+      "id": "recovery-small-05",
+      "pos": {
+        "x": 68,
+        "y": 1.5,
+        "z": 0
+      },
+      "size": "S",
+      "solid": true
+    },
+    {
+      "_comment": "復帰用小ブロック6",
+      "id": "recovery-small-06",
+      "pos": {
+        "x": 69,
+        "y": 2.5,
+        "z": 0
+      },
+      "size": "S",
+      "solid": true
+    }
+  ],
+  "doors": [
+    {
+      "id": "goal-door-009",
+      "aabb": {
+        "min": {
+          "x": 83.3,
+          "y": 0.0,
+          "z": -0.5
+        },
+        "max": {
+          "x": 84.1,
+          "y": 2.2,
+          "z": 0.5
+        }
+      },
+      "visibleViews": [
+        "SIDE",
+        "FRONT"
+      ],
+      "kind": "REAL"
+    }
+  ],
+  "enemies": [
+    {
+      "id": "walker-9-01",
+      "type": "WALKER",
+      "posByView": {
+        "SIDE": {
+          "x": 28,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 28,
+          "y": 1,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 20,
+        "max": 29,
+        "speed": 1.8,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "hoppins-9-01",
+      "type": "HOPPINS",
+      "posByView": {
+        "SIDE": {
+          "x": 46,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 46,
+          "y": 1,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 35,
+        "max": 47,
+        "speed": 2.4,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "ochy-9-01",
+      "type": "OCHY",
+      "posByView": {
+        "SIDE": {
+          "x": 64,
+          "y": 8,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 64,
+          "y": 8,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "y",
+        "min": 0,
+        "max": 8,
+        "speed": 9,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-009-start",
+      "aabb": {
+        "min": {
+          "x": -8.5,
+          "y": 0.0,
+          "z": -0.5
+        },
+        "max": {
+          "x": -7.5,
+          "y": 2.0,
+          "z": 0.5
+        }
+      },
+      "respawn": {
+        "x": -8,
+        "y": 1,
+        "z": 0
+      }
+    }
+  ],
+  "items": [],
+  "start": {
+    "spawn": {
+      "x": -8,
+      "y": 1,
+      "z": 0
+    }
+  }
+}   

@@ -1,0 +1,1049 @@
+{
+  "id": "stage008",
+  "name": "Stage 008 - バフバフバフ？",
+  "viewCycle": [
+    "SIDE",
+    "FRONT"
+  ],
+  "blocks": [
+    {
+      "_comment": "道ブロック1",
+      "id": "ground--08-z0",
+      "pos": {
+        "x": -8,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック2",
+      "id": "ground--07-z0",
+      "pos": {
+        "x": -7,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック3",
+      "id": "ground--06-z0",
+      "pos": {
+        "x": -6,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック4",
+      "id": "ground--05-z0",
+      "pos": {
+        "x": -5,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック5",
+      "id": "ground--04-z0",
+      "pos": {
+        "x": -4,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック6",
+      "id": "ground--03-z0",
+      "pos": {
+        "x": -3,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック7",
+      "id": "ground--02-z0",
+      "pos": {
+        "x": -2,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック8",
+      "id": "ground--01-z0",
+      "pos": {
+        "x": -1,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック9",
+      "id": "ground-+00-z0",
+      "pos": {
+        "x": 0,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック10",
+      "id": "ground-+01-z0",
+      "pos": {
+        "x": 1,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック11",
+      "id": "ground-+02-z0",
+      "pos": {
+        "x": 2,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック12",
+      "id": "ground-+03-z0",
+      "pos": {
+        "x": 3,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック13",
+      "id": "ground-+04-z0",
+      "pos": {
+        "x": 4,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック14",
+      "id": "ground-+05-z0",
+      "pos": {
+        "x": 5,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック15",
+      "id": "ground-+06-z0",
+      "pos": {
+        "x": 6,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "崩れる床ブロック：タンバ状態で素早く渡る橋",
+      "id": "crumble-bridge-+07",
+      "pos": {
+        "x": 7,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "崩れる床ブロック：タンバ状態で素早く渡る橋",
+      "id": "crumble-bridge-+08",
+      "pos": {
+        "x": 8,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "崩れる床ブロック：タンバ状態で素早く渡る橋",
+      "id": "crumble-bridge-+09",
+      "pos": {
+        "x": 9,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "崩れる床ブロック：タンバ状態で素早く渡る橋",
+      "id": "crumble-bridge-+10",
+      "pos": {
+        "x": 10,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "崩れる床ブロック：タンバ状態で素早く渡る橋",
+      "id": "crumble-bridge-+11",
+      "pos": {
+        "x": 11,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "崩れる床ブロック：タンバ状態で素早く渡る橋",
+      "id": "crumble-bridge-+12",
+      "pos": {
+        "x": 12,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "崩れる床ブロック：タンバ状態で素早く渡る橋",
+      "id": "crumble-bridge-+13",
+      "pos": {
+        "x": 13,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "崩れる床ブロック：タンバ状態で素早く渡る橋",
+      "id": "crumble-bridge-+14",
+      "pos": {
+        "x": 14,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "crumbling-floor"
+      ]
+    },
+    {
+      "_comment": "道ブロック24",
+      "id": "ground-+18-z0",
+      "pos": {
+        "x": 18,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック25",
+      "id": "ground-+19-z0",
+      "pos": {
+        "x": 19,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック26",
+      "id": "ground-+20-z0",
+      "pos": {
+        "x": 20,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック27",
+      "id": "ground-+21-z0",
+      "pos": {
+        "x": 21,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック28",
+      "id": "ground-+22-z0",
+      "pos": {
+        "x": 22,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック29",
+      "id": "ground-+23-z0",
+      "pos": {
+        "x": 23,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所ジャンプ用足場1：チョウバ状態で登る",
+      "id": "chouba-step-01",
+      "pos": {
+        "x": 24,
+        "y": 1.0,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所ジャンプ用足場2：チョウバ状態で登る",
+      "id": "chouba-step-02",
+      "pos": {
+        "x": 26,
+        "y": 2.2,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所道ブロック：チョウバ状態で到達する上ルート",
+      "id": "high-route-+28",
+      "pos": {
+        "x": 28,
+        "y": 3.2,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所道ブロック：チョウバ状態で到達する上ルート",
+      "id": "high-route-+29",
+      "pos": {
+        "x": 29,
+        "y": 3.2,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所道ブロック：チョウバ状態で到達する上ルート",
+      "id": "high-route-+30",
+      "pos": {
+        "x": 30,
+        "y": 3.2,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所道ブロック：チョウバ状態で到達する上ルート",
+      "id": "high-route-+31",
+      "pos": {
+        "x": 31,
+        "y": 3.2,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所道ブロック：チョウバ状態で到達する上ルート",
+      "id": "high-route-+32",
+      "pos": {
+        "x": 32,
+        "y": 3.2,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所道ブロック：チョウバ状態で到達する上ルート",
+      "id": "high-route-+33",
+      "pos": {
+        "x": 33,
+        "y": 3.2,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "高所道ブロック：チョウバ状態で到達する上ルート",
+      "id": "high-route-+34",
+      "pos": {
+        "x": 34,
+        "y": 3.2,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック30",
+      "id": "ground-+36-z0",
+      "pos": {
+        "x": 36,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック31",
+      "id": "ground-+37-z0",
+      "pos": {
+        "x": 37,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック32",
+      "id": "ground-+38-z0",
+      "pos": {
+        "x": 38,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック33",
+      "id": "ground-+39-z0",
+      "pos": {
+        "x": 39,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック34",
+      "id": "ground-+40-z0",
+      "pos": {
+        "x": 40,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック35",
+      "id": "ground-+41-z0",
+      "pos": {
+        "x": 41,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック36",
+      "id": "ground-+42-z0",
+      "pos": {
+        "x": 42,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック37",
+      "id": "ground-+43-z0",
+      "pos": {
+        "x": 43,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック38",
+      "id": "ground-+44-z0",
+      "pos": {
+        "x": 44,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック39",
+      "id": "ground-+45-z0",
+      "pos": {
+        "x": 45,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック40",
+      "id": "ground-+46-z0",
+      "pos": {
+        "x": 46,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック：ゴルバを飛び越えるための避け足場",
+      "id": "goruba-avoid-platform-01",
+      "pos": {
+        "x": 42,
+        "y": 1.8,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true,
+      "scale": {
+        "x": 3,
+        "y": 0.35,
+        "z": 1
+      }
+    },
+    {
+      "_comment": "壁ブロック1：横視点では道を塞ぐが正面視点では奥にずれている",
+      "id": "illusion-wall-08-01",
+      "pos": {
+        "x": 48,
+        "y": 0.5,
+        "z": 1.35
+      },
+      "size": "L",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "道ブロック41",
+      "id": "ground-+50-z0",
+      "pos": {
+        "x": 50,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック42",
+      "id": "ground-+51-z0",
+      "pos": {
+        "x": 51,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック43",
+      "id": "ground-+52-z0",
+      "pos": {
+        "x": 52,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック44",
+      "id": "ground-+53-z0",
+      "pos": {
+        "x": 53,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック45",
+      "id": "ground-+54-z0",
+      "pos": {
+        "x": 54,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック46",
+      "id": "ground-+55-z0",
+      "pos": {
+        "x": 55,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック47",
+      "id": "ground-+56-z0",
+      "pos": {
+        "x": 56,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック48",
+      "id": "ground-+57-z0",
+      "pos": {
+        "x": 57,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック49",
+      "id": "ground-+58-z0",
+      "pos": {
+        "x": 58,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック50",
+      "id": "ground-+59-z0",
+      "pos": {
+        "x": 59,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック51",
+      "id": "ground-+60-z0",
+      "pos": {
+        "x": 60,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック52",
+      "id": "ground-+61-z0",
+      "pos": {
+        "x": 61,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック53",
+      "id": "ground-+62-z0",
+      "pos": {
+        "x": 62,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック54",
+      "id": "ground-+63-z0",
+      "pos": {
+        "x": 63,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック55",
+      "id": "ground-+64-z0",
+      "pos": {
+        "x": 64,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック56",
+      "id": "ground-+65-z0",
+      "pos": {
+        "x": 65,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック57",
+      "id": "ground-+66-z0",
+      "pos": {
+        "x": 66,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック58",
+      "id": "ground-+67-z0",
+      "pos": {
+        "x": 67,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック59",
+      "id": "ground-+68-z0",
+      "pos": {
+        "x": 68,
+        "y": -0.5,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック：しゃがみ通路の天井",
+      "id": "crouch-ceiling-08-55",
+      "pos": {
+        "x": 55,
+        "y": 1.8,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック：しゃがみ通路の天井",
+      "id": "crouch-ceiling-08-56",
+      "pos": {
+        "x": 56,
+        "y": 1.8,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "空中ブロック：しゃがみ通路の天井",
+      "id": "crouch-ceiling-08-57",
+      "pos": {
+        "x": 57,
+        "y": 1.8,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "上昇パネル通常：終盤の高さ調整用",
+      "id": "panel-up-normal-08-01",
+      "pos": {
+        "x": 61,
+        "y": 0.0,
+        "z": 0
+      },
+      "size": "M",
+      "solid": true,
+      "scale": {
+        "x": 3,
+        "y": 0.25,
+        "z": 1
+      },
+      "tags": [
+        "up-panel-normal"
+      ]
+    }
+  ],
+  "doors": [
+    {
+      "id": "goal-door-008",
+      "aabb": {
+        "min": {
+          "x": 67.8,
+          "y": 0.0,
+          "z": -0.5
+        },
+        "max": {
+          "x": 68.6,
+          "y": 2.2,
+          "z": 0.5
+        }
+      },
+      "visibleViews": [
+        "SIDE",
+        "FRONT"
+      ],
+      "kind": "REAL"
+    }
+  ],
+  "enemies": [
+    {
+      "id": "tamba-8-01",
+      "type": "TAMBA",
+      "posByView": {
+        "SIDE": {
+          "x": 3,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 3,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "chouba-8-01",
+      "type": "CHOUBA",
+      "posByView": {
+        "SIDE": {
+          "x": 20,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 20,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "goruba-8-01",
+      "type": "GORUBA",
+      "posByView": {
+        "SIDE": {
+          "x": 42,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 42,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "walker-8-01",
+      "type": "WALKER",
+      "posByView": {
+        "SIDE": {
+          "x": 56,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 56,
+          "y": 1,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 52,
+        "max": 58,
+        "speed": 1.8,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "ochy-8-01",
+      "type": "OCHY",
+      "posByView": {
+        "SIDE": {
+          "x": 63,
+          "y": 8,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 63,
+          "y": 8,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "y",
+        "min": 0,
+        "max": 8,
+        "speed": 9,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-008-start",
+      "aabb": {
+        "min": {
+          "x": -8.5,
+          "y": 0.0,
+          "z": -0.5
+        },
+        "max": {
+          "x": -7.5,
+          "y": 2.0,
+          "z": 0.5
+        }
+      },
+      "respawn": {
+        "x": -8,
+        "y": 1,
+        "z": 0
+      }
+    }
+  ],
+  "items": [
+    {
+      "_comment": "移動する床：タンバ状態で速度差を体験する区間",
+      "id": "move-floor-right-08",
+      "kind": "MOVE_FLOOR_RIGHT",
+      "aabb": {
+        "min": {
+          "x": 10.0,
+          "y": 0.0,
+          "z": -0.45
+        },
+        "max": {
+          "x": 14.0,
+          "y": 0.2,
+          "z": 0.45
+        }
+      }
+    },
+    {
+      "_comment": "ジャンプ台：状態解除後の補助ジャンプ台",
+      "id": "jump-pad-08",
+      "kind": "JUMP_PAD",
+      "aabb": {
+        "min": {
+          "x": 59.5,
+          "y": 0.0,
+          "z": -0.45
+        },
+        "max": {
+          "x": 60.5,
+          "y": 0.2,
+          "z": 0.45
+        }
+      }
+    }
+  ],
+  "start": {
+    "spawn": {
+      "x": -8,
+      "y": 1,
+      "z": 0
+    }
+  }
+}
