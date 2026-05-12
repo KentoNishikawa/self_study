@@ -121,6 +121,7 @@ export interface PlayerState {
   statusTimerMs: number;
   gorubaLockMs: number;
   gorubaDirection: -1 | 1;
+  stairAssistUsedInJump: boolean;
 }
 
 export interface CameraState {

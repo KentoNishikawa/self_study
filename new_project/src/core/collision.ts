@@ -66,9 +66,21 @@ export function canStandUp(player: PlayerState, blocks: BlockData[]): boolean {
 
 export function moveWithCollision(player: PlayerState, blocks: BlockData[], dtSec: number, view: View): void {
   player.onGround = false;
-  moveAxis(player, blocks, "x", player.velocity.x * dtSec, view);
-  moveAxis(player, blocks, "z", player.velocity.z * dtSec, view);
-  moveAxis(player, blocks, "y", player.velocity.y * dtSec, view);
+
+  const deltaX = player.velocity.x * dtSec;
+  const deltaY = player.velocity.y * dtSec;
+  const deltaZ = player.velocity.z * dtSec;
+
+  if (deltaY > 0) {
+    moveAxis(player, blocks, "y", deltaY, view);
+    moveAxis(player, blocks, "x", deltaX, view);
+    moveAxis(player, blocks, "z", deltaZ, view);
+  } else {
+    moveAxis(player, blocks, "x", deltaX, view);
+    moveAxis(player, blocks, "z", deltaZ, view);
+    moveAxis(player, blocks, "y", deltaY, view);
+  }
+
   refreshTrappedState(player, blocks, view);
 }
 
@@ -78,7 +90,7 @@ function moveAxis(player: PlayerState, blocks: BlockData[], axis: "x" | "y" | "z
   }
 
   player.position[axis] += delta;
-  const playerBox = playerAabbAt(player.position, player.width, player.height);
+  let playerBox = playerAabbAt(player.position, player.width, player.height);
 
   for (const block of getSolidBlocks(blocks)) {
     if (block.id === player.trappedBlockId) {
@@ -90,8 +102,15 @@ function moveAxis(player: PlayerState, blocks: BlockData[], axis: "x" | "y" | "z
       continue;
     }
 
-    if ((axis === "x" || axis === "z") && isStandingOnBlockTopForView(playerBox, solidBox, block, view)) {
-      continue;
+    if (axis === "x" || axis === "z") {
+      if (isStandingOnBlockTopForView(playerBox, solidBox, block, view)) {
+        continue;
+      }
+
+      if (tryLandOnReachableBlockTop(player, playerBox, solidBox)) {
+        playerBox = playerAabbAt(player.position, player.width, player.height);
+        continue;
+      }
     }
 
     if (axis === "x") {
@@ -122,6 +141,27 @@ function moveAxis(player: PlayerState, blocks: BlockData[], axis: "x" | "y" | "z
       player.velocity.y = 0;
     }
   }
+}
+
+
+function tryLandOnReachableBlockTop(player: PlayerState, playerBox: AABB, solidBox: AABB): boolean {
+  const maxReachableStepHeight = 0.75;
+  const topGap = solidBox.max.y - playerBox.min.y;
+  if (topGap < -0.05 || topGap > maxReachableStepHeight) {
+    return false;
+  }
+
+  const horizontalInset = 0.05;
+  const overlapsX = playerBox.max.x > solidBox.min.x + horizontalInset && playerBox.min.x < solidBox.max.x - horizontalInset;
+  const overlapsZ = playerBox.max.z > solidBox.min.z + horizontalInset && playerBox.min.z < solidBox.max.z - horizontalInset;
+  if (!overlapsX || !overlapsZ) {
+    return false;
+  }
+
+  player.position.y = solidBox.max.y + player.height / 2;
+  player.velocity.y = 0;
+  player.onGround = true;
+  return true;
 }
 
 function isStandingOnBlockTopForView(playerBox: AABB, solidBox: AABB, block: BlockData, view: View): boolean {

@@ -41,7 +41,8 @@ export function createPlayerState(spawn: Vec3): PlayerState {
     status: "NONE",
     statusTimerMs: 0,
     gorubaLockMs: 0,
-    gorubaDirection: 1
+    gorubaDirection: 1,
+    stairAssistUsedInJump: false
   };
 }
 
@@ -58,6 +59,7 @@ export function respawnPlayer(player: PlayerState, respawn: Vec3): void {
   player.statusTimerMs = 0;
   player.gorubaLockMs = 0;
   player.gorubaDirection = 1;
+  player.stairAssistUsedInJump = false;
 }
 
 export function updatePlayer(state: GameState, activeBlocks: BlockData[], dtSec: number, nowMs: number): void {
@@ -140,6 +142,7 @@ function updateJumpAndGravity(state: GameState, dtSec: number, nowMs: number): v
   const canJump = state.input.jump && state.player.onGround && !state.player.crouching;
 
   if (canJump) {
+    state.player.stairAssistUsedInJump = false;
     const jumpPad = jumpPadAtPlayer(state);
     if (jumpPad?.kind === "JUMP_PAD") {
       state.player.velocity.y = JUMP_PAD_VELOCITY;
