@@ -103,12 +103,7 @@ function moveAxis(player: PlayerState, blocks: BlockData[], axis: "x" | "y" | "z
     }
 
     if (axis === "x" || axis === "z") {
-      if (isStandingOnBlockTopForView(playerBox, solidBox, block, view)) {
-        continue;
-      }
-
-      if (tryLandOnReachableBlockTop(player, playerBox, solidBox)) {
-        playerBox = playerAabbAt(player.position, player.width, player.height);
+      if (isStandingOnBlockTopForView(player, playerBox, solidBox, block, view)) {
         continue;
       }
     }
@@ -144,29 +139,12 @@ function moveAxis(player: PlayerState, blocks: BlockData[], axis: "x" | "y" | "z
 }
 
 
-function tryLandOnReachableBlockTop(player: PlayerState, playerBox: AABB, solidBox: AABB): boolean {
-  const maxReachableStepHeight = 0.75;
-  const topGap = solidBox.max.y - playerBox.min.y;
-  if (topGap < -0.05 || topGap > maxReachableStepHeight) {
-    return false;
-  }
-
-  const horizontalInset = 0.05;
-  const overlapsX = playerBox.max.x > solidBox.min.x + horizontalInset && playerBox.min.x < solidBox.max.x - horizontalInset;
-  const overlapsZ = playerBox.max.z > solidBox.min.z + horizontalInset && playerBox.min.z < solidBox.max.z - horizontalInset;
-  if (!overlapsX || !overlapsZ) {
-    return false;
-  }
-
-  player.position.y = solidBox.max.y + player.height / 2;
-  player.velocity.y = 0;
-  player.onGround = true;
-  return true;
-}
-
-function isStandingOnBlockTopForView(playerBox: AABB, solidBox: AABB, block: BlockData, view: View): boolean {
+function isStandingOnBlockTopForView(player: PlayerState, playerBox: AABB, solidBox: AABB, block: BlockData, view: View): boolean {
   void block;
   void view;
+  if (player.velocity.y > 0) {
+    return false;
+  }
   const topTolerance = 0.2;
   const overlapsX = playerBox.max.x > solidBox.min.x && playerBox.min.x < solidBox.max.x;
   const overlapsZ = playerBox.max.z > solidBox.min.z && playerBox.min.z < solidBox.max.z;
