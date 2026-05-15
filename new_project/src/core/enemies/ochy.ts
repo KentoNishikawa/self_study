@@ -1,6 +1,6 @@
-import type { EnemyBehavior } from "./types";
-import { enemyPositionForView } from "./types";
-import { ENEMY_DESPAWN_Y, isEnemyTouchingGround } from "./physics";
+import type { EnemyBehavior } from "../types";
+import { enemyPositionForView } from "../enemyUtils";
+import { ENEMY_DESPAWN_Y, isEnemyTouchingGround } from "../enemyPhysics";
 
 const DEFAULT_OCHY_FALL_SPEED = 9.0;
 const DEFAULT_OCHY_RESPAWN_INTERVAL_MS = 3000;

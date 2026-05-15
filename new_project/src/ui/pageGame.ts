@@ -2,14 +2,25 @@ import { createGame, getRenderState, onKeyDown, onKeyUp, resumeGame, tick } from
 import { createThreeEngine } from "../engine/threeEngine";
 import { renderStageSelectPage } from "./pageStageSelect";
 
-export function renderGamePage(root: HTMLElement, stageId = "stage001"): void {
+export function renderGamePage(root: HTMLElement, stageId = "stage001", startFromCheckpoint = false): void {
   root.innerHTML = `
     <main class="game-page">
       <div class="game-canvas-root" data-canvas-root></div>
       <div class="game-hud" data-hud></div>
+      <div class="checkpoint-toast" data-checkpoint-toast></div>
+      <div class="tutorial-overlay" data-tutorial-overlay hidden>
+        <div class="tutorial-spotlight" data-tutorial-spotlight></div>
+        <section class="tutorial-card">
+          <p data-tutorial-text></p>
+          <div class="tutorial-footer">
+            <span data-tutorial-page></span>
+            <span>Enter: 次へ</span>
+          </div>
+        </section>
+      </div>
       <div class="game-help">
-        SIDE: ←→ / A・D　FRONT: ↑↓ / W・S　Space: ジャンプ　Shift: しゃがみ<br>
-        同方向2回押し: ダッシュ　Q長押し: 正面視点 / 離す: 横視点　E: 扉　Enter: メニュー
+        SIDE: ←→ / A・D　FRONT: ↑↓ / W・S　Space: 短押し小ジャンプ / 長押し通常ジャンプ　Shift: しゃがみ<br>
+        Q長押し: 正面視点 / 離す: 横視点　E: 扉　Enter: メニュー
       </div>
       <div class="pause-modal" data-pause-menu hidden>
         <section class="pause-card">
@@ -26,6 +37,7 @@ export function renderGamePage(root: HTMLElement, stageId = "stage001"): void {
         <section class="stage-clear-card">
           <h2>ステージクリア！</h2>
           <p class="clear-time" data-clear-time>クリアタイム: 0.0秒</p>
+          <p class="ranking-note" data-ranking-note hidden>チェックポイントから開始したため、今後実装予定のクリアタイムランキングには反映されません。</p>
           <p>次のステージがある場合は、ステージ選択画面で解放されます。</p>
           <div class="stage-clear-actions">
             <button type="button" class="game-button" data-replay>もう一度遊ぶ</button>
@@ -40,11 +52,13 @@ export function renderGamePage(root: HTMLElement, stageId = "stage001"): void {
   const hud = root.querySelector<HTMLElement>("[data-hud]");
   const clearModal = root.querySelector<HTMLElement>("[data-stage-clear]");
   const pauseMenu = root.querySelector<HTMLElement>("[data-pause-menu]");
-  if (!canvasRoot || !hud || !clearModal || !pauseMenu) {
+  const checkpointToast = root.querySelector<HTMLElement>("[data-checkpoint-toast]");
+  const tutorialOverlay = root.querySelector<HTMLElement>("[data-tutorial-overlay]");
+  if (!canvasRoot || !hud || !clearModal || !pauseMenu || !checkpointToast || !tutorialOverlay) {
     throw new Error("ゲーム画面の初期化に失敗しました。");
   }
 
-  const game = createGame({ initialStageId: stageId });
+  const game = createGame({ initialStageId: stageId, startFromCheckpoint });
   const engine = createThreeEngine(canvasRoot);
   let lastTime = performance.now();
   let rafId = 0;
@@ -84,7 +98,9 @@ export function renderGamePage(root: HTMLElement, stageId = "stage001"): void {
     const state = tick(game, dtMs);
     engine.render(state);
     renderHud(hud, state);
+    renderTutorialOverlay(tutorialOverlay, state, engine);
     renderPauseMenu(pauseMenu, state);
+    renderCheckpointToast(checkpointToast, state);
     renderStageClearModal(clearModal, state);
     rafId = requestAnimationFrame(frame);
   };
@@ -96,7 +112,7 @@ export function renderGamePage(root: HTMLElement, stageId = "stage001"): void {
 
   pauseMenu.querySelector<HTMLButtonElement>("[data-pause-restart]")?.addEventListener("click", () => {
     dispose();
-    renderGamePage(root, stageId);
+    renderGamePage(root, stageId, false);
   });
 
   pauseMenu.querySelector<HTMLButtonElement>("[data-pause-resume]")?.addEventListener("click", () => {
@@ -106,7 +122,7 @@ export function renderGamePage(root: HTMLElement, stageId = "stage001"): void {
 
   clearModal.querySelector<HTMLButtonElement>("[data-replay]")?.addEventListener("click", () => {
     dispose();
-    renderGamePage(root, stageId);
+    renderGamePage(root, stageId, startFromCheckpoint);
   });
 
   clearModal.querySelector<HTMLButtonElement>("[data-stage-select]")?.addEventListener("click", () => {
@@ -143,6 +159,11 @@ function renderPauseMenu(modal: HTMLElement, state: HudState): void {
   modal.hidden = state.mode !== "PAUSED";
 }
 
+function renderCheckpointToast(toast: HTMLElement, state: HudState): void {
+  toast.textContent = state.checkpointToastMessage;
+  toast.classList.toggle("is-visible", state.checkpointToastMessage !== "");
+}
+
 function renderStageClearModal(modal: HTMLElement, state: HudState): void {
   modal.hidden = state.mode !== "STAGE_CLEAR";
   if (state.mode !== "STAGE_CLEAR") {
@@ -151,7 +172,41 @@ function renderStageClearModal(modal: HTMLElement, state: HudState): void {
 
   const clearTime = modal.querySelector<HTMLElement>("[data-clear-time]");
   if (clearTime) {
+    clearTime.hidden = !state.clearTimeVisible;
     clearTime.textContent = `クリアタイム: ${formatTime(state.elapsedMs)}`;
+  }
+
+  const rankingNote = modal.querySelector<HTMLElement>("[data-ranking-note]");
+  if (rankingNote) {
+    rankingNote.hidden = state.clearTimeRankingEligible || !state.clearTimeVisible;
+  }
+}
+
+function renderTutorialOverlay(modal: HTMLElement, state: HudState, engine: ReturnType<typeof createThreeEngine>): void {
+  const tutorial = state.tutorial;
+  modal.hidden = tutorial === null;
+  if (!tutorial) {
+    return;
+  }
+
+  const text = modal.querySelector<HTMLElement>("[data-tutorial-text]");
+  const page = modal.querySelector<HTMLElement>("[data-tutorial-page]");
+  const spotlight = modal.querySelector<HTMLElement>("[data-tutorial-spotlight]");
+
+  if (text) {
+    text.textContent = tutorial.text;
+  }
+  if (page) {
+    page.textContent = `${tutorial.pageIndex + 1} / ${tutorial.pageCount}`;
+  }
+  if (spotlight) {
+    const focus = engine.projectAabbToScreen(tutorial.focusAabb);
+    if (focus) {
+      spotlight.style.setProperty("--tutorial-focus-x", `${focus.x}px`);
+      spotlight.style.setProperty("--tutorial-focus-y", `${focus.y}px`);
+      spotlight.style.setProperty("--tutorial-focus-width", `${Math.max(focus.width + 160, 220)}px`);
+      spotlight.style.setProperty("--tutorial-focus-height", `${Math.max(focus.height + 140, 180)}px`);
+    }
   }
 }
 

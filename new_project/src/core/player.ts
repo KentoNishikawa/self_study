@@ -3,23 +3,23 @@ import {
   CHOUBA_JUMP_MULTIPLIER,
   CHOUBA_SPEED_MULTIPLIER,
   CROUCH_SPEED_RATE,
-  DASH_JUMP_AIR_SPEED_LIMIT,
-  DASH_SPEED,
   GORUBA_AUTO_SPEED,
   GRAVITY,
   JUMP_PAD_VELOCITY,
   JUMP_VELOCITY,
+  SMALL_JUMP_RELEASE_VELOCITY,
   MOVING_FLOOR_SPEED,
   PLAYER_CROUCHING_HEIGHT,
   PLAYER_STANDING_HEIGHT,
   PLAYER_WIDTH,
   TAMBA_JUMP_MULTIPLIER,
   TAMBA_SPEED_MULTIPLIER,
+  VARIABLE_JUMP_HOLD_MS,
   TRAP_JUMP_PAD_VELOCITY,
   WALK_SPEED
 } from "./constants";
 import { canStandUp, moveWithCollision, playerAabbAt } from "./collision";
-import { isDashActive, movementIntent, refreshDashState } from "./input";
+import { movementIntent } from "./input";
 import { jumpPadAtPlayer, movingFloorDirectionAtPlayer } from "./items";
 import { cloneVec3 } from "./math";
 import { blockAabb } from "./stage";
@@ -35,14 +35,14 @@ export function createPlayerState(spawn: Vec3): PlayerState {
     height: PLAYER_STANDING_HEIGHT,
     crouching: false,
     onGround: false,
-    dashJumping: false,
+    variableJumpActive: false,
+    jumpStartedAtMs: 0,
     trappedBlockId: null,
     trapLaunched: false,
     status: "NONE",
     statusTimerMs: 0,
     gorubaLockMs: 0,
-    gorubaDirection: 1,
-    stairAssistUsedInJump: false
+    gorubaDirection: 1
   };
 }
 
@@ -52,14 +52,14 @@ export function respawnPlayer(player: PlayerState, respawn: Vec3): void {
   player.height = player.standingHeight;
   player.crouching = false;
   player.onGround = false;
-  player.dashJumping = false;
+  player.variableJumpActive = false;
+  player.jumpStartedAtMs = 0;
   player.trappedBlockId = null;
   player.trapLaunched = false;
   player.status = "NONE";
   player.statusTimerMs = 0;
   player.gorubaLockMs = 0;
   player.gorubaDirection = 1;
-  player.stairAssistUsedInJump = false;
 }
 
 export function updatePlayer(state: GameState, activeBlocks: BlockData[], dtSec: number, nowMs: number): void {
@@ -68,15 +68,10 @@ export function updatePlayer(state: GameState, activeBlocks: BlockData[], dtSec:
     return;
   }
 
-  refreshDashState(state.input, state.camera.currentView, nowMs);
   updateCrouch(state.player, activeBlocks, state.input.crouch);
   updateHorizontalVelocity(state, nowMs);
   updateJumpAndGravity(state, dtSec, nowMs);
   moveWithCollision(state.player, activeBlocks, dtSec, state.camera.currentView);
-
-  if (state.player.onGround) {
-    state.player.dashJumping = false;
-  }
 }
 
 function updateCrouch(player: PlayerState, blocks: BlockData[], wantsCrouch: boolean): void {
@@ -118,11 +113,9 @@ function bottomY(player: PlayerState): number {
   return player.position.y - player.height / 2;
 }
 
-function updateHorizontalVelocity(state: GameState, nowMs: number): void {
+function updateHorizontalVelocity(state: GameState, _nowMs: number): void {
   const direction = movementIntent(state.input, state.camera.currentView);
-  const dash = isDashActive(state.input, state.camera.currentView, nowMs);
-  const baseSpeed = dash ? DASH_SPEED : WALK_SPEED;
-  const speed = statusSpeed(baseSpeed, state.player.status) * (state.player.crouching ? CROUCH_SPEED_RATE : 1);
+  const speed = statusSpeed(WALK_SPEED, state.player.status) * (state.player.crouching ? CROUCH_SPEED_RATE : 1);
   const floorDirection = state.player.onGround ? movingFloorDirectionAtPlayer(state) : 0;
   const moveAxis = { x: movingFloorVelocity(direction, speed, floorDirection), y: 0, z: 0 };
 
@@ -132,18 +125,18 @@ function updateHorizontalVelocity(state: GameState, nowMs: number): void {
     return;
   }
 
-  const limit = state.player.dashJumping ? DASH_JUMP_AIR_SPEED_LIMIT : AIR_SPEED_LIMIT;
-  state.player.velocity.x = clampMagnitude(moveAxis.x, limit);
-  state.player.velocity.z = clampMagnitude(moveAxis.z, limit);
+  state.player.velocity.x = clampMagnitude(moveAxis.x, AIR_SPEED_LIMIT);
+  state.player.velocity.z = clampMagnitude(moveAxis.z, AIR_SPEED_LIMIT);
 }
 
 function updateJumpAndGravity(state: GameState, dtSec: number, nowMs: number): void {
-  const dash = isDashActive(state.input, state.camera.currentView, nowMs);
-  const canJump = state.input.jump && state.player.onGround && !state.player.crouching;
+  const canJump = (state.input.jump || state.input.jumpRequested) && state.player.onGround && !state.player.crouching;
 
   if (canJump) {
-    state.player.stairAssistUsedInJump = false;
     const jumpPad = jumpPadAtPlayer(state);
+    state.player.variableJumpActive = false;
+    state.player.jumpStartedAtMs = nowMs;
+
     if (jumpPad?.kind === "JUMP_PAD") {
       state.player.velocity.y = JUMP_PAD_VELOCITY;
     } else if (jumpPad?.kind === "TRAP_JUMP_PAD") {
@@ -151,12 +144,36 @@ function updateJumpAndGravity(state: GameState, dtSec: number, nowMs: number): v
       state.player.trapLaunched = true;
     } else {
       state.player.velocity.y = statusJumpVelocity(JUMP_VELOCITY, state.player.status);
+      state.player.variableJumpActive = true;
     }
     state.player.onGround = false;
-    state.player.dashJumping = dash;
   }
 
+  state.input.jumpRequested = false;
+  applyVariableJumpCut(state, nowMs);
   state.player.velocity.y += GRAVITY * dtSec;
+}
+
+function applyVariableJumpCut(state: GameState, nowMs: number): void {
+  if (!state.player.variableJumpActive) {
+    return;
+  }
+
+  if (state.input.jump) {
+    return;
+  }
+
+  const elapsedMs = nowMs - state.player.jumpStartedAtMs;
+  if (elapsedMs >= VARIABLE_JUMP_HOLD_MS) {
+    state.player.variableJumpActive = false;
+    return;
+  }
+
+  const releaseVelocity = statusJumpVelocity(SMALL_JUMP_RELEASE_VELOCITY, state.player.status);
+  if (state.player.velocity.y > releaseVelocity) {
+    state.player.velocity.y = releaseVelocity;
+  }
+  state.player.variableJumpActive = false;
 }
 
 function updateGorubaPlayer(state: GameState, activeBlocks: BlockData[], dtSec: number): void {
@@ -165,9 +182,8 @@ function updateGorubaPlayer(state: GameState, activeBlocks: BlockData[], dtSec: 
   state.input.forward = false;
   state.input.back = false;
   state.input.jump = false;
+  state.input.jumpRequested = false;
   state.input.crouch = false;
-  state.input.dashActive = false;
-  state.input.dashDirection = 0;
   state.player.crouching = false;
   setPlayerHeightKeepingFeet(state.player, state.player.standingHeight);
 

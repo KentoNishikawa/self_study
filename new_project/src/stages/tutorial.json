@@ -1,0 +1,570 @@
+{
+  "id": "tutorial",
+  "name": "Tutorial - 基本操作",
+  "viewCycle": [
+    "SIDE",
+    "FRONT"
+  ],
+  "blocks": [
+    {
+      "_comment": "道ブロック1",
+      "id": "tutorial-ground--08",
+      "pos": {
+        "x": -8,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック2",
+      "id": "tutorial-ground--07",
+      "pos": {
+        "x": -7,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック3",
+      "id": "tutorial-ground--06",
+      "pos": {
+        "x": -6,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック4",
+      "id": "tutorial-ground--05",
+      "pos": {
+        "x": -5,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック5",
+      "id": "tutorial-ground--04",
+      "pos": {
+        "x": -4,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック6",
+      "id": "tutorial-ground--03",
+      "pos": {
+        "x": -3,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック7",
+      "id": "tutorial-ground--02",
+      "pos": {
+        "x": -2,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック8",
+      "id": "tutorial-ground--01",
+      "pos": {
+        "x": -1,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック9",
+      "id": "tutorial-ground-+02",
+      "pos": {
+        "x": 2,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック10",
+      "id": "tutorial-ground-+03",
+      "pos": {
+        "x": 3,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック11",
+      "id": "tutorial-ground-+04",
+      "pos": {
+        "x": 4,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック12",
+      "id": "tutorial-ground-+05",
+      "pos": {
+        "x": 5,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック13",
+      "id": "tutorial-ground-+06",
+      "pos": {
+        "x": 6,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック14",
+      "id": "tutorial-ground-+07",
+      "pos": {
+        "x": 7,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック15",
+      "id": "tutorial-ground-+08",
+      "pos": {
+        "x": 8,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック16",
+      "id": "tutorial-ground-+09",
+      "pos": {
+        "x": 9,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック17",
+      "id": "tutorial-ground-+10",
+      "pos": {
+        "x": 10,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック18",
+      "id": "tutorial-ground-+11",
+      "pos": {
+        "x": 11,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック19",
+      "id": "tutorial-ground-+12",
+      "pos": {
+        "x": 12,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック20",
+      "id": "tutorial-ground-+13",
+      "pos": {
+        "x": 13,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック21",
+      "id": "tutorial-ground-+14",
+      "pos": {
+        "x": 14,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック22",
+      "id": "tutorial-ground-+15",
+      "pos": {
+        "x": 15,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック23",
+      "id": "tutorial-ground-+16",
+      "pos": {
+        "x": 16,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック24",
+      "id": "tutorial-ground-+17",
+      "pos": {
+        "x": 17,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック25",
+      "id": "tutorial-ground-+18",
+      "pos": {
+        "x": 18,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック26",
+      "id": "tutorial-ground-+19",
+      "pos": {
+        "x": 19,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック27",
+      "id": "tutorial-ground-+20",
+      "pos": {
+        "x": 20,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック28",
+      "id": "tutorial-ground-+21",
+      "pos": {
+        "x": 21,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック29",
+      "id": "tutorial-ground-+22",
+      "pos": {
+        "x": 22,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック30",
+      "id": "tutorial-ground-+23",
+      "pos": {
+        "x": 23,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック31",
+      "id": "tutorial-ground-+24",
+      "pos": {
+        "x": 24,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "ブロック山1：ジャンプで乗る練習用",
+      "id": "tutorial-step-01",
+      "pos": {
+        "x": 6,
+        "y": 0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "ブロック山2：高さ2の柱ブロック",
+      "id": "tutorial-step-02",
+      "pos": {
+        "x": 7,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "scale": {
+        "x": 1.0,
+        "y": 2.0,
+        "z": 1.0
+      }
+    },
+    {
+      "_comment": "ブロック山3：高さ3の柱ブロック",
+      "id": "tutorial-step-03",
+      "pos": {
+        "x": 8,
+        "y": 1.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "scale": {
+        "x": 1.0,
+        "y": 3.0,
+        "z": 1.0
+      }
+    },
+    {
+      "_comment": "視点切り替え壁1：横視点では塞がるが正面視点では通れる",
+      "id": "tutorial-view-wall-01",
+      "pos": {
+        "x": 13,
+        "y": 0.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "視点切り替え壁2：横視点では塞がるが正面視点では通れる",
+      "id": "tutorial-view-wall-02",
+      "pos": {
+        "x": 13,
+        "y": 1.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    },
+    {
+      "_comment": "視点切り替え壁3：横視点では塞がるが正面視点では通れる",
+      "id": "tutorial-view-wall-03",
+      "pos": {
+        "x": 13,
+        "y": 2.5,
+        "z": -0.96
+      },
+      "size": "M",
+      "solid": true,
+      "tags": [
+        "side-projection-solid",
+        "trick-art-wall"
+      ]
+    }
+  ],
+  "doors": [
+    {
+      "id": "tutorial-goal-door",
+      "aabb": {
+        "min": {
+          "x": 22.7,
+          "y": 0.0,
+          "z": -0.35
+        },
+        "max": {
+          "x": 23.4,
+          "y": 1.8,
+          "z": 0.35
+        }
+      },
+      "visibleViews": [
+        "SIDE",
+        "FRONT"
+      ],
+      "kind": "REAL"
+    }
+  ],
+  "enemies": [],
+  "checkpoints": [],
+  "tutorials": [
+    {
+      "id": "tutorial-move",
+      "triggerX": -7.0,
+      "pages": [
+        "まずは基本操作です。横視点では、→ / D で進み、← / A で戻れます。",
+        "説明中はゲームが止まります。Enterキーで次の説明へ進みます。"
+      ],
+      "focusAabb": {
+        "min": {
+          "x": -7.7,
+          "y": 0.0,
+          "z": -0.6
+        },
+        "max": {
+          "x": -5.8,
+          "y": 2.2,
+          "z": 0.6
+        }
+      }
+    },
+    {
+      "id": "tutorial-jump",
+      "triggerX": -3.0,
+      "pages": [
+        "穴はSpaceキーのジャンプで飛び越えます。ここには2ブロック分の穴があります。",
+        "Spaceキーを短く押すと小ジャンプ、長く押すと通常ジャンプになります。"
+      ],
+      "focusAabb": {
+        "min": {
+          "x": -3.6,
+          "y": -0.2,
+          "z": -0.7
+        },
+        "max": {
+          "x": 2.2,
+          "y": 2.6,
+          "z": 0.7
+        }
+      }
+    },
+    {
+      "id": "tutorial-block-mountain",
+      "triggerX": 4.6,
+      "pages": [
+        "ブロックはジャンプで上に乗れます。進みながらジャンプして、山を越えてみましょう。"
+      ],
+      "focusAabb": {
+        "min": {
+          "x": 4.4,
+          "y": -0.2,
+          "z": -0.7
+        },
+        "max": {
+          "x": 8.8,
+          "y": 3.6,
+          "z": 0.7
+        }
+      }
+    },
+    {
+      "id": "tutorial-view-switch",
+      "triggerX": 11.0,
+      "pages": [
+        "Qキーを押している間、正面視点に切り替わります。横から見ると通れない場所でも、正面から見ると通れることがあります。",
+        "正面視点では ↑ / W で前進、↓ / S で後退します。Qキーを離すと横視点に戻ります。"
+      ],
+      "focusAabb": {
+        "min": {
+          "x": 10.5,
+          "y": -0.2,
+          "z": -1.6
+        },
+        "max": {
+          "x": 13.8,
+          "y": 3.2,
+          "z": 0.8
+        }
+      }
+    },
+    {
+      "id": "tutorial-door",
+      "triggerX": 22.3,
+      "pages": [
+        "ここがゴールの扉です。扉に触れている状態で E キーを押すと、ステージクリアになります。"
+      ],
+      "focusAabb": {
+        "min": {
+          "x": 20.7,
+          "y": -0.2,
+          "z": -0.8
+        },
+        "max": {
+          "x": 23.6,
+          "y": 2.2,
+          "z": 0.8
+        }
+      }
+    }
+  ],
+  "start": {
+    "spawn": {
+      "x": -7.0,
+      "y": 1.0,
+      "z": 0.0
+    }
+  }
+}

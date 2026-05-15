@@ -17,6 +17,16 @@ export function createCameraState(stage: StageData): CameraState {
   };
 }
 
+export function resetCameraToDefaultView(camera: CameraState, stage: StageData): void {
+  const defaultView = stage.viewCycle.includes("SIDE") ? "SIDE" : stage.viewCycle[0];
+  const yaw = yawForView(defaultView);
+  camera.currentView = defaultView;
+  camera.currentViewIndex = stage.viewCycle.indexOf(defaultView);
+  camera.yaw = yaw;
+  camera.right = rightVectorFromYaw(yaw);
+  camera.rotating = null;
+}
+
 export function beginRotateTo(camera: CameraState, stage: StageData, targetView: View): void {
   if (!stage.viewCycle.includes(targetView)) {
     return;

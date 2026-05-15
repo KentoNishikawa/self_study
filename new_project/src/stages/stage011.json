@@ -1,0 +1,2996 @@
+{
+  "id": "stage011",
+  "name": "Stage 011 - 迫り来る壁の回廊",
+  "viewCycle": [
+    "SIDE",
+    "FRONT"
+  ],
+  "blocks": [
+    {
+      "_comment": "道ブロック1",
+      "id": "s11-ground--08",
+      "pos": {
+        "x": -8,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック2",
+      "id": "s11-ground--07",
+      "pos": {
+        "x": -7,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック3",
+      "id": "s11-ground--06",
+      "pos": {
+        "x": -6,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック4",
+      "id": "s11-ground--05",
+      "pos": {
+        "x": -5,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック5",
+      "id": "s11-ground--02",
+      "pos": {
+        "x": -2,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック6",
+      "id": "s11-ground--01",
+      "pos": {
+        "x": -1,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック7",
+      "id": "s11-ground-+00",
+      "pos": {
+        "x": 0,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック8",
+      "id": "s11-ground-+01",
+      "pos": {
+        "x": 1,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック9",
+      "id": "s11-ground-+05",
+      "pos": {
+        "x": 5,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック10",
+      "id": "s11-ground-+06",
+      "pos": {
+        "x": 6,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック11",
+      "id": "s11-ground-+07",
+      "pos": {
+        "x": 7,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック12",
+      "id": "s11-ground-+08",
+      "pos": {
+        "x": 8,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック13",
+      "id": "s11-ground-+09",
+      "pos": {
+        "x": 9,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック14",
+      "id": "s11-ground-+10",
+      "pos": {
+        "x": 10,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック15",
+      "id": "s11-ground-+11",
+      "pos": {
+        "x": 11,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック16",
+      "id": "s11-ground-+12",
+      "pos": {
+        "x": 12,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック17",
+      "id": "s11-ground-+13",
+      "pos": {
+        "x": 13,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック18",
+      "id": "s11-ground-+14",
+      "pos": {
+        "x": 14,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック19",
+      "id": "s11-ground-+15",
+      "pos": {
+        "x": 15,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック20",
+      "id": "s11-ground-+16",
+      "pos": {
+        "x": 16,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック21",
+      "id": "s11-ground-+17",
+      "pos": {
+        "x": 17,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック22",
+      "id": "s11-ground-+21",
+      "pos": {
+        "x": 21,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック23",
+      "id": "s11-ground-+22",
+      "pos": {
+        "x": 22,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック24",
+      "id": "s11-ground-+23",
+      "pos": {
+        "x": 23,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック25",
+      "id": "s11-ground-+24",
+      "pos": {
+        "x": 24,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック26",
+      "id": "s11-ground-+25",
+      "pos": {
+        "x": 25,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック27",
+      "id": "s11-ground-+26",
+      "pos": {
+        "x": 26,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック28",
+      "id": "s11-ground-+27",
+      "pos": {
+        "x": 27,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック29",
+      "id": "s11-ground-+28",
+      "pos": {
+        "x": 28,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック30",
+      "id": "s11-ground-+29",
+      "pos": {
+        "x": 29,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック31",
+      "id": "s11-ground-+30",
+      "pos": {
+        "x": 30,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック32",
+      "id": "s11-ground-+31",
+      "pos": {
+        "x": 31,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック33",
+      "id": "s11-ground-+32",
+      "pos": {
+        "x": 32,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック34",
+      "id": "s11-ground-+33",
+      "pos": {
+        "x": 33,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック35",
+      "id": "s11-ground-+34",
+      "pos": {
+        "x": 34,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック36",
+      "id": "s11-ground-+35",
+      "pos": {
+        "x": 35,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック37",
+      "id": "s11-ground-+38",
+      "pos": {
+        "x": 38,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック38",
+      "id": "s11-ground-+39",
+      "pos": {
+        "x": 39,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック39",
+      "id": "s11-ground-+40",
+      "pos": {
+        "x": 40,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック40",
+      "id": "s11-ground-+41",
+      "pos": {
+        "x": 41,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック41",
+      "id": "s11-ground-+42",
+      "pos": {
+        "x": 42,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック42",
+      "id": "s11-ground-+43",
+      "pos": {
+        "x": 43,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック43",
+      "id": "s11-ground-+44",
+      "pos": {
+        "x": 44,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック44",
+      "id": "s11-ground-+45",
+      "pos": {
+        "x": 45,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック45",
+      "id": "s11-ground-+46",
+      "pos": {
+        "x": 46,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック46",
+      "id": "s11-ground-+47",
+      "pos": {
+        "x": 47,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック47",
+      "id": "s11-ground-+48",
+      "pos": {
+        "x": 48,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック48",
+      "id": "s11-ground-+49",
+      "pos": {
+        "x": 49,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック49",
+      "id": "s11-ground-+50",
+      "pos": {
+        "x": 50,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック50",
+      "id": "s11-ground-+51",
+      "pos": {
+        "x": 51,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック51",
+      "id": "s11-ground-+52",
+      "pos": {
+        "x": 52,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック52",
+      "id": "s11-ground-+53",
+      "pos": {
+        "x": 53,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック53",
+      "id": "s11-ground-+54",
+      "pos": {
+        "x": 54,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック54",
+      "id": "s11-ground-+55",
+      "pos": {
+        "x": 55,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック55",
+      "id": "s11-ground-+56",
+      "pos": {
+        "x": 56,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック56",
+      "id": "s11-ground-+57",
+      "pos": {
+        "x": 57,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック57",
+      "id": "s11-ground-+58",
+      "pos": {
+        "x": 58,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック58",
+      "id": "s11-ground-+59",
+      "pos": {
+        "x": 59,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック59",
+      "id": "s11-ground-+60",
+      "pos": {
+        "x": 60,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック60",
+      "id": "s11-ground-+61",
+      "pos": {
+        "x": 61,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック61",
+      "id": "s11-ground-+62",
+      "pos": {
+        "x": 62,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック62",
+      "id": "s11-ground-+63",
+      "pos": {
+        "x": 63,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック63",
+      "id": "s11-ground-+64",
+      "pos": {
+        "x": 64,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック64",
+      "id": "s11-ground-+65",
+      "pos": {
+        "x": 65,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック65",
+      "id": "s11-ground-+66",
+      "pos": {
+        "x": 66,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック66",
+      "id": "s11-ground-+67",
+      "pos": {
+        "x": 67,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック67",
+      "id": "s11-ground-+68",
+      "pos": {
+        "x": 68,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック68",
+      "id": "s11-ground-+71",
+      "pos": {
+        "x": 71,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック69",
+      "id": "s11-ground-+72",
+      "pos": {
+        "x": 72,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック70",
+      "id": "s11-ground-+73",
+      "pos": {
+        "x": 73,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック71",
+      "id": "s11-ground-+74",
+      "pos": {
+        "x": 74,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック72",
+      "id": "s11-ground-+75",
+      "pos": {
+        "x": 75,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック73",
+      "id": "s11-ground-+76",
+      "pos": {
+        "x": 76,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック74",
+      "id": "s11-ground-+77",
+      "pos": {
+        "x": 77,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック75",
+      "id": "s11-ground-+78",
+      "pos": {
+        "x": 78,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック76",
+      "id": "s11-ground-+79",
+      "pos": {
+        "x": 79,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック77",
+      "id": "s11-ground-+80",
+      "pos": {
+        "x": 80,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック78",
+      "id": "s11-ground-+81",
+      "pos": {
+        "x": 81,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック79",
+      "id": "s11-ground-+82",
+      "pos": {
+        "x": 82,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック80",
+      "id": "s11-ground-+83",
+      "pos": {
+        "x": 83,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック81",
+      "id": "s11-ground-+84",
+      "pos": {
+        "x": 84,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック82",
+      "id": "s11-ground-+85",
+      "pos": {
+        "x": 85,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック83",
+      "id": "s11-ground-+86",
+      "pos": {
+        "x": 86,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック84",
+      "id": "s11-ground-+87",
+      "pos": {
+        "x": 87,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック85",
+      "id": "s11-ground-+88",
+      "pos": {
+        "x": 88,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック86",
+      "id": "s11-ground-+89",
+      "pos": {
+        "x": 89,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック87",
+      "id": "s11-ground-+90",
+      "pos": {
+        "x": 90,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック88",
+      "id": "s11-ground-+91",
+      "pos": {
+        "x": 91,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック89",
+      "id": "s11-ground-+92",
+      "pos": {
+        "x": 92,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック90",
+      "id": "s11-ground-+93",
+      "pos": {
+        "x": 93,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック91",
+      "id": "s11-ground-+94",
+      "pos": {
+        "x": 94,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック92",
+      "id": "s11-ground-+95",
+      "pos": {
+        "x": 95,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック93",
+      "id": "s11-ground-+96",
+      "pos": {
+        "x": 96,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック94",
+      "id": "s11-ground-+97",
+      "pos": {
+        "x": 97,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック95",
+      "id": "s11-ground-+98",
+      "pos": {
+        "x": 98,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック96",
+      "id": "s11-ground-+99",
+      "pos": {
+        "x": 99,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック97",
+      "id": "s11-ground-+100",
+      "pos": {
+        "x": 100,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック98",
+      "id": "s11-ground-+101",
+      "pos": {
+        "x": 101,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック99",
+      "id": "s11-ground-+102",
+      "pos": {
+        "x": 102,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック100",
+      "id": "s11-ground-+103",
+      "pos": {
+        "x": 103,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック101",
+      "id": "s11-ground-+104",
+      "pos": {
+        "x": 104,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック102",
+      "id": "s11-ground-+105",
+      "pos": {
+        "x": 105,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック103",
+      "id": "s11-ground-+108",
+      "pos": {
+        "x": 108,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック104",
+      "id": "s11-ground-+109",
+      "pos": {
+        "x": 109,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック105",
+      "id": "s11-ground-+110",
+      "pos": {
+        "x": 110,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック106",
+      "id": "s11-ground-+111",
+      "pos": {
+        "x": 111,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック107",
+      "id": "s11-ground-+112",
+      "pos": {
+        "x": 112,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック108",
+      "id": "s11-ground-+113",
+      "pos": {
+        "x": 113,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック109",
+      "id": "s11-ground-+114",
+      "pos": {
+        "x": 114,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック110",
+      "id": "s11-ground-+115",
+      "pos": {
+        "x": 115,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック111",
+      "id": "s11-ground-+116",
+      "pos": {
+        "x": 116,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック112",
+      "id": "s11-ground-+117",
+      "pos": {
+        "x": 117,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック113",
+      "id": "s11-ground-+118",
+      "pos": {
+        "x": 118,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック114",
+      "id": "s11-ground-+119",
+      "pos": {
+        "x": 119,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック115",
+      "id": "s11-ground-+120",
+      "pos": {
+        "x": 120,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック116",
+      "id": "s11-ground-+121",
+      "pos": {
+        "x": 121,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック117",
+      "id": "s11-ground-+122",
+      "pos": {
+        "x": 122,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック118",
+      "id": "s11-ground-+123",
+      "pos": {
+        "x": 123,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック119",
+      "id": "s11-ground-+124",
+      "pos": {
+        "x": 124,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック120",
+      "id": "s11-ground-+125",
+      "pos": {
+        "x": 125,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック121",
+      "id": "s11-ground-+126",
+      "pos": {
+        "x": 126,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック122",
+      "id": "s11-ground-+127",
+      "pos": {
+        "x": 127,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック123",
+      "id": "s11-ground-+128",
+      "pos": {
+        "x": 128,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック124",
+      "id": "s11-ground-+129",
+      "pos": {
+        "x": 129,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック125",
+      "id": "s11-ground-+130",
+      "pos": {
+        "x": 130,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック126",
+      "id": "s11-ground-+131",
+      "pos": {
+        "x": 131,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック127",
+      "id": "s11-ground-+132",
+      "pos": {
+        "x": 132,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック128",
+      "id": "s11-ground-+133",
+      "pos": {
+        "x": 133,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック129",
+      "id": "s11-ground-+134",
+      "pos": {
+        "x": 134,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック130",
+      "id": "s11-ground-+135",
+      "pos": {
+        "x": 135,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック131",
+      "id": "s11-ground-+136",
+      "pos": {
+        "x": 136,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック132",
+      "id": "s11-ground-+137",
+      "pos": {
+        "x": 137,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック133",
+      "id": "s11-ground-+138",
+      "pos": {
+        "x": 138,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック134",
+      "id": "s11-ground-+139",
+      "pos": {
+        "x": 139,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック135",
+      "id": "s11-ground-+140",
+      "pos": {
+        "x": 140,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック136",
+      "id": "s11-ground-+141",
+      "pos": {
+        "x": 141,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック137",
+      "id": "s11-ground-+142",
+      "pos": {
+        "x": 142,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック138",
+      "id": "s11-ground-+143",
+      "pos": {
+        "x": 143,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック139",
+      "id": "s11-ground-+144",
+      "pos": {
+        "x": 144,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック140",
+      "id": "s11-ground-+145",
+      "pos": {
+        "x": 145,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック141",
+      "id": "s11-ground-+146",
+      "pos": {
+        "x": 146,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック142",
+      "id": "s11-ground-+147",
+      "pos": {
+        "x": 147,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック143",
+      "id": "s11-ground-+148",
+      "pos": {
+        "x": 148,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック144",
+      "id": "s11-ground-+152",
+      "pos": {
+        "x": 152,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック145",
+      "id": "s11-ground-+153",
+      "pos": {
+        "x": 153,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック146",
+      "id": "s11-ground-+154",
+      "pos": {
+        "x": 154,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック147",
+      "id": "s11-ground-+155",
+      "pos": {
+        "x": 155,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック148",
+      "id": "s11-ground-+156",
+      "pos": {
+        "x": 156,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック149",
+      "id": "s11-ground-+157",
+      "pos": {
+        "x": 157,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック150",
+      "id": "s11-ground-+158",
+      "pos": {
+        "x": 158,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック151",
+      "id": "s11-ground-+159",
+      "pos": {
+        "x": 159,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック152",
+      "id": "s11-ground-+160",
+      "pos": {
+        "x": 160,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック153",
+      "id": "s11-ground-+161",
+      "pos": {
+        "x": 161,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック154",
+      "id": "s11-ground-+162",
+      "pos": {
+        "x": 162,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック155",
+      "id": "s11-ground-+163",
+      "pos": {
+        "x": 163,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック156",
+      "id": "s11-ground-+164",
+      "pos": {
+        "x": 164,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック157",
+      "id": "s11-ground-+165",
+      "pos": {
+        "x": 165,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック158",
+      "id": "s11-ground-+166",
+      "pos": {
+        "x": 166,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック159",
+      "id": "s11-ground-+167",
+      "pos": {
+        "x": 167,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック160",
+      "id": "s11-ground-+168",
+      "pos": {
+        "x": 168,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック161",
+      "id": "s11-ground-+169",
+      "pos": {
+        "x": 169,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック162",
+      "id": "s11-ground-+170",
+      "pos": {
+        "x": 170,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック163",
+      "id": "s11-ground-+171",
+      "pos": {
+        "x": 171,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック164",
+      "id": "s11-ground-+172",
+      "pos": {
+        "x": 172,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック165",
+      "id": "s11-ground-+173",
+      "pos": {
+        "x": 173,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック166",
+      "id": "s11-ground-+174",
+      "pos": {
+        "x": 174,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック167",
+      "id": "s11-ground-+175",
+      "pos": {
+        "x": 175,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック168",
+      "id": "s11-ground-+176",
+      "pos": {
+        "x": 176,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック169",
+      "id": "s11-ground-+177",
+      "pos": {
+        "x": 177,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック170",
+      "id": "s11-ground-+178",
+      "pos": {
+        "x": 178,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック171",
+      "id": "s11-ground-+179",
+      "pos": {
+        "x": 179,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック172",
+      "id": "s11-ground-+180",
+      "pos": {
+        "x": 180,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック173",
+      "id": "s11-ground-+181",
+      "pos": {
+        "x": 181,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック174",
+      "id": "s11-ground-+182",
+      "pos": {
+        "x": 182,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック175",
+      "id": "s11-ground-+183",
+      "pos": {
+        "x": 183,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック176",
+      "id": "s11-ground-+184",
+      "pos": {
+        "x": 184,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック177",
+      "id": "s11-ground-+187",
+      "pos": {
+        "x": 187,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック178",
+      "id": "s11-ground-+188",
+      "pos": {
+        "x": 188,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック179",
+      "id": "s11-ground-+189",
+      "pos": {
+        "x": 189,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック180",
+      "id": "s11-ground-+190",
+      "pos": {
+        "x": 190,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック181",
+      "id": "s11-ground-+191",
+      "pos": {
+        "x": 191,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック182",
+      "id": "s11-ground-+192",
+      "pos": {
+        "x": 192,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック183",
+      "id": "s11-ground-+193",
+      "pos": {
+        "x": 193,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック184",
+      "id": "s11-ground-+194",
+      "pos": {
+        "x": 194,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック185",
+      "id": "s11-ground-+195",
+      "pos": {
+        "x": 195,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック186",
+      "id": "s11-ground-+196",
+      "pos": {
+        "x": 196,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック187",
+      "id": "s11-ground-+197",
+      "pos": {
+        "x": 197,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック188",
+      "id": "s11-ground-+198",
+      "pos": {
+        "x": 198,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック189",
+      "id": "s11-ground-+199",
+      "pos": {
+        "x": 199,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック190",
+      "id": "s11-ground-+200",
+      "pos": {
+        "x": 200,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック191",
+      "id": "s11-ground-+201",
+      "pos": {
+        "x": 201,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック192",
+      "id": "s11-ground-+202",
+      "pos": {
+        "x": 202,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック193",
+      "id": "s11-ground-+203",
+      "pos": {
+        "x": 203,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック194",
+      "id": "s11-ground-+204",
+      "pos": {
+        "x": 204,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック195",
+      "id": "s11-ground-+205",
+      "pos": {
+        "x": 205,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック196",
+      "id": "s11-ground-+206",
+      "pos": {
+        "x": 206,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック197",
+      "id": "s11-ground-+207",
+      "pos": {
+        "x": 207,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック198",
+      "id": "s11-ground-+208",
+      "pos": {
+        "x": 208,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック199",
+      "id": "s11-ground-+209",
+      "pos": {
+        "x": 209,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック200",
+      "id": "s11-ground-+210",
+      "pos": {
+        "x": 210,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック201",
+      "id": "s11-ground-+211",
+      "pos": {
+        "x": 211,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック202",
+      "id": "s11-ground-+212",
+      "pos": {
+        "x": 212,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック203",
+      "id": "s11-ground-+213",
+      "pos": {
+        "x": 213,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック204",
+      "id": "s11-ground-+214",
+      "pos": {
+        "x": 214,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック205",
+      "id": "s11-ground-+215",
+      "pos": {
+        "x": 215,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック206",
+      "id": "s11-ground-+218",
+      "pos": {
+        "x": 218,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック207",
+      "id": "s11-ground-+219",
+      "pos": {
+        "x": 219,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック208",
+      "id": "s11-ground-+220",
+      "pos": {
+        "x": 220,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック209",
+      "id": "s11-ground-+221",
+      "pos": {
+        "x": 221,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック210",
+      "id": "s11-ground-+222",
+      "pos": {
+        "x": 222,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック211",
+      "id": "s11-ground-+223",
+      "pos": {
+        "x": 223,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック212",
+      "id": "s11-ground-+224",
+      "pos": {
+        "x": 224,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック213",
+      "id": "s11-ground-+225",
+      "pos": {
+        "x": 225,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック214",
+      "id": "s11-ground-+226",
+      "pos": {
+        "x": 226,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック215",
+      "id": "s11-ground-+227",
+      "pos": {
+        "x": 227,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック216",
+      "id": "s11-ground-+228",
+      "pos": {
+        "x": 228,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック217",
+      "id": "s11-ground-+229",
+      "pos": {
+        "x": 229,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック218",
+      "id": "s11-ground-+230",
+      "pos": {
+        "x": 230,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック219",
+      "id": "s11-ground-+231",
+      "pos": {
+        "x": 231,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック220",
+      "id": "s11-ground-+232",
+      "pos": {
+        "x": 232,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック221",
+      "id": "s11-ground-+233",
+      "pos": {
+        "x": 233,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック222",
+      "id": "s11-ground-+234",
+      "pos": {
+        "x": 234,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック223",
+      "id": "s11-ground-+235",
+      "pos": {
+        "x": 235,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック224",
+      "id": "s11-ground-+236",
+      "pos": {
+        "x": 236,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック225",
+      "id": "s11-ground-+237",
+      "pos": {
+        "x": 237,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック226",
+      "id": "s11-ground-+238",
+      "pos": {
+        "x": 238,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック227",
+      "id": "s11-ground-+239",
+      "pos": {
+        "x": 239,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック228",
+      "id": "s11-ground-+240",
+      "pos": {
+        "x": 240,
+        "y": -0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック229",
+      "id": "s11-air-marker-01",
+      "pos": {
+        "x": 34,
+        "y": 2.7,
+        "z": -1.2
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック230",
+      "id": "s11-air-marker-02",
+      "pos": {
+        "x": 62,
+        "y": 2.7,
+        "z": -1.2
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック231",
+      "id": "s11-crouch-ceiling-01",
+      "pos": {
+        "x": 96,
+        "y": 1.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック232",
+      "id": "s11-crouch-ceiling-02",
+      "pos": {
+        "x": 97,
+        "y": 1.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック233",
+      "id": "s11-crouch-ceiling-03",
+      "pos": {
+        "x": 98,
+        "y": 1.8,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true
+    },
+    {
+      "_comment": "道ブロック234",
+      "id": "s11-illusion-wall-01",
+      "pos": {
+        "x": 132,
+        "y": 0.5,
+        "z": 1.35
+      },
+      "size": "L",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "道ブロック235",
+      "id": "s11-illusion-wall-02",
+      "pos": {
+        "x": 168,
+        "y": 0.5,
+        "z": 1.45
+      },
+      "size": "XL",
+      "solid": true,
+      "tags": [
+        "side-projection-solid"
+      ]
+    },
+    {
+      "_comment": "道ブロック236",
+      "id": "s11-step-column-01",
+      "pos": {
+        "x": 112,
+        "y": 0.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      }
+    },
+    {
+      "_comment": "道ブロック237",
+      "id": "s11-step-column-02",
+      "pos": {
+        "x": 113,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "scale": {
+        "x": 1,
+        "y": 2,
+        "z": 1
+      }
+    },
+    {
+      "_comment": "道ブロック238",
+      "id": "s11-step-column-03",
+      "pos": {
+        "x": 114,
+        "y": 1.5,
+        "z": 0.0
+      },
+      "size": "M",
+      "solid": true,
+      "scale": {
+        "x": 1,
+        "y": 3,
+        "z": 1
+      }
+    }
+  ],
+  "doors": [
+    {
+      "id": "goal-door-011",
+      "aabb": {
+        "min": {
+          "x": 239.3,
+          "y": 0.0,
+          "z": -0.5
+        },
+        "max": {
+          "x": 240.1,
+          "y": 2.2,
+          "z": 0.5
+        }
+      },
+      "visibleViews": [
+        "SIDE",
+        "FRONT"
+      ],
+      "kind": "REAL"
+    }
+  ],
+  "enemies": [
+    {
+      "id": "s11-walker-01",
+      "type": "WALKER",
+      "posByView": {
+        "SIDE": {
+          "x": 64,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 64,
+          "y": 1,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 60,
+        "max": 68,
+        "speed": 1.8,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "s11-tamba-01",
+      "type": "TAMBA",
+      "posByView": {
+        "SIDE": {
+          "x": 104,
+          "y": 0.5,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 104,
+          "y": 0.5,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "s11-chouba-01",
+      "type": "CHOUBA",
+      "posByView": {
+        "SIDE": {
+          "x": 148,
+          "y": 0.5,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 148,
+          "y": 0.5,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "s11-hoppins-01",
+      "type": "HOPPINS",
+      "posByView": {
+        "SIDE": {
+          "x": 182,
+          "y": 1,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 182,
+          "y": 1,
+          "z": 0
+        }
+      },
+      "route": {
+        "axis": "x",
+        "min": 178,
+        "max": 188,
+        "speed": 2.4,
+        "direction": -1,
+        "respawnIntervalMs": 3000
+      }
+    },
+    {
+      "id": "s11-goruba-01",
+      "type": "GORUBA",
+      "posByView": {
+        "SIDE": {
+          "x": 214,
+          "y": 0.5,
+          "z": 0
+        },
+        "FRONT": {
+          "x": 214,
+          "y": 0.5,
+          "z": 0
+        }
+      }
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-011-start",
+      "aabb": {
+        "min": {
+          "x": -8.5,
+          "y": 0.0,
+          "z": -0.5
+        },
+        "max": {
+          "x": -7.5,
+          "y": 2.0,
+          "z": 0.5
+        }
+      },
+      "respawn": {
+        "x": -8,
+        "y": 1,
+        "z": 0
+      }
+    },
+    {
+      "id": "cp-011-second",
+      "aabb": {
+        "min": {
+          "x": 118.4,
+          "y": 0.0,
+          "z": -0.5
+        },
+        "max": {
+          "x": 119.4,
+          "y": 2.0,
+          "z": 0.5
+        }
+      },
+      "respawn": {
+        "x": 119,
+        "y": 1,
+        "z": 0
+      }
+    }
+  ],
+  "items": [],
+  "wallZones": [
+    {
+      "id": "s11-zone-01-side-single",
+      "startX": 16,
+      "endX": 30,
+      "patternIntervalMs": 10000,
+      "walls": [
+        {
+          "id": "side-crouch",
+          "wallType": "SIDE_WALL",
+          "openingKind": "CROUCH",
+          "speed": 5.0
+        }
+      ]
+    },
+    {
+      "id": "s11-zone-02-depth-single",
+      "startX": 44,
+      "endX": 58,
+      "patternIntervalMs": 10000,
+      "walls": [
+        {
+          "id": "depth-small",
+          "wallType": "DEPTH_WALL",
+          "openingKind": "SMALL_JUMP",
+          "speed": 5.0
+        }
+      ]
+    },
+    {
+      "id": "s11-zone-03-side-double",
+      "startX": 72,
+      "endX": 90,
+      "patternIntervalMs": 10000,
+      "walls": [
+        {
+          "id": "side-stand-1",
+          "wallType": "SIDE_WALL",
+          "openingKind": "STAND",
+          "speed": 5.2
+        },
+        {
+          "id": "side-small-2",
+          "wallType": "SIDE_WALL",
+          "openingKind": "SMALL_JUMP",
+          "delayMs": 1300,
+          "speed": 5.2
+        }
+      ]
+    },
+    {
+      "id": "s11-zone-04-depth-double",
+      "startX": 124,
+      "endX": 142,
+      "patternIntervalMs": 10000,
+      "walls": [
+        {
+          "id": "depth-small-1",
+          "wallType": "DEPTH_WALL",
+          "openingKind": "SMALL_JUMP",
+          "speed": 5.4
+        },
+        {
+          "id": "depth-normal-2",
+          "wallType": "DEPTH_WALL",
+          "openingKind": "NORMAL_JUMP",
+          "delayMs": 1300,
+          "speed": 5.4
+        }
+      ]
+    },
+    {
+      "id": "s11-zone-05-side-triple",
+      "startX": 156,
+      "endX": 176,
+      "patternIntervalMs": 10000,
+      "walls": [
+        {
+          "id": "side-crouch-1",
+          "wallType": "SIDE_WALL",
+          "openingKind": "CROUCH",
+          "speed": 5.6
+        },
+        {
+          "id": "side-stand-2",
+          "wallType": "SIDE_WALL",
+          "openingKind": "STAND",
+          "delayMs": 1200,
+          "speed": 5.6
+        },
+        {
+          "id": "side-normal-3",
+          "wallType": "SIDE_WALL",
+          "openingKind": "NORMAL_JUMP",
+          "delayMs": 2400,
+          "speed": 5.6
+        }
+      ]
+    },
+    {
+      "id": "s11-zone-06-depth-triple",
+      "startX": 190,
+      "endX": 210,
+      "patternIntervalMs": 10000,
+      "walls": [
+        {
+          "id": "depth-small-1",
+          "wallType": "DEPTH_WALL",
+          "openingKind": "SMALL_JUMP",
+          "speed": 5.8
+        },
+        {
+          "id": "depth-normal-2",
+          "wallType": "DEPTH_WALL",
+          "openingKind": "NORMAL_JUMP",
+          "delayMs": 1200,
+          "speed": 5.8
+        },
+        {
+          "id": "depth-small-3",
+          "wallType": "DEPTH_WALL",
+          "openingKind": "SMALL_JUMP",
+          "delayMs": 2400,
+          "speed": 5.8
+        }
+      ]
+    },
+    {
+      "id": "s11-zone-07-final-mix",
+      "startX": 220,
+      "endX": 236,
+      "patternIntervalMs": 10000,
+      "walls": [
+        {
+          "id": "final-side-crouch",
+          "wallType": "SIDE_WALL",
+          "openingKind": "CROUCH",
+          "speed": 6.0
+        },
+        {
+          "id": "final-depth-small",
+          "wallType": "DEPTH_WALL",
+          "openingKind": "SMALL_JUMP",
+          "delayMs": 1100,
+          "speed": 6.0
+        },
+        {
+          "id": "final-side-normal",
+          "wallType": "SIDE_WALL",
+          "openingKind": "NORMAL_JUMP",
+          "delayMs": 2200,
+          "speed": 6.0
+        },
+        {
+          "id": "final-depth-normal",
+          "wallType": "DEPTH_WALL",
+          "openingKind": "NORMAL_JUMP",
+          "delayMs": 3300,
+          "speed": 6.0
+        },
+        {
+          "id": "final-depth-small-2",
+          "wallType": "DEPTH_WALL",
+          "openingKind": "SMALL_JUMP",
+          "delayMs": 4400,
+          "speed": 6.0
+        },
+        {
+          "id": "final-side-stand",
+          "wallType": "SIDE_WALL",
+          "openingKind": "STAND",
+          "delayMs": 5500,
+          "speed": 6.0
+        }
+      ]
+    }
+  ],
+  "start": {
+    "spawn": {
+      "x": -8,
+      "y": 1,
+      "z": 0
+    }
+  }
+}

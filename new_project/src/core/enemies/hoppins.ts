@@ -1,6 +1,6 @@
-import type { EnemyBehavior } from "./types";
-import { enemyPositionForView } from "./types";
-import { applyEnemyHop, ENEMY_DESPAWN_Y } from "./physics";
+import type { EnemyBehavior } from "../types";
+import { enemyPositionForView } from "../enemyUtils";
+import { applyEnemyHop, ENEMY_DESPAWN_Y } from "../enemyPhysics";
 
 const DEFAULT_HOPPINS_SPEED = 3.0;
 const DEFAULT_HOPPINS_JUMP_VELOCITY = 4.4;

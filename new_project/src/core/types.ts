@@ -1,10 +1,12 @@
 export type View = "SIDE" | "FRONT" | "BACK";
-export type GameMode = "PLAY" | "ROTATING" | "DEAD" | "TRANSITION" | "STAGE_CLEAR" | "PAUSED";
+export type GameMode = "PLAY" | "ROTATING" | "DEAD" | "TRANSITION" | "STAGE_CLEAR" | "PAUSED" | "TUTORIAL";
 export type BlockSizeName = "S" | "M" | "L" | "XL";
 export type DoorKind = "REAL" | "DUMMY";
 export type EnemyKind = "WALKER" | "OCHY" | "HOPPINS" | "TAMBA" | "CHOUBA" | "GORUBA";
 export type StageItemKind = "JUMP_PAD" | "TRAP_JUMP_PAD" | "MOVE_FLOOR_RIGHT" | "MOVE_FLOOR_LEFT" | "WARP_GOOD" | "WARP_BAD";
 export type PlayerStatus = "NONE" | "TAMBA" | "CHOUBA" | "GORUBA";
+export type HazardWallType = "SIDE_WALL" | "DEPTH_WALL";
+export type HazardWallOpeningKind = "CROUCH" | "STAND" | "SMALL_JUMP" | "NORMAL_JUMP";
 
 export interface Vec3 {
   x: number;
@@ -62,6 +64,12 @@ export interface EnemyData {
   route?: EnemyRouteData;
 }
 
+export interface EnemyBehavior {
+  create(enemy: EnemyData, view: View): EnemyRuntimeState;
+  snapToView(enemyRuntime: EnemyRuntimeState, enemy: EnemyData, view: View): void;
+  update(enemyRuntime: EnemyRuntimeState, stage: StageData, dtSec: number): void;
+}
+
 export interface CheckpointData {
   id: string;
   aabb: AABB;
@@ -75,6 +83,49 @@ export interface StageItemData {
   target?: Vec3;
 }
 
+export interface HazardWallData {
+  id: string;
+  wallType: HazardWallType;
+  openingKind: HazardWallOpeningKind;
+  delayMs?: number;
+  speed?: number;
+}
+
+export interface HazardWallZoneData {
+  id: string;
+  startX: number;
+  endX: number;
+  patternIntervalMs?: number;
+  walls: HazardWallData[];
+}
+
+export interface TutorialStepData {
+  id: string;
+  triggerX: number;
+  pages: string[];
+  focusAabb: AABB;
+}
+
+export interface ActiveTutorialRuntimeState {
+  stepId: string;
+  pageIndex: number;
+  pages: string[];
+  focusAabb: AABB;
+}
+
+export interface TutorialRuntimeState {
+  shownStepIds: string[];
+  active: ActiveTutorialRuntimeState | null;
+}
+
+export interface RenderTutorialOverlay {
+  stepId: string;
+  text: string;
+  pageIndex: number;
+  pageCount: number;
+  focusAabb: AABB;
+}
+
 export interface StageData {
   id: string;
   name?: string;
@@ -84,6 +135,8 @@ export interface StageData {
   enemies: EnemyData[];
   checkpoints: CheckpointData[];
   items?: StageItemData[];
+  wallZones?: HazardWallZoneData[];
+  tutorials?: TutorialStepData[];
   start: {
     spawn: Vec3;
   };
@@ -95,14 +148,10 @@ export interface InputState {
   forward: boolean;
   back: boolean;
   jump: boolean;
+  jumpRequested: boolean;
   crouch: boolean;
   interactRequested: boolean;
   viewSwitchHeld: boolean;
-  dashDirection: -1 | 0 | 1;
-  dashActive: boolean;
-  dashMinUntilMs: number;
-  lastTapDirection: -1 | 0 | 1;
-  lastTapAtMs: number;
 }
 
 export interface PlayerState {
@@ -114,14 +163,14 @@ export interface PlayerState {
   height: number;
   crouching: boolean;
   onGround: boolean;
-  dashJumping: boolean;
+  variableJumpActive: boolean;
+  jumpStartedAtMs: number;
   trappedBlockId: string | null;
   trapLaunched: boolean;
   status: PlayerStatus;
   statusTimerMs: number;
   gorubaLockMs: number;
   gorubaDirection: -1 | 1;
-  stairAssistUsedInJump: boolean;
 }
 
 export interface CameraState {
@@ -188,6 +237,34 @@ export interface FallingBlockRuntimeState {
   fallSpeed: number;
 }
 
+export interface HazardWallZoneRuntimeState {
+  id: string;
+  startX: number;
+  endX: number;
+  active: boolean;
+  completed: boolean;
+  elapsedMs: number;
+  waitMs: number;
+  emittedWallIds: string[];
+  spawnedView: View | null;
+}
+
+export interface HazardWallRuntimeState {
+  id: string;
+  zoneId: string;
+  wallType: HazardWallType;
+  openingKind: HazardWallOpeningKind;
+  spawnedView: View;
+  axis: "x" | "z";
+  direction: -1 | 1;
+  position: number;
+  endPosition: number;
+  fixedX: number;
+  fixedZ: number;
+  speed: number;
+  active: boolean;
+}
+
 export interface WarpRuntimeState {
   goodItemId: string;
   badItemId: string;
@@ -207,12 +284,18 @@ export interface GameState {
   elapsedMs: number;
   deathTimerMs: number;
   statusMessage: string;
+  checkpointToastMessage: string;
+  checkpointToastMs: number;
+  clearTimeRankingEligible: boolean;
   pausedMode: Exclude<GameMode, "PAUSED"> | null;
   warpCooldownMs: number;
   warpRuntime: WarpRuntimeState | null;
   crumblingBlocks: CrumblingBlockRuntimeState[];
   verticalPanels: VerticalPanelRuntimeState[];
   fallingBlocks: FallingBlockRuntimeState[];
+  wallZones: HazardWallZoneRuntimeState[];
+  hazardWalls: HazardWallRuntimeState[];
+  tutorial: TutorialRuntimeState;
 }
 
 export interface GameHandle {
@@ -221,6 +304,7 @@ export interface GameHandle {
 
 export interface GameConfig {
   initialStageId?: string;
+  startFromCheckpoint?: boolean;
 }
 
 export interface StageSelectItem {
@@ -228,6 +312,7 @@ export interface StageSelectItem {
   name: string;
   unlocked: boolean;
   cleared: boolean;
+  checkpointAvailable: boolean;
 }
 
 export interface RenderBlock {
@@ -263,6 +348,13 @@ export interface RenderStageItem {
   aabb: AABB;
 }
 
+export interface RenderHazardWall {
+  id: string;
+  wallType: HazardWallType;
+  openingKind: HazardWallOpeningKind;
+  aabb: AABB;
+}
+
 export interface RenderState {
   mode: GameMode;
   stageId: string;
@@ -287,6 +379,11 @@ export interface RenderState {
   enemies: RenderEnemy[];
   checkpoints: RenderCheckpoint[];
   items: RenderStageItem[];
+  hazardWalls: RenderHazardWall[];
+  tutorial: RenderTutorialOverlay | null;
   elapsedMs: number;
   statusMessage: string;
+  checkpointToastMessage: string;
+  clearTimeRankingEligible: boolean;
+  clearTimeVisible: boolean;
 }

@@ -211,3 +211,137 @@ button {
   justify-content: center;
   gap: 12px;
 }
+
+
+.checkpoint-toast {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
+  padding: 12px 20px;
+  border-radius: 999px;
+  color: #0f172a;
+  background: #fde68a;
+  font-weight: 800;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.checkpoint-toast.is-visible {
+  animation: checkpoint-toast-fade 2.2s ease-in-out both;
+}
+
+@keyframes checkpoint-toast-fade {
+  0% { opacity: 0; transform: translate(-50%, -12px); }
+  18% { opacity: 1; transform: translate(-50%, 0); }
+  76% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -12px); }
+}
+
+.ranking-note {
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+.stage-start-choice-modal {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(2, 6, 23, 0.64);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.stage-start-choice-modal[hidden] {
+  display: none;
+}
+
+.stage-start-choice-card {
+  width: min(560px, 100%);
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
+  background: rgba(15, 23, 42, 0.94);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
+  text-align: center;
+}
+
+.stage-start-choice-card h2 {
+  margin: 0 0 12px;
+  font-size: 30px;
+}
+
+.stage-start-choice-card p {
+  margin: 0 0 22px;
+  color: #cbd5e1;
+  line-height: 1.8;
+}
+
+.stage-start-choice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.tutorial-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+}
+
+.tutorial-overlay[hidden] {
+  display: none;
+}
+
+.tutorial-spotlight {
+  position: absolute;
+  inset: 0;
+  --tutorial-focus-x: 50vw;
+  --tutorial-focus-y: 50vh;
+  --tutorial-focus-width: 260px;
+  --tutorial-focus-height: 220px;
+  background: radial-gradient(
+    ellipse var(--tutorial-focus-width) var(--tutorial-focus-height) at var(--tutorial-focus-x) var(--tutorial-focus-y),
+    rgba(2, 6, 23, 0) 0%,
+    rgba(2, 6, 23, 0) 42%,
+    rgba(2, 6, 23, 0.62) 66%,
+    rgba(2, 6, 23, 0.82) 100%
+  );
+}
+
+.tutorial-card {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  width: min(640px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  padding: 22px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 22px;
+  background: rgba(15, 23, 42, 0.96);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
+  pointer-events: auto;
+}
+
+.tutorial-card p {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 18px;
+  line-height: 1.8;
+  font-weight: 700;
+}
+
+.tutorial-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  color: #bfdbfe;
+  font-size: 14px;
+  font-weight: 800;
+}

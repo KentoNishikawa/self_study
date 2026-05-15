@@ -1,5 +1,4 @@
-import type { EnemyKind } from "../types";
-import type { EnemyBehavior } from "./types";
+import type { EnemyBehavior, EnemyKind } from "../types";
 import { choubaEnemyBehavior } from "./chouba";
 import { gorubaEnemyBehavior } from "./goruba";
 import { hoppinsEnemyBehavior } from "./hoppins";

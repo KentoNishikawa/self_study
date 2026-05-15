@@ -1,3 +1,4 @@
+import tutorial from "../stages/tutorial.json";
 import stage001 from "../stages/stage001.json";
 import stage002 from "../stages/stage002.json";
 import stage003 from "../stages/stage003.json";
@@ -7,22 +8,28 @@ import stage006 from "../stages/stage006.json";
 import stage007 from "../stages/stage007.json";
 import stage008 from "../stages/stage008.json";
 import stage009 from "../stages/stage009.json";
+import stage010 from "../stages/stage010.json";
+import stage011 from "../stages/stage011.json";
 import { CHOUBA_STATUS_DURATION_MS, CRUMBLE_FLOOR_DELAY_MS, DEATH_RESPAWN_DELAY_MS, GORUBA_LOCK_MS, TAMBA_STATUS_DURATION_MS, TRAP_JUMP_GAME_OVER_Y, WARP_COOLDOWN_MS } from "./constants";
 import { beginRotateTo, cameraPositionAroundPlayer, cameraTargetAroundPlayer, createCameraState, updateCameraRotation } from "./camera";
 import { intersectsAabb, playerAabbAt, updateTrappedStateAfterRotate } from "./collision";
 import { findInteractableDoor } from "./door";
 import { createEnemyStates, isPlayerHitByEnemy, snapEnemiesToView, touchedStatusEnemyKind, updateEnemies } from "./enemy";
-import { applyKeyDown, applyKeyUp, consumeInteract, createInputState } from "./input";
+import { applyKeyDown, applyKeyUp, consumeInteract, createInputState, resetInputState } from "./input";
 import { cloneVec3 } from "./math";
 import { warpItemAtPlayer } from "./items";
 import { createPlayerState, respawnPlayer, updatePlayer } from "./player";
-import { loadSaveData, saveStageClear } from "./save";
+import { loadSaveData, loadStageCheckpoint, saveStageCheckpoint, saveStageClear } from "./save";
 import { blockAabb, blockScale, validateStageData } from "./stage";
+import { advanceTutorial, createTutorialRuntime, isTutorialStage, renderTutorialOverlay, tryStartTutorial } from "./tutorial";
 import type { AABB, BlockData, CrumblingBlockRuntimeState, EnemyKind, FallingBlockRuntimeState, GameConfig, GameHandle, GameState, PlayerStatus, RenderState, StageData, StageItemData, StageSelectItem, Vec3, VerticalPanelKind, VerticalPanelRuntimeState, WarpRuntimeState } from "./types";
 
-const STAGE_ORDER = ["stage001", "stage002", "stage003", "stage004", "stage005", "stage006", "stage007", "stage008", "stage009"] as const;
+const TUTORIAL_STAGE_ID = "tutorial";
+const STAGE_ORDER = [TUTORIAL_STAGE_ID, "stage001", "stage002", "stage003", "stage004", "stage005", "stage006", "stage007", "stage008", "stage009", "stage010", "stage011"] as const;
+const PROGRESSION_STAGE_ORDER = ["stage001", "stage002", "stage003", "stage004", "stage005", "stage006", "stage007", "stage008", "stage009", "stage010", "stage011"] as const;
 
 const STAGES: Record<string, StageData> = {
+  tutorial: tutorial as StageData,
   stage001: stage001 as StageData,
   stage002: stage002 as StageData,
   stage003: stage003 as StageData,
@@ -31,7 +38,9 @@ const STAGES: Record<string, StageData> = {
   stage006: stage006 as StageData,
   stage007: stage007 as StageData,
   stage008: stage008 as StageData,
-  stage009: stage009 as StageData
+  stage009: stage009 as StageData,
+  stage010: stage010 as StageData,
+  stage011: stage011 as StageData
 };
 
 export function createGame(config: GameConfig = {}): GameHandle {
@@ -40,24 +49,32 @@ export function createGame(config: GameConfig = {}): GameHandle {
   validateStageData(stage);
 
   const camera = createCameraState(stage);
+  const savedCheckpoint = config.startFromCheckpoint ? savedCheckpointForStage(stage) : null;
+  const initialCheckpoint = savedCheckpoint ?? { id: "stage-start", respawn: stage.start.spawn };
   const state: GameState = {
     mode: "PLAY",
     stage,
-    player: createPlayerState(stage.start.spawn),
+    player: createPlayerState(initialCheckpoint.respawn),
     input: createInputState(),
     camera,
     enemies: createEnemyStates(stage, camera.currentView),
-    checkpoint: cloneVec3(stage.start.spawn),
-    checkpointId: "stage-start",
+    checkpoint: cloneVec3(initialCheckpoint.respawn),
+    checkpointId: initialCheckpoint.id,
     elapsedMs: 0,
     deathTimerMs: 0,
     statusMessage: "",
+    checkpointToastMessage: "",
+    checkpointToastMs: 0,
+    clearTimeRankingEligible: savedCheckpoint === null,
     pausedMode: null,
     warpCooldownMs: 0,
     warpRuntime: createWarpRuntime(stage),
     crumblingBlocks: [],
     verticalPanels: createVerticalPanelRuntime(stage),
-    fallingBlocks: createFallingBlockRuntime(stage)
+    fallingBlocks: createFallingBlockRuntime(stage),
+    wallZones: [],
+    hazardWalls: [],
+    tutorial: createTutorialRuntime()
   };
 
   return { state };
@@ -65,17 +82,47 @@ export function createGame(config: GameConfig = {}): GameHandle {
 
 export function getStageSelectItems(): StageSelectItem[] {
   const clearedStageId = loadSaveData()?.stageId;
-  const clearedIndex = clearedStageId ? STAGE_ORDER.indexOf(clearedStageId as typeof STAGE_ORDER[number]) : -1;
+  const clearedIndex = clearedStageId ? PROGRESSION_STAGE_ORDER.indexOf(clearedStageId as typeof PROGRESSION_STAGE_ORDER[number]) : -1;
 
-  return STAGE_ORDER.map((stageId, index) => {
+  return STAGE_ORDER.map((stageId) => {
     const stage = getStage(stageId);
+    if (stageId === TUTORIAL_STAGE_ID) {
+      return {
+        id: stage.id,
+        name: stage.name ?? stage.id,
+        unlocked: true,
+        cleared: false,
+        checkpointAvailable: false
+      };
+    }
+
+    const index = PROGRESSION_STAGE_ORDER.indexOf(stageId as typeof PROGRESSION_STAGE_ORDER[number]);
     return {
       id: stage.id,
       name: stage.name ?? stage.id,
       unlocked: index === 0 || index <= clearedIndex + 1,
-      cleared: index <= clearedIndex
+      cleared: index <= clearedIndex,
+      checkpointAvailable: canStartFromCheckpoint(stage.id)
     };
   });
+}
+export function canStartFromCheckpoint(stageId: string): boolean {
+  const stage = getStage(stageId);
+  return savedCheckpointForStage(stage) !== null;
+}
+
+function savedCheckpointForStage(stage: StageData): { id: string; respawn: Vec3 } | null {
+  const saved = loadStageCheckpoint(stage.id);
+  if (!saved) {
+    return null;
+  }
+
+  const checkpoint = stage.checkpoints.find((item) => item.id === saved.checkpointId);
+  if (!checkpoint || !isSecondCheckpoint(stage, checkpoint)) {
+    return null;
+  }
+
+  return { id: checkpoint.id, respawn: checkpoint.respawn };
 }
 
 export function loadStage(game: GameHandle, stageId: string): void {
@@ -99,9 +146,23 @@ export function loadStage(game: GameHandle, stageId: string): void {
   game.state.crumblingBlocks = [];
   game.state.verticalPanels = createVerticalPanelRuntime(stage);
   game.state.fallingBlocks = createFallingBlockRuntime(stage);
+  game.state.wallZones = [];
+  game.state.hazardWalls = [];
+  game.state.tutorial = createTutorialRuntime();
 }
 
 export function onKeyDown(game: GameHandle, code: string, timestampMs: number): void {
+  if (game.state.mode === "TUTORIAL") {
+    if (code === "Enter") {
+      advanceTutorial(game.state);
+      resetInputState(game.state.input);
+      if (!game.state.tutorial.active && game.state.camera.currentView !== "SIDE") {
+        requestDefaultView(game);
+      }
+    }
+    return;
+  }
+
   if (code === "Enter") {
     requestPause(game);
     return;
@@ -125,6 +186,10 @@ export function onKeyDown(game: GameHandle, code: string, timestampMs: number): 
 export function onKeyUp(game: GameHandle, code: string, timestampMs: number): void {
   void timestampMs;
   applyKeyUp(game.state.input, code);
+
+  if (game.state.mode === "TUTORIAL") {
+    return;
+  }
 
   if (code === "KeyQ" && game.state.mode !== "PAUSED") {
     requestDefaultView(game);
@@ -203,7 +268,7 @@ export function tick(game: GameHandle, dtMs: number): RenderState {
     return getRenderState(game);
   }
 
-  if (state.mode === "PAUSED") {
+  if (state.mode === "PAUSED" || state.mode === "TUTORIAL") {
     return getRenderState(game);
   }
 
@@ -268,8 +333,18 @@ export function getRenderState(game: GameHandle): RenderState {
       kind: item.kind,
       aabb: item.aabb
     })),
+    hazardWalls: state.hazardWalls.map((wall) => ({
+      id: wall.id,
+      wallType: wall.wallType,
+      openingKind: wall.openingKind,
+      aabb: wallAabbForRender(wall)
+    })),
+    tutorial: renderTutorialOverlay(state),
     elapsedMs: state.elapsedMs,
-    statusMessage: state.statusMessage
+    statusMessage: state.statusMessage,
+    checkpointToastMessage: state.checkpointToastMs > 0 ? state.checkpointToastMessage : "",
+    clearTimeRankingEligible: state.clearTimeRankingEligible,
+    clearTimeVisible: !isTutorialStage(state.stage)
   };
 }
 
@@ -297,6 +372,11 @@ function tickDeath(game: GameHandle, dtMs: number): void {
   }
 
   respawnPlayer(state.player, state.checkpoint);
+  resetInputState(state.input);
+  state.camera = createCameraState(state.stage);
+  if (isCurrentCheckpointSecond(state)) {
+    state.clearTimeRankingEligible = false;
+  }
   state.enemies = createEnemyStates(state.stage, state.camera.currentView);
   state.warpCooldownMs = 0;
   state.warpRuntime = createWarpRuntime(state.stage);
@@ -309,8 +389,16 @@ function tickDeath(game: GameHandle, dtMs: number): void {
 
 function tickPlay(game: GameHandle, dtMs: number): void {
   const state = game.state;
+  if (tryStartTutorial(state)) {
+    resetInputState(state.input);
+    return;
+  }
+
   const dtSec = dtMs / 1000;
   state.elapsedMs += dtMs;
+  if (state.checkpointToastMs > 0) {
+    state.checkpointToastMs = Math.max(0, state.checkpointToastMs - dtMs);
+  }
 
   if (state.warpCooldownMs > 0) {
     state.warpCooldownMs = Math.max(0, state.warpCooldownMs - dtMs);
@@ -461,14 +549,41 @@ function hasGroundAtX(blocks: BlockData[], x: number, z: number, playerBottomY: 
   return false;
 }
 
+
+function isCurrentCheckpointSecond(state: GameState): boolean {
+  const checkpoint = state.stage.checkpoints.find((item) => item.id === state.checkpointId);
+  return checkpoint ? isSecondCheckpoint(state.stage, checkpoint) : false;
+}
+
+function isSecondCheckpoint(stage: StageData, checkpoint: { id: string; respawn: Vec3 }): boolean {
+  return !isStartCheckpoint(stage, checkpoint);
+}
+
+function isStartCheckpoint(stage: StageData, checkpoint: { id: string; respawn: Vec3 }): boolean {
+  return checkpoint.id === "stage-start" ||
+    checkpoint.id.toLowerCase().includes("start") ||
+    samePosition(checkpoint.respawn, stage.start.spawn);
+}
+
+function samePosition(a: Vec3, b: Vec3): boolean {
+  return a.x === b.x && a.y === b.y && a.z === b.z;
+}
+
 function handleCheckpoint(state: GameState): void {
   const playerBox = playerAabbAt(state.player.position, state.player.width, state.player.height);
   for (const checkpoint of state.stage.checkpoints) {
     if (intersectsAabb(playerBox, checkpoint.aabb)) {
+      if (!isSecondCheckpoint(state.stage, checkpoint)) {
+        return;
+      }
+
       if (state.checkpointId !== checkpoint.id) {
         state.checkpoint = cloneVec3(checkpoint.respawn);
         state.checkpointId = checkpoint.id;
-        state.statusMessage = "チェックポイントを更新しました。";
+        state.statusMessage = "リスポーン地点を更新しました。";
+        state.checkpointToastMessage = "リスポーン地点を更新しました";
+        state.checkpointToastMs = 2200;
+        saveStageCheckpoint(state.stage.id, checkpoint.id);
       }
       return;
     }
@@ -501,7 +616,9 @@ function handleDoor(game: GameHandle): void {
 }
 
 function clearStage(state: GameState): void {
-  saveStageClear(state.stage.id);
+  if (!isTutorialStage(state.stage)) {
+    saveStageClear(state.stage.id);
+  }
   state.mode = "STAGE_CLEAR";
   state.statusMessage = "ステージクリア！";
 }
@@ -894,6 +1011,23 @@ function activeBlocksForState(state: GameState): BlockData[] {
   const collapsedIds = new Set(state.crumblingBlocks.filter((item) => item.collapsed).map((item) => item.blockId));
   const activeBlocks = state.stage.blocks.filter((block) => !collapsedIds.has(block.id));
   return applyFallingBlockPositions(state, applyVerticalPanelPositions(state, activeBlocks));
+}
+
+function wallAabbForRender(wall: GameState["hazardWalls"][number]): AABB {
+  // このプロジェクト状態ではStage 011の壁ランタイムが無い場合もあるため、
+  // RenderStateの型を満たすための安全なAABB変換だけをここに置く。
+  const thickness = 0.35;
+  if (wall.axis === "x") {
+    return {
+      min: { x: wall.position - thickness / 2, y: 0, z: -2 },
+      max: { x: wall.position + thickness / 2, y: 4, z: 2 }
+    };
+  }
+
+  return {
+    min: { x: -200, y: 0, z: wall.position - thickness / 2 },
+    max: { x: 200, y: 4, z: wall.position + thickness / 2 }
+  };
 }
 
 function killPlayer(state: GameState, reason: string): void {

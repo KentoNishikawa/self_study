@@ -1,9 +1,10 @@
 import * as THREE from "three";
 import { aabbCenter, aabbSize } from "../core/stage";
-import type { RenderState } from "../core/types";
+import type { AABB, RenderState, Vec3 } from "../core/types";
 
 export interface ThreeEngine {
   render(state: RenderState): void;
+  projectAabbToScreen(aabb: AABB): { x: number; y: number; width: number; height: number } | null;
   dispose(): void;
 }
 
@@ -30,8 +31,10 @@ export function createThreeEngine(root: HTMLElement): ThreeEngine {
 
   const blockMeshes = new Map<string, THREE.Mesh>();
   const doorMeshes = new Map<string, THREE.Mesh>();
+  const checkpointMeshes = new Map<string, THREE.Mesh>();
   const enemyMeshes = new Map<string, THREE.Mesh>();
   const itemMeshes = new Map<string, THREE.Mesh>();
+  const hazardWallMeshes = new Map<string, THREE.Mesh>();
   const playerMesh = createBoxMesh(0x93c5fd);
   scene.add(playerMesh);
 
@@ -51,8 +54,10 @@ export function createThreeEngine(root: HTMLElement): ThreeEngine {
       resize();
       syncBlocks(scene, blockMeshes, state);
       syncDoors(scene, doorMeshes, state);
+      syncCheckpoints(scene, checkpointMeshes, state);
       syncEnemies(scene, enemyMeshes, state);
       syncItems(scene, itemMeshes, state);
+      syncHazardWalls(scene, hazardWallMeshes, state);
 
       playerMesh.position.set(state.player.position.x, state.player.position.y, state.player.position.z);
       playerMesh.scale.set(state.player.width, state.player.height, state.player.width);
@@ -65,17 +70,59 @@ export function createThreeEngine(root: HTMLElement): ThreeEngine {
 
       renderer.render(scene, camera);
     },
+    projectAabbToScreen(aabb: AABB): { x: number; y: number; width: number; height: number } | null {
+      return projectAabbToScreen(aabb, camera, root);
+    },
     dispose(): void {
       window.removeEventListener("resize", resize);
       renderer.dispose();
       root.replaceChildren();
       disposeMap(blockMeshes);
       disposeMap(doorMeshes);
+      disposeMap(checkpointMeshes);
       disposeMap(enemyMeshes);
       disposeMap(itemMeshes);
+      disposeMap(hazardWallMeshes);
       playerMesh.geometry.dispose();
       disposeMaterial(playerMesh.material);
     }
+  };
+}
+
+function projectAabbToScreen(aabb: AABB, camera: THREE.Camera, root: HTMLElement): { x: number; y: number; width: number; height: number } | null {
+  const corners: Vec3[] = [
+    { x: aabb.min.x, y: aabb.min.y, z: aabb.min.z },
+    { x: aabb.min.x, y: aabb.min.y, z: aabb.max.z },
+    { x: aabb.min.x, y: aabb.max.y, z: aabb.min.z },
+    { x: aabb.min.x, y: aabb.max.y, z: aabb.max.z },
+    { x: aabb.max.x, y: aabb.min.y, z: aabb.min.z },
+    { x: aabb.max.x, y: aabb.min.y, z: aabb.max.z },
+    { x: aabb.max.x, y: aabb.max.y, z: aabb.min.z },
+    { x: aabb.max.x, y: aabb.max.y, z: aabb.max.z }
+  ];
+  const projected = corners.map((corner) => {
+    const vector = new THREE.Vector3(corner.x, corner.y, corner.z).project(camera);
+    return {
+      x: (vector.x * 0.5 + 0.5) * root.clientWidth,
+      y: (-vector.y * 0.5 + 0.5) * root.clientHeight,
+      z: vector.z
+    };
+  }).filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+
+  if (projected.length === 0) {
+    return null;
+  }
+
+  const minX = Math.min(...projected.map((point) => point.x));
+  const maxX = Math.max(...projected.map((point) => point.x));
+  const minY = Math.min(...projected.map((point) => point.y));
+  const maxY = Math.max(...projected.map((point) => point.y));
+
+  return {
+    x: (minX + maxX) / 2,
+    y: (minY + maxY) / 2,
+    width: Math.max(1, maxX - minX),
+    height: Math.max(1, maxY - minY)
   };
 }
 
@@ -118,11 +165,9 @@ function blockColor(stageId: string, solid: boolean, blockIndex: number, tags?: 
     return 0xfacc15;
   }
 
-  if (stageId !== "stage003") {
-    return solid ? 0x64748b : 0x334155;
-  }
-
-  return (blockIndex + 1) % 2 === 1 ? 0xef4444 : 0x22c55e;
+  void stageId;
+  void blockIndex;
+  return solid ? 0x64748b : 0x334155;
 }
 
 function syncDoors(scene: THREE.Scene, meshes: Map<string, THREE.Mesh>, state: RenderState): void {
@@ -142,6 +187,28 @@ function syncDoors(scene: THREE.Scene, meshes: Map<string, THREE.Mesh>, state: R
     mesh.position.set(center.x, center.y, center.z);
     mesh.scale.set(size.x, size.y, size.z);
     mesh.visible = door.visible;
+  }
+
+  removeInactive(scene, meshes, activeIds);
+}
+
+function syncCheckpoints(scene: THREE.Scene, meshes: Map<string, THREE.Mesh>, state: RenderState): void {
+  const activeIds = new Set<string>();
+
+  for (const checkpoint of state.checkpoints) {
+    activeIds.add(checkpoint.id);
+    let mesh = meshes.get(checkpoint.id);
+    if (!mesh) {
+      mesh = createBoxMesh(checkpoint.active ? 0x22c55e : 0xfde047);
+      meshes.set(checkpoint.id, mesh);
+      scene.add(mesh);
+    }
+
+    const center = aabbCenter(checkpoint.aabb);
+    const size = aabbSize(checkpoint.aabb);
+    mesh.position.set(center.x, center.y, center.z);
+    mesh.scale.set(size.x, size.y, size.z);
+    setMeshColor(mesh, checkpoint.active ? 0x22c55e : 0xfde047);
   }
 
   removeInactive(scene, meshes, activeIds);
@@ -186,6 +253,47 @@ function syncItems(scene: THREE.Scene, meshes: Map<string, THREE.Mesh>, state: R
   }
 
   removeInactive(scene, meshes, activeIds);
+}
+
+function syncHazardWalls(scene: THREE.Scene, meshes: Map<string, THREE.Mesh>, state: RenderState): void {
+  const activeIds = new Set<string>();
+
+  for (const wall of state.hazardWalls) {
+    activeIds.add(wall.id);
+    let mesh = meshes.get(wall.id);
+    if (!mesh) {
+      mesh = createFlatBoxMesh(hazardWallColor(wall.wallType, wall.openingKind));
+      meshes.set(wall.id, mesh);
+      scene.add(mesh);
+    }
+
+    const center = aabbCenter(wall.aabb);
+    const size = aabbSize(wall.aabb);
+    mesh.position.set(center.x, center.y, center.z);
+    mesh.scale.set(size.x, size.y, size.z);
+    setMeshColor(mesh, hazardWallColor(wall.wallType, wall.openingKind));
+  }
+
+  removeInactive(scene, meshes, activeIds);
+}
+
+function hazardWallColor(wallType: RenderState["hazardWalls"][number]["wallType"], openingKind: RenderState["hazardWalls"][number]["openingKind"]): number {
+  if (wallType === "DEPTH_WALL") {
+    return openingKind === "NORMAL_JUMP" ? 0xfb7185 : 0xf43f5e;
+  }
+
+  switch (openingKind) {
+    case "CROUCH":
+      return 0xef4444;
+    case "STAND":
+      return 0xf97316;
+    case "SMALL_JUMP":
+      return 0xeab308;
+    case "NORMAL_JUMP":
+      return 0xdc2626;
+    default:
+      return 0xef4444;
+  }
 }
 
 function itemColor(kind: RenderState["items"][number]["kind"]): number {

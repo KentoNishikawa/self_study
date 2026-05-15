@@ -1,4 +1,3 @@
-import { DASH_MIN_DURATION_MS, DOUBLE_TAP_WINDOW_MS } from "./constants";
 import type { InputState, View } from "./types";
 
 export type InputCommand = "ROTATE" | "INTERACT" | null;
@@ -10,18 +9,18 @@ export function createInputState(): InputState {
     forward: false,
     back: false,
     jump: false,
+    jumpRequested: false,
     crouch: false,
     interactRequested: false,
     viewSwitchHeld: false,
-    dashDirection: 0,
-    dashActive: false,
-    dashMinUntilMs: 0,
-    lastTapDirection: 0,
-    lastTapAtMs: Number.NEGATIVE_INFINITY
   };
 }
 
-export function applyKeyDown(input: InputState, code: string, timestampMs: number, gameplayInputEnabled: boolean): InputCommand {
+export function resetInputState(input: InputState): void {
+  Object.assign(input, createInputState());
+}
+
+export function applyKeyDown(input: InputState, code: string, _timestampMs: number, gameplayInputEnabled: boolean): InputCommand {
   if (code === "KeyQ") {
     if (input.viewSwitchHeld) {
       return null;
@@ -40,26 +39,25 @@ export function applyKeyDown(input: InputState, code: string, timestampMs: numbe
   }
 
   if (code === "ArrowLeft" || code === "KeyA") {
-    applyDirectionDown(input, -1, timestampMs);
     input.left = true;
   }
 
   if (code === "ArrowRight" || code === "KeyD") {
-    applyDirectionDown(input, 1, timestampMs);
     input.right = true;
   }
 
   if (code === "ArrowUp" || code === "KeyW") {
-    applyDirectionDown(input, 1, timestampMs);
     input.forward = true;
   }
 
   if (code === "ArrowDown" || code === "KeyS") {
-    applyDirectionDown(input, -1, timestampMs);
     input.back = true;
   }
 
   if (code === "Space") {
+    if (!input.jump) {
+      input.jumpRequested = true;
+    }
     input.jump = true;
   }
 
@@ -114,42 +112,8 @@ export function movementIntent(input: InputState, view: View): -1 | 0 | 1 {
   return input.left ? -1 : 1;
 }
 
-export function isDashActive(input: InputState, view: View, nowMs: number): boolean {
-  const direction = movementIntent(input, view);
-  if (direction === 0) {
-    return nowMs < input.dashMinUntilMs;
-  }
-  return input.dashActive && input.dashDirection === direction;
-}
-
-export function refreshDashState(input: InputState, view: View, nowMs: number): void {
-  const direction = movementIntent(input, view);
-  const minDurationRunning = nowMs < input.dashMinUntilMs;
-
-  if (!minDurationRunning && direction !== input.dashDirection) {
-    input.dashActive = false;
-    input.dashDirection = 0;
-  }
-
-  if (!minDurationRunning && direction === 0) {
-    input.dashActive = false;
-    input.dashDirection = 0;
-  }
-}
-
 export function consumeInteract(input: InputState): boolean {
   const requested = input.interactRequested;
   input.interactRequested = false;
   return requested;
-}
-
-function applyDirectionDown(input: InputState, direction: -1 | 1, timestampMs: number): void {
-  if (input.lastTapDirection === direction && timestampMs - input.lastTapAtMs <= DOUBLE_TAP_WINDOW_MS) {
-    input.dashDirection = direction;
-    input.dashActive = true;
-    input.dashMinUntilMs = timestampMs + DASH_MIN_DURATION_MS;
-  }
-
-  input.lastTapDirection = direction;
-  input.lastTapAtMs = timestampMs;
 }

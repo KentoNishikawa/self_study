@@ -1,5 +1,5 @@
-import type { EnemyBehavior } from "./types";
-import { enemyPositionForView } from "./types";
+import type { EnemyBehavior } from "../types";
+import { enemyPositionForView } from "../enemyUtils";
 
 export const gorubaEnemyBehavior: EnemyBehavior = {
   create(enemy, view) {

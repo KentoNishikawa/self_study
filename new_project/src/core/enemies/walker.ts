@@ -1,6 +1,6 @@
-import type { EnemyBehavior } from "./types";
-import { enemyPositionForView } from "./types";
-import { applyEnemyGrounding, ENEMY_DESPAWN_Y } from "./physics";
+import type { EnemyBehavior } from "../types";
+import { enemyPositionForView } from "../enemyUtils";
+import { applyEnemyGrounding, ENEMY_DESPAWN_Y } from "../enemyPhysics";
 
 const DEFAULT_WALKER_SPEED = 1.8;
 const DEFAULT_WALKER_RESPAWN_INTERVAL_MS = 3000;

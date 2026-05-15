@@ -14,11 +14,7 @@ export const PLAYER_CROUCHING_HEIGHT = 1.2;
 
 export const CROUCH_SPEED_RATE = 0.45;
 export const WALK_SPEED = 6.0;
-export const DASH_SPEED = 9.0;
 export const AIR_SPEED_LIMIT = 6.5;
-export const DASH_JUMP_AIR_SPEED_LIMIT = 13.0;
-export const DOUBLE_TAP_WINDOW_MS = 250;
-export const DASH_MIN_DURATION_MS = 200;
 
 export const ROTATE_DURATION_MS = 1000;
 export const ROTATE_STEP_RAD = Math.PI / 2;
@@ -28,6 +24,8 @@ export const CAMERA_FOV = 40;
 
 export const GRAVITY = -24;
 export const JUMP_VELOCITY = 8.8; // TBD: 「2ブロック弱」に合わせた体感値として初期設定。
+export const VARIABLE_JUMP_HOLD_MS = 160;
+export const SMALL_JUMP_RELEASE_VELOCITY = 4.8;
 export const JUMP_PAD_VELOCITY = 20;
 export const TRAP_JUMP_PAD_VELOCITY = 100;
 export const TRAP_JUMP_GAME_OVER_Y = 55;
