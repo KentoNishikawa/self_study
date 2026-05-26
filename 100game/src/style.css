@@ -1034,6 +1034,21 @@ html {
   margin: 0 0 1em;
 }
 
+.titleInfoBody a {
+  color: #60a5fa;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.titleInfoBody a:visited {
+  color: #60a5fa;
+}
+
+.titleInfoBody a:hover {
+  color: #93c5fd;
+}
+
 .titleInfoBody p:last-child {
   margin-bottom: 0;
 }

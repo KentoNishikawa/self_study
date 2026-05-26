@@ -1,0 +1,350 @@
+:root {
+  color: #1f2937;
+  background: #f4f6f8;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f4f6f8;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.contactPage {
+  min-height: 100vh;
+  padding: 48px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.contactCard {
+  width: min(100%, 760px);
+  padding: 36px;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+}
+
+.contactCard.is-complete {
+  text-align: center;
+}
+
+.contactHeader {
+  margin-bottom: 28px;
+}
+
+.contactBrand {
+  margin-bottom: 8px;
+  color: #9d202a;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.contactHeader h1 {
+  margin: 0 0 10px;
+  color: #111827;
+  font-size: clamp(1.75rem, 4vw, 2.35rem);
+  line-height: 1.25;
+}
+
+.contactHeader p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.8;
+}
+
+.contactForm {
+  display: grid;
+  gap: 22px;
+}
+
+.contactField {
+  display: grid;
+  gap: 8px;
+}
+
+.contactField label {
+  color: #111827;
+  font-weight: 700;
+}
+
+.contactRequired,
+.contactOptional {
+  display: inline-flex;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  vertical-align: middle;
+}
+
+.contactRequired {
+  color: #ffffff;
+  background: #9d202a;
+}
+
+.contactOptional {
+  color: #4b5563;
+  background: #eef2f7;
+}
+
+.contactField input,
+.contactField select,
+.contactField textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #111827;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.contactField input,
+.contactField select {
+  min-height: 46px;
+  padding: 10px 13px;
+}
+
+.contactField textarea {
+  padding: 12px 13px;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+.contactField input:focus,
+.contactField select:focus,
+.contactField textarea:focus {
+  outline: none;
+  border-color: #9d202a;
+  box-shadow: 0 0 0 4px rgba(157, 32, 42, 0.12);
+}
+
+.contactFileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.contactFileControls {
+  min-height: 46px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.contactFileBtn {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  color: #111827;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+  transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease;
+}
+
+.contactFileBtn:not(:disabled):hover {
+  border-color: #9d202a;
+  background: #fff7f8;
+  color: #9d202a;
+}
+
+.contactFileBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.contactSubText,
+.contactSelectedFile,
+.contactHint {
+  color: #6b7280;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.contactHint {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff7ed;
+  visibility: hidden;
+}
+
+.contactHint.is-visible {
+  visibility: visible;
+}
+
+.contactHint.is-bug {
+  color: #7c2d12;
+}
+
+.contactError {
+  color: #dc2626;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.contactActions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.contactActions.is-center {
+  justify-content: center;
+}
+
+.contactBtn {
+  min-width: 150px;
+  min-height: 46px;
+  padding: 11px 22px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 800;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+
+.contactBtn:hover {
+  transform: translateY(-1px);
+}
+
+.contactBtn.is-primary {
+  color: #ffffff;
+  background: #9d202a;
+  box-shadow: 0 10px 20px rgba(157, 32, 42, 0.18);
+}
+
+.contactBtn.is-primary:hover {
+  background: #851b24;
+}
+
+.contactBtn.is-secondary {
+  color: #374151;
+  background: #eef2f7;
+}
+
+.contactBtn.is-secondary:hover {
+  background: #e5e7eb;
+}
+
+.contactConfirmList {
+  margin: 0;
+  display: grid;
+  gap: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.contactConfirmRow {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.contactConfirmRow:last-child {
+  border-bottom: 0;
+}
+
+.contactConfirmRow dt,
+.contactConfirmRow dd {
+  margin: 0;
+  padding: 15px 16px;
+  line-height: 1.7;
+}
+
+.contactConfirmRow dt {
+  color: #374151;
+  background: #f9fafb;
+  font-weight: 800;
+}
+
+.contactConfirmRow dd {
+  color: #111827;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.contactConfirmRow.is-multiline dd {
+  min-height: 120px;
+}
+
+.contactCompleteIcon {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #ffffff;
+  background: #16a34a;
+  font-size: 2.1rem;
+  font-weight: 900;
+}
+
+.contactCompleteNote {
+  margin: 24px 0 20px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  color: #6b7280;
+  background: #f9fafb;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 640px) {
+  .contactPage {
+    padding: 24px 14px;
+  }
+
+  .contactCard {
+    padding: 24px 18px;
+    border-radius: 16px;
+  }
+
+  .contactActions {
+    flex-direction: column-reverse;
+  }
+
+  .contactBtn {
+    width: 100%;
+  }
+
+  .contactConfirmRow {
+    grid-template-columns: 1fr;
+  }
+
+  .contactConfirmRow dt {
+    padding-bottom: 6px;
+  }
+
+  .contactConfirmRow dd {
+    padding-top: 6px;
+  }
+}

@@ -145,20 +145,25 @@ const TITLE_MODAL_CONTENT: Record<TitleModalKey, TitleModalContent> = {
     title: "クレジット",
     bodyHtml: `
       <p><strong>タイトル</strong><br>100GAME⁺(100ゲームプラス)</p>
-      <p><strong>企画・開発</strong><br>Acceble</p>
+      <p><strong>制作</strong><br>Acceble</p>
+      <p><strong>企画</strong><br>西川 拳人</p>
+      <p><strong>開発</strong><br>西川 拳人<br>車田 恭輔</p>
+      <p><strong>イラスト提供</strong><br>Shake</p>
+      <p><strong>サービス運用設計</strong><br>野上 玲旺</p>
       <p><strong>使用技術</strong><br>TypeScript / Vite / Cloudflare</p>
-      <p>クレジット表記は、今後の追加要素に応じて更新する予定です。</p>
+      <p><strong>お問い合わせ</strong><br>support@acceble.com</p>
+      <p>© 2026 Acceble. All Rights Reserved.</p>
+      <p><small>Version 1.0.0</small></p>
     `,
   },
   contact: {
     title: "お問い合わせ",
     bodyHtml: `
-      <p>本ゲームで不明なことや不具合の報告等の各種お問い合わせは、専用のお問い合わせページよりご連絡ください。</p>
-      <p>お問い合わせ内容を確認のうえ、必要に応じて対応いたします。</p>
+      <p>100GAME⁺に関する不具合報告、ご意見・ご要望、その他のお問い合わせは専用ページからお送りください。</p>
+      <p>いただいた内容を確認のうえ、必要に応じて運営より返信する場合があります。</p>
+      <p><a href="./contact.html">お問い合わせページはこちら</a></p>
+      <p>※現在のタブでお問い合わせページへ移動します。</p>
     `,
-    actionLabel: "お問い合わせ",
-    actionNote: "※お問い合わせページは現在準備中です。",
-    actionDisabled: true,
   },
 };
 
@@ -389,6 +394,11 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
       openModal(key);
     });
   }
+
+  modalActionBtn.addEventListener("click", () => {
+    playButtonSe();
+    window.location.href = new URL("./contact.html", window.location.href).toString();
+  });
 
   modalClose.addEventListener("click", () => {
     playButtonSe();

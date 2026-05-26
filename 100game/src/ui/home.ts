@@ -206,8 +206,6 @@ export function renderHome(
     }, 3000);
   };
 
-  const targetLabel = config.gameType === "EXTRA" ? "???" : String(config.gameType);
-
   app.innerHTML = `
 
     <!-- 通知モーダル（満員など） -->
@@ -234,7 +232,7 @@ export function renderHome(
           <div style="font-size:clamp(18px, 3vw, 24px);font-weight:950;letter-spacing:0.04em;">ルール要点</div>
         </div>
         <div style="min-height:0;overflow-y:auto;padding:18px;color:rgba(255,255,255,0.88);line-height:1.8;">
-          <div>・順番にカードを出し、合計が <b>${escapeHtml(targetLabel)}以上</b> で負け（加算時）</div>
+          <div>・順番にカードを出し、合計が上限値を超えたら負け（加算時）</div>
           <div>・J/Q/Kは10、Aは1</div>
           <div>・ジョーカーは1〜49（宣言）</div>
           <div>・ジョーカー直後に♠3でジョーカーを0化、♠3も0</div>
