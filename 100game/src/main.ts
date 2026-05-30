@@ -176,6 +176,12 @@ const app: HTMLDivElement = appEl;
 let uiLocked = false;
 let npcRunToken = 0;
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+const NPC_THINK_MIN_MS = 800;
+const NPC_THINK_MAX_MS = 1750;
+
+function pickNpcThinkDelayMs(): number {
+  return Math.floor(Math.random() * (NPC_THINK_MAX_MS - NPC_THINK_MIN_MS + 1)) + NPC_THINK_MIN_MS;
+}
 
 function playMpFrames(session: MpSession, frames: GameState[], intervalMs: number, seq: number) {
   if (!Number.isFinite(seq)) return;
@@ -668,6 +674,10 @@ async function runNpcTurnsAnimated() {
     while (state && state.result.status === "PLAYING" && state.turn !== 0) {
       if (token !== npcRunToken) return;
 
+      await sleep(pickNpcThinkDelayMs());
+      if (token !== npcRunToken) return;
+      if (!state || state.result.status !== "PLAYING" || state.turn === 0) return;
+
       const action = chooseNpcAction(state, difficulty);
 
       if (action.type === "PLAY_HAND") {
@@ -677,7 +687,6 @@ async function runNpcTurnsAnimated() {
       }
 
       draw();
-      await sleep(250);
     }
   } finally {
     uiLocked = false;
