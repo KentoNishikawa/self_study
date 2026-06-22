@@ -1487,6 +1487,9 @@ export function renderUserHome(
   };
 
   const renderIconDetail = (icon: UserIconDefinition) => {
+    const selectedId = getSelectedUserIcon().id;
+    const isSelected = icon.id === selectedId;
+
     titleDetailBody.innerHTML = `
       <div class="titleDetailOuter collectionDetailOuter">
         <section class="titleDetailHero collectionDetailHero iconDetailHero">
@@ -1497,18 +1500,26 @@ export function renderUserHome(
         <section class="titleDetailContent collectionDetailContent">
           <div class="titleDetailConditionBlock">
             <div class="titleDetailLabel">アイコン詳細</div>
-            <div class="titleDetailCondition">取得済み</div>
+            <div class="titleDetailCondition">${isSelected ? "設定中" : "取得済み"}</div>
           </div>
 
           <div class="titleDetailComment">${escapeHtml(icon.comment)}</div>
           <div class="titleDetailDate">プレイヤーアイコンとして利用できます。</div>
 
-          <div class="titleDetailFooter titleDetailFooterSingle">
+          <div class="titleDetailFooter">
+            <button id="userHomeIconDetailSetBtn" class="btn titleDetailSetBtn" type="button" ${isSelected ? "disabled" : ""}>${isSelected ? "設定中" : "アイコンに設定"}</button>
             <button id="userHomeTitleDetailCloseBtn" class="btn titleDetailCloseBtn" type="button">閉じる</button>
           </div>
         </section>
       </div>
     `;
+
+    titleDetailBody.querySelector<HTMLButtonElement>("#userHomeIconDetailSetBtn")?.addEventListener("click", () => {
+      if (isSelected) return;
+      playButtonSe();
+      applySelectedIcon(icon.id);
+      setTitleDetailOpen(false);
+    });
 
     titleDetailBody.querySelector<HTMLButtonElement>("#userHomeTitleDetailCloseBtn")?.addEventListener("click", () => {
       playButtonSe();
