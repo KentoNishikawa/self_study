@@ -10,7 +10,7 @@ export type GameType = 100 | 200 | 300 | 400 | 500 | "EXTRA";
 export type Card = { id: string; suit: Suit; rank: Rank };
 
 export type SeatKind = "HUMAN" | "NPC";
-export type Seat = { kind: SeatKind; name: string; hand: Card[] };
+export type Seat = { kind: SeatKind; name: string; hand: Card[]; iconId?: string; isGuest?: boolean; titleName?: string };
 
 export type GameResult =
     | { status: "PLAYING" }

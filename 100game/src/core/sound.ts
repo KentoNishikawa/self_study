@@ -10,6 +10,7 @@ import buttonSeFile from "../assets/sound_effects/決定ボタンを押す49.mp3
 import startbuttonSeFile from "../assets/sound_effects/決定ボタンを押す47.mp3";
 // 自分のターン開始の効果音
 import myturnSeFile from "../assets/sound_effects/cncl01.mp3";
+import { getSoundVolumeLevel, soundVolumeLevelToAudioVolume } from "./userSettings";
 
 function createAudio(src: string) {
     const audio = new Audio(src);
@@ -47,6 +48,7 @@ export function toggleSound(): boolean {
 function playAudio(audio: HTMLAudioElement) {
     if (!isSoundEnabled()) return;
     try {
+        audio.volume = soundVolumeLevelToAudioVolume(getSoundVolumeLevel());
         audio.pause();
         audio.currentTime = 0;
         const p = audio.play();

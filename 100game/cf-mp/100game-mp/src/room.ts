@@ -10,6 +10,8 @@ type LobbySeat = {
     kind: "HOST" | "PLAYER" | "NPC";
     name: string;
     iconId: string;
+    isGuest?: boolean;
+    titleName?: string;
 };
 
 type RoomState = {
@@ -33,10 +35,10 @@ function makeInitialState(roomId: string, hostToken: string, expiresAt: number):
         npcDifficulty: "SMART",
         gameType: "100",
         seats: [
-            { kind: "HOST", name: "HOST", iconId: "host_default" },
-            { kind: "NPC", name: "NPC1", iconId: "npc_default" },
-            { kind: "NPC", name: "NPC2", iconId: "npc_default" },
-            { kind: "NPC", name: "NPC3", iconId: "npc_default" },
+            { kind: "HOST", name: "HOST", iconId: "host_default", isGuest: false, titleName: "はじまりの挑戦者" },
+            { kind: "NPC", name: "NPC1", iconId: "npc_default", isGuest: false },
+            { kind: "NPC", name: "NPC2", iconId: "npc_default", isGuest: false },
+            { kind: "NPC", name: "NPC3", iconId: "npc_default", isGuest: false },
         ],
         playOrder: [0, 1, 2, 3],
         disbanded: false,
@@ -67,6 +69,8 @@ const EXTRA_CANDIDATES: Array<Exclude<GameType, "EXTRA">> = [100, 200, 300, 400,
 // ローカルはクライアントで強制手を実行しているが、MPではサーバ側（DO）で強制する。
 const TURN_LIMIT_MS = 60 * 1000;
 const GAME_START_NPC_DELAY_MS = 3000;
+const MP_NPC_THINK_MIN_MS = 2500;
+const MP_NPC_THINK_MAX_MS = 5500;
 
 function turnKey(g: GameState) {
     return `${g.turn}|${g.history.length}`;
@@ -109,6 +113,8 @@ function makeGameFromRoom(room: RoomState): GameState {
             name: ls.kind === "NPC" ? `NPC${slot}` : ls.name,
             hand: [],
             iconId: ls.iconId,
+            isGuest: Boolean(ls.isGuest),
+            titleName: ls.kind === "NPC" || ls.isGuest ? "" : (ls.titleName ?? "はじまりの挑戦者"),
         };
     }) as unknown as [Seat, Seat, Seat, Seat];
 
@@ -137,6 +143,18 @@ function makeGameFromRoom(room: RoomState): GameState {
 
 function isNpcTurn(game: GameState) {
     return game.seats[game.turn].kind === "NPC";
+}
+
+function pickMpNpcThinkDelayMs(): number {
+    return Math.floor(Math.random() * (MP_NPC_THINK_MAX_MS - MP_NPC_THINK_MIN_MS + 1)) + MP_NPC_THINK_MIN_MS;
+}
+
+function buildMpFrameIntervals(states: GameState[], fallbackIntervalMs: number): number[] {
+    const intervals: number[] = [];
+    for (let i = 0; i < states.length - 1; i++) {
+        intervals.push(isNpcTurn(states[i]) ? pickMpNpcThinkDelayMs() : fallbackIntervalMs);
+    }
+    return intervals;
 }
 
 // ---------------- Durable Object ----------------
@@ -244,6 +262,14 @@ export class RoomDO {
 
                     if (msg.type === "UPDATE_ICON" && typeof msg.iconId === "string") {
                         cur.seats[mySeat].iconId = msg.iconId;
+                        await this.ctx.storage.put("state", cur);
+                        this.broadcastRoomState(cur);
+                        return;
+                    }
+
+                    if (msg.type === "UPDATE_GUEST" && typeof msg.isGuest === "boolean") {
+                        cur.seats[mySeat].isGuest = msg.isGuest;
+                        cur.seats[mySeat].titleName = msg.isGuest ? "" : (cur.seats[mySeat].titleName || "はじまりの挑戦者");
                         await this.ctx.storage.put("state", cur);
                         this.broadcastRoomState(cur);
                         return;
@@ -381,7 +407,7 @@ export class RoomDO {
                     if (mySeat !== 0 && mySeat >= 1 && mySeat <= 3) {
                         const leaverName = cur.seats[mySeat].name;
                         // ロビー：即NPCへ
-                        cur.seats[mySeat] = { kind: "NPC", name: `NPC${mySeat}`, iconId: "npc_default" };
+                        cur.seats[mySeat] = { kind: "NPC", name: `NPC${mySeat}`, iconId: "npc_default", isGuest: false };
                         await this.ctx.storage.put("state", cur);
                         this.broadcastRoomState(cur);
 
@@ -452,7 +478,7 @@ export class RoomDO {
 
                 if (typeof seatIndex === "number" && seatIndex >= 1 && seatIndex <= 3) {
                     const leaverName = cur.seats[seatIndex].name;
-                    cur.seats[seatIndex] = { kind: "NPC", name: `NPC${seatIndex}`, iconId: "npc_default" };
+                    cur.seats[seatIndex] = { kind: "NPC", name: `NPC${seatIndex}`, iconId: "npc_default", isGuest: false };
                     await this.ctx.storage.put("state", cur);
                     this.broadcastRoomState(cur);
 
@@ -589,7 +615,7 @@ export class RoomDO {
     private assignPlayerSeat(st: RoomState): number {
         for (let i = 1; i <= 3; i++) {
             if (st.seats[i].kind === "NPC") {
-                st.seats[i] = { kind: "PLAYER", name: `プレイヤー${i}`, iconId: "player_default" };
+                st.seats[i] = { kind: "PLAYER", name: `プレイヤー${i}`, iconId: "player_default", isGuest: false, titleName: "はじまりの挑戦者" };
                 return i;
             }
         }
@@ -619,7 +645,8 @@ export class RoomDO {
         const seq = cur + 1;
         await this.ctx.storage.put("gameSeq", seq);
 
-        const payload = JSON.stringify({ type: "GAME_STATES", seq, intervalMs, states });
+        const intervalMsList = buildMpFrameIntervals(states, intervalMs);
+        const payload = JSON.stringify({ type: "GAME_STATES", seq, intervalMs, intervalMsList, states });
         for (const ws of this.sessions) {
             try {
                 ws.send(payload);

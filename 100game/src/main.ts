@@ -6,12 +6,122 @@ import { reducer } from "./core/reducer";
 import { chooseNpcAction } from "./ai/npc";
 import { renderHome, type HomeConfig } from "./ui/home";
 import { renderTitle } from "./ui/title";
+import { getSelectedUserTitleName, renderUserHome, type IconAwardNotification, type TitleAwardNotification } from "./ui/userHome";
+import { renderMpGate } from "./ui/mpGate";
+import { createLoadingConfig, renderLoading, type LoadingScreenConfig } from "./ui/loading";
 import { GAME_START_OVERLAY_FADE_MS, GAME_START_OVERLAY_HOLD_MS, render, resetRenderTransientState } from "./ui/render";
 import { pickJokerValue } from "./ui/jokerPicker";
+import { PLAYER_ICON_PRESETS } from "./icons/iconPresets";
+import { DEFAULT_USER_PLAYER_NAME, getUserIconId, getUserPlayerName } from "./core/userSettings";
 
-type Screen = "TITLE" | "HOME" | "GAME";
+type Screen = "TITLE" | "MP_GATE" | "LOADING" | "USER_HOME" | "HOME" | "GAME";
 
 const FORCE_HOME_SCREEN_KEY = "100game.forceHomeScreen";
+const TITLE_NOTIFICATION_SESSION_ACTIVE_KEY = "100game.titleNotificationSessionActive";
+const PENDING_TITLE_NOTIFICATION_KEY = "100game.pendingTitleAwardNotification";
+const PENDING_ICON_NOTIFICATION_KEY = "100game.pendingIconAwardNotification";
+
+const MOCK_TITLE_AWARD_NOTIFICATION: TitleAwardNotification = {
+  items: [
+    { id: "title-start-001", name: "はじまりの挑戦者", rarity: "☆" },
+    { id: "title-joker-001", name: "JOKERを告げし者", rarity: "☆" },
+    { id: "title-fate-001", name: "運命を拒む者", rarity: "☆☆" },
+    { id: "title-alive-001", name: "堕ちぬ者", rarity: "☆☆" },
+    { id: "title-boundary-001", name: "百の境界を越えし者", rarity: "☆☆☆" },
+    { id: "title-abyss-001", name: "深淵を覗く者", rarity: "☆☆☆" },
+    { id: "title-spade3-001", name: "黒き三刃の返礼", rarity: "☆☆" },
+  ],
+};
+
+const MOCK_ICON_AWARD_NOTIFICATION: IconAwardNotification = {
+  items: PLAYER_ICON_PRESETS.slice(0, 6).map((icon) => ({ id: icon.id, name: icon.label })),
+};
+
+function beginTitleNotificationSession() {
+  try {
+    sessionStorage.setItem(TITLE_NOTIFICATION_SESSION_ACTIVE_KEY, "1");
+  } catch { }
+}
+
+function hasActiveTitleNotificationSession(): boolean {
+  try {
+    return sessionStorage.getItem(TITLE_NOTIFICATION_SESSION_ACTIVE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function endTitleNotificationSession() {
+  try {
+    sessionStorage.removeItem(TITLE_NOTIFICATION_SESSION_ACTIVE_KEY);
+  } catch { }
+}
+
+function stashPendingTitleAwardNotification(notification: TitleAwardNotification) {
+  if (!notification.items.length) return;
+  try {
+    sessionStorage.setItem(PENDING_TITLE_NOTIFICATION_KEY, JSON.stringify(notification));
+  } catch { }
+}
+
+function readPendingTitleAwardNotification(): TitleAwardNotification | null {
+  try {
+    const raw = sessionStorage.getItem(PENDING_TITLE_NOTIFICATION_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as TitleAwardNotification;
+    if (!parsed || !Array.isArray(parsed.items)) return null;
+
+    const items = parsed.items.filter((item) => item && typeof item.id === "string" && typeof item.name === "string" && typeof item.rarity === "string");
+    return items.length > 0 ? { items } : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearPendingTitleAwardNotification() {
+  try {
+    sessionStorage.removeItem(PENDING_TITLE_NOTIFICATION_KEY);
+  } catch { }
+}
+
+function stashPendingIconAwardNotification(notification: IconAwardNotification) {
+  if (!notification.items.length) return;
+  try {
+    sessionStorage.setItem(PENDING_ICON_NOTIFICATION_KEY, JSON.stringify(notification));
+  } catch { }
+}
+
+function readPendingIconAwardNotification(): IconAwardNotification | null {
+  try {
+    const raw = sessionStorage.getItem(PENDING_ICON_NOTIFICATION_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as IconAwardNotification;
+    if (!parsed || !Array.isArray(parsed.items)) return null;
+
+    const items = parsed.items.filter((item) => item && typeof item.id === "string" && typeof item.name === "string");
+    return items.length > 0 ? { items } : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearPendingIconAwardNotification() {
+  try {
+    sessionStorage.removeItem(PENDING_ICON_NOTIFICATION_KEY);
+  } catch { }
+}
+
+function completeTitleNotificationSessionWithMockAwards() {
+  if (isGuestSession) return;
+  if (!hasActiveTitleNotificationSession()) return;
+
+  stashPendingTitleAwardNotification(MOCK_TITLE_AWARD_NOTIFICATION);
+  stashPendingIconAwardNotification(MOCK_ICON_AWARD_NOTIFICATION);
+  endTitleNotificationSession();
+}
+
 
 function consumeForceHomeScreen(): boolean {
   try {
@@ -23,10 +133,23 @@ function consumeForceHomeScreen(): boolean {
   }
 }
 
-const hasInitialRoom = !!new URLSearchParams(location.search).get("room");
+const initialRoomId = new URLSearchParams(location.search).get("room");
+const hasInitialRoom = !!initialRoomId;
+const hasInitialHostToken = (() => {
+  if (!initialRoomId) return false;
+  try {
+    return !!sessionStorage.getItem(`hostToken:${initialRoomId}`);
+  } catch {
+    return false;
+  }
+})();
 const forceInitialHome = consumeForceHomeScreen();
-let screen: Screen = hasInitialRoom || forceInitialHome ? "HOME" : "TITLE";
+let screen: Screen = forceInitialHome || (hasInitialRoom && hasInitialHostToken) ? "HOME" : hasInitialRoom ? "MP_GATE" : "TITLE";
 let state: GameState | null = null;
+let loadingConfig: LoadingScreenConfig | null = null;
+let loadingTargetScreen: "USER_HOME" | "HOME" | null = null;
+let loadingTimerId: number | null = null;
+let isGuestSession = false;
 
 type MpSession = {
   roomId: string;
@@ -68,24 +191,81 @@ function stashNoticeForNextHomeRender(notice: { title?: string; message: string 
 }
 
 const MP_API_BASE = String((import.meta as any).env?.VITE_MP_API_BASE || "http://127.0.0.1:8787");
+const TITLE_LOADING_MIN_MS = 4000;
+const TITLE_LOADING_MAX_MS = 5500;
+
+function pickTitleLoadingDelayMs(): number {
+  return Math.floor(Math.random() * (TITLE_LOADING_MAX_MS - TITLE_LOADING_MIN_MS + 1)) + TITLE_LOADING_MIN_MS;
+}
+
+function clearTitleLoadingTimer() {
+  if (loadingTimerId != null) {
+    window.clearTimeout(loadingTimerId);
+    loadingTimerId = null;
+  }
+}
+
+function startTitleLoading(mode: "AUTHENTICATED" | "GUEST", targetScreen: "USER_HOME" | "HOME") {
+  clearTitleLoadingTimer();
+  stopTurnLimit();
+
+  isGuestSession = mode === "GUEST";
+  loadingConfig = createLoadingConfig(mode);
+  loadingTargetScreen = targetScreen;
+  screen = "LOADING";
+  draw();
+
+  loadingTimerId = window.setTimeout(() => {
+    loadingTimerId = null;
+    if (screen !== "LOADING") return;
+
+    const nextScreen = loadingTargetScreen ?? "HOME";
+    loadingConfig = null;
+    loadingTargetScreen = null;
+    screen = nextScreen;
+    draw();
+  }, pickTitleLoadingDelayMs());
+}
+
+function startTitleLoadingToUserHome() {
+  startTitleLoading("AUTHENTICATED", "USER_HOME");
+}
+
+function startTitleLoadingToGuestGameSettings() {
+  startTitleLoading("GUEST", "HOME");
+}
+
+function cancelMpGateToTitle() {
+  clearTitleLoadingTimer();
+  isGuestSession = false;
+  loadingConfig = null;
+  loadingTargetScreen = null;
+  screen = "TITLE";
+  try {
+    const next = location.pathname + (location.hash ?? "");
+    history.replaceState(null, "", next);
+  } catch { }
+  draw();
+}
+
 
 // ソロ時にホームで選んだアイコンを引き継ぐ
 let soloIconId = "player_default";
 
 function getSelectedHomeIconId(): string {
-  // 1) sessionStorage に入っていればそれを優先（将来拡張用）
-  const s = sessionStorage.getItem("solo_iconId") || sessionStorage.getItem("selectedIconId");
-  if (s && typeof s === "string") return s;
-
-  // 2) HOMEのアイコンボタン（実装に依存するが id=iconBtn を優先）
+  // 1) ゲーム設定画面で現在表示しているアイコンを優先する
   const btn = document.querySelector<HTMLButtonElement>("#iconBtn");
   const data = (btn as any)?.dataset;
   const d = data?.iconId || data?.icon;
   if (typeof d === "string" && d) return d;
 
-  // 3) 旧実装: select から拾う
+  // 2) 旧実装: select から拾う
   const sel = document.querySelector<HTMLSelectElement>("#iconSelect");
   if (sel?.value) return sel.value;
+
+  // 3) 旧実装: sessionStorage に入っていればそれを使う
+  const s = sessionStorage.getItem("solo_iconId") || sessionStorage.getItem("selectedIconId");
+  if (s && typeof s === "string") return s;
 
   // 4) 最後の手段: ボタンの絵文字から推定
   const emoji = (btn?.textContent ?? "").trim();
@@ -99,7 +279,7 @@ function getSelectedHomeIconId(): string {
   };
   if (emoji && map[emoji]) return map[emoji];
 
-  return "player_default";
+  return getUserIconId();
 }
 
 
@@ -137,6 +317,11 @@ function leaveMpToHome(session?: MpSession | null, notice?: { title?: string; me
     stashNoticeForNextHomeRender(notice);
   }
 
+  const shouldReturnToUserHome = !isGuestSession && !notice?.message;
+  if (shouldReturnToUserHome) {
+    completeTitleNotificationSessionWithMockAwards();
+  }
+
   const active = session ?? mp;
   if (active) {
     try {
@@ -150,9 +335,11 @@ function leaveMpToHome(session?: MpSession | null, notice?: { title?: string; me
     } catch { }
   }
 
+  const shouldReturnToTitle = isGuestSession && !notice?.message;
   mp = null;
+  isGuestSession = false;
   resetRenderTransientState();
-  screen = "HOME";
+  screen = shouldReturnToUserHome ? "USER_HOME" : shouldReturnToTitle ? "TITLE" : "HOME";
   state = null;
   draw();
 
@@ -183,7 +370,7 @@ function pickNpcThinkDelayMs(): number {
   return Math.floor(Math.random() * (NPC_THINK_MAX_MS - NPC_THINK_MIN_MS + 1)) + NPC_THINK_MIN_MS;
 }
 
-function playMpFrames(session: MpSession, frames: GameState[], intervalMs: number, seq: number) {
+function playMpFrames(session: MpSession, frames: GameState[], intervalMs: number, seq: number, intervalMsList?: number[]) {
   if (!Number.isFinite(seq)) return;
   if (seq <= mpLastSeq) return;
   mpLastSeq = seq;
@@ -206,7 +393,9 @@ function playMpFrames(session: MpSession, frames: GameState[], intervalMs: numbe
       draw();
 
       if (i < frames.length - 1) {
-        await sleep(intervalMs);
+        const frameIntervalMs = intervalMsList?.[i];
+        const delayMs = Number.isFinite(frameIntervalMs) ? Number(frameIntervalMs) : intervalMs;
+        await sleep(delayMs);
       }
     }
 
@@ -249,7 +438,10 @@ function attachMpWs(session: MpSession) {
       const seq = Number(raw.seq);
       const intervalMsRaw = Number(raw.intervalMs);
       const intervalMs = Number.isFinite(intervalMsRaw) ? intervalMsRaw : 250;
-      playMpFrames(session, raw.states as GameState[], intervalMs, seq);
+      const intervalMsList = Array.isArray(raw.intervalMsList)
+        ? raw.intervalMsList.map((v: unknown) => Number(v))
+        : undefined;
+      playMpFrames(session, raw.states as GameState[], intervalMs, seq, intervalMsList);
       return;
     }
 
@@ -288,7 +480,7 @@ function attachMpWs(session: MpSession) {
 
 let difficulty: Difficulty = "CASUAL";
 let homeConfig: HomeConfig = {
-  playerName: "プレイヤー",
+  playerName: getUserPlayerName(),
   difficulty: "CASUAL",
   gameType: 100,
 };
@@ -555,13 +747,16 @@ function startGame(cfg: HomeConfig) {
   uiLocked = false;
   stopTurnLimit();
 
-  const name = (cfg.playerName || "").trim() || "プレイヤー";
+  const name = (cfg.playerName || "").trim() || DEFAULT_USER_PLAYER_NAME;
   homeConfig = { ...cfg, playerName: name };
   difficulty = cfg.difficulty;
 
   soloIconId = getSelectedHomeIconId();
   state = createInitialState(name, cfg.gameType, soloIconId);
+  (state.seats[0] as any).isGuest = isGuestSession;
+  (state.seats[0] as any).titleName = isGuestSession ? "" : getSelectedUserTitleName();
   screen = "GAME";
+  loadingTargetScreen = null;
   beginGameStartOverlayPhase(true);
   draw();
 }
@@ -571,7 +766,13 @@ function goHome() {
   uiLocked = false;
   stopTurnLimit();
 
-  screen = "HOME";
+  const shouldReturnToUserHome = !isGuestSession;
+  if (shouldReturnToUserHome) {
+    completeTitleNotificationSessionWithMockAwards();
+  }
+
+  screen = shouldReturnToUserHome ? "USER_HOME" : "TITLE";
+  isGuestSession = false;
   state = null;
   stopMpDisbandWatch();
   draw();
@@ -582,9 +783,11 @@ function restartGame() {
   uiLocked = false;
   stopTurnLimit();
 
-  const name = (homeConfig.playerName || "").trim() || "プレイヤー";
+  const name = (homeConfig.playerName || "").trim() || DEFAULT_USER_PLAYER_NAME;
   stopMpDisbandWatch();
   state = createInitialState(name, homeConfig.gameType, soloIconId);
+  (state.seats[0] as any).isGuest = isGuestSession;
+  (state.seats[0] as any).titleName = isGuestSession ? "" : getSelectedUserTitleName();
   beginGameStartOverlayPhase(true);
   draw();
 }
@@ -770,7 +973,62 @@ function draw() {
 
     renderTitle(app, {
       onStart: () => {
+        startTitleLoadingToUserHome();
+      },
+      onGuestStart: () => {
+        startTitleLoadingToGuestGameSettings();
+      },
+    });
+
+    return;
+  }
+
+  if (screen === "MP_GATE") {
+    stopTurnLimit();
+
+    renderMpGate(app, {
+      onLoginJoin: () => {
+        startTitleLoading("AUTHENTICATED", "HOME");
+      },
+      onGuestJoin: () => {
+        startTitleLoading("GUEST", "HOME");
+      },
+      onCancel: () => {
+        cancelMpGateToTitle();
+      },
+    });
+
+    return;
+  }
+
+  if (screen === "LOADING") {
+    stopTurnLimit();
+    renderLoading(app, loadingConfig ?? createLoadingConfig("AUTHENTICATED"));
+    return;
+  }
+
+  if (screen === "USER_HOME") {
+    stopTurnLimit();
+
+    renderUserHome(app, {
+      titleAwardNotification: readPendingTitleAwardNotification(),
+      iconAwardNotification: readPendingIconAwardNotification(),
+      onTitleAwardNotificationClose: () => {
+        clearPendingTitleAwardNotification();
+      },
+      onIconAwardNotificationClose: () => {
+        clearPendingIconAwardNotification();
+      },
+      onGoGameSettings: () => {
+        isGuestSession = false;
+        homeConfig = { ...homeConfig, playerName: getUserPlayerName() };
+        beginTitleNotificationSession();
         screen = "HOME";
+        draw();
+      },
+      onGoTitle: () => {
+        isGuestSession = false;
+        screen = "TITLE";
         draw();
       },
     });
@@ -781,11 +1039,27 @@ function draw() {
   if (screen === "HOME") {
     stopTurnLimit();
 
-    renderHome(app, homeConfig, {
+    const gameSettingsConfig: HomeConfig = {
+      ...homeConfig,
+      playerName: isGuestSession ? homeConfig.playerName : getUserPlayerName(),
+      isGuest: isGuestSession,
+    };
+
+    renderHome(app, gameSettingsConfig, {
       onStart: (cfg) => startGame(cfg),
       onChange: (cfg) => {
         homeConfig = cfg;
         difficulty = cfg.difficulty;
+      },
+      onGoUserHome: () => {
+        isGuestSession = false;
+        screen = "USER_HOME";
+        draw();
+      },
+      onGoTitle: () => {
+        isGuestSession = false;
+        screen = "TITLE";
+        draw();
       },
       onEnterMpGame: (p, initial) => {
         stopTurnLimit();
@@ -810,6 +1084,10 @@ function draw() {
         state = rotateToMe(initial, p.seatIndex);
         (state as any).__mpSeatOffset = p.seatIndex;
         (state as any).__mpIsHost = p.isHost;
+
+        if (!isGuestSession) {
+          beginTitleNotificationSession();
+        }
 
         screen = "GAME";
 

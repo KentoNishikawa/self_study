@@ -4,17 +4,22 @@ import { DEFAULT_PLAYER_ICON_ID, PLAYER_ICON_PRESETS, iconContentHtml, resolveIc
 import { isSoundEnabled, playButtonSe, startButtonSe, toggleSound } from "../core/sound";
 import { validatePlayerName } from "../core/nameValidation";
 import { HOME_HOST_DISBANDED_NOTICE, getInviteExpiredNotice, getJoinFailedNotice, getLockedRoomNotice, getPreflightStatusNotice, getPreflightUnexpectedStatusNotice, getRoomFullNotice, renderMpNoticeModalHtml, setupMpNoticeModal, stashMpNotice, type MpNotice } from "./mpNotice";
+import { getSelectedUserTitleName } from "./userHome";
+import { getUserIconId, MAX_PLAYER_NAME_LENGTH } from "../core/userSettings";
 
 export type HomeConfig = {
   playerName: string;
   difficulty: Difficulty;
   gameType: GameType;
+  isGuest?: boolean;
 };
 
 type LobbySeat = {
   kind: "HOST" | "PLAYER" | "NPC";
   name: string;
   iconId: string;
+  isGuest?: boolean;
+  titleName?: string;
 };
 
 type LobbyState = {
@@ -31,6 +36,60 @@ type WelcomeMsg = { type: "WELCOME"; seatIndex: number; state: LobbyState };
 type RoomStateMsg = { type: "ROOM_STATE"; state: LobbyState };
 
 const SOUND_NOTICE_SHOWN_KEY = "100game.soundNoticeShown";
+
+type GameSettingsMenuKey = "privacy" | "terms" | "credits" | "contact";
+
+type GameSettingsMenuContent = {
+  title: string;
+  bodyHtml: string;
+  actionLabel?: string;
+  actionNote?: string;
+};
+
+const GAME_SETTINGS_MENU_CONTENT: Record<GameSettingsMenuKey, GameSettingsMenuContent> = {
+  privacy: {
+    title: "プライバシーポリシー",
+    bodyHtml: `
+      <p>本ゲームでは、サービスの提供や品質向上のため、プレイ状況やご利用環境に関する情報を取得する場合があります。</p>
+      <p>取得した情報は、ゲーム運営、障害対応、不具合調査、利用状況の分析などの目的で利用します。</p>
+      <p>法令に基づく場合を除き、取得した情報を第三者へ不当に提供することはありません。</p>
+      <p>プライバシーポリシーの内容は、必要に応じて見直し・更新することがあります。</p>
+    `,
+  },
+  terms: {
+    title: "利用規約",
+    bodyHtml: `
+      <p>本ゲームをご利用の際は、法令や公序良俗に反する行為、サービス運営を妨げる行為を行わないでください。</p>
+      <p>ゲーム内容、提供方法、公開情報は、予告なく変更または終了する場合があります。</p>
+      <p>本ゲームの利用に関連して発生した損害について、運営側は故意または重過失がある場合を除き責任を負いません。</p>
+      <p>詳細な利用条件は、正式公開時に必要に応じて更新します。</p>
+    `,
+  },
+  credits: {
+    title: "クレジット",
+    bodyHtml: `
+      <p><strong>タイトル</strong><br>100GAME⁺(100ゲームプラス)</p>
+      <p><strong>制作</strong><br>Acceble</p>
+      <p><strong>企画</strong><br>西川 拳人</p>
+      <p><strong>開発</strong><br>西川 拳人<br>車田 恭輔</p>
+      <p><strong>イラスト提供</strong><br>Shake</p>
+      <p><strong>サービス運用設計</strong><br>野上 玲旺</p>
+      <p><strong>使用技術</strong><br>TypeScript / Vite / Cloudflare</p>
+      <p><strong>お問い合わせ</strong><br>support@acceble.com</p>
+      <p>© 2026 Acceble. All Rights Reserved.</p>
+      <p><small>Version 1.0.0</small></p>
+    `,
+  },
+  contact: {
+    title: "お問い合わせ",
+    bodyHtml: `
+      <p>100GAME⁺に関する不具合報告、ご意見・ご要望、その他のお問い合わせは専用ページからお送りください。</p>
+      <p>いただいた内容を確認のうえ、必要に応じて運営より返信する場合があります。</p>
+      <p><a href="./contact.html">お問い合わせページはこちら</a></p>
+      <p>※現在のタブでお問い合わせページへ移動します。</p>
+    `,
+  },
+};
 
 function hasShownSoundNotice() {
   try {
@@ -86,6 +145,17 @@ function shortName(name: string) {
   return chars.slice(0, 6).join("") + "…";
 }
 
+function truncateText(text: string, maxChars: number) {
+  const chars = Array.from(text.trim());
+  if (chars.length <= maxChars) return text.trim();
+  return chars.slice(0, Math.max(0, maxChars - 1)).join("") + "…";
+}
+
+function lobbyTitleName(seat: LobbySeat) {
+  if (seat.kind === "NPC" || seat.isGuest) return "";
+  return (seat.titleName ?? getSelectedUserTitleName()).trim();
+}
+
 function defaultPlayerName(seatIndex: number | null, isConnected: boolean) {
   if (!isConnected) return "プレイヤー";
   if (seatIndex === 0) return "HOST";
@@ -99,6 +169,8 @@ export function renderHome(
   handlers: {
     onStart: (cfg: HomeConfig) => void;
     onChange: (cfg: HomeConfig) => void;
+    onGoUserHome: () => void;
+    onGoTitle: () => void;
     onEnterMpGame: (
       p: { ws: WebSocket; roomId: string; seatIndex: number; isHost: boolean; npcDifficulty: Difficulty },
       initial: GameState
@@ -117,13 +189,10 @@ export function renderHome(
   let draftOrder: number[] = [];
 
   let pendingRedirect = false;
+  let pendingLeaveDestination: "TITLE" | "USER_HOME" | null = null;
   let committedName = config.playerName;
   const FORCE_HOME_SCREEN_KEY = "100game.forceHomeScreen";
-  const ICON_STORAGE_KEY = "100game.iconId";
-  let localIconId = DEFAULT_PLAYER_ICON_ID;
-  try {
-    localIconId = resolveIconId(localStorage.getItem(ICON_STORAGE_KEY) ?? DEFAULT_PLAYER_ICON_ID);
-  } catch { }
+  let localIconId = config.isGuest ? DEFAULT_PLAYER_ICON_ID : getUserIconId();
 
 
   const redirectToHome = (forceHomeScreen = false) => {
@@ -190,9 +259,31 @@ export function renderHome(
     mpNoticeModal.show(HOME_HOST_DISBANDED_NOTICE, { hideTitle: true });
   };
 
-  const leaveOrDisbandAndRedirect = () => {
+  const getLeaveRoomButtonText = (isHost: boolean) => {
+    if (isHost) return "部屋を解散する";
+
+    const destinationText = config.isGuest ? "タイトル" : "ホーム";
+    return `部屋から抜けて${destinationText}へ`;
+  };
+
+  const navigateAfterLeaveRoom = () => {
+    const destination = pendingLeaveDestination ?? (config.isGuest ? "TITLE" : "USER_HOME");
+    pendingLeaveDestination = null;
+
+    if (destination === "TITLE") {
+      handlers.onGoTitle();
+      return;
+    }
+
+    handlers.onGoUserHome();
+  };
+
+  const leaveOrDisbandAndNavigate = () => {
+    pendingLeaveDestination = config.isGuest ? "TITLE" : "USER_HOME";
+
     if (!ws || ws.readyState !== WebSocket.OPEN || mySeatIndex == null) {
-      redirectToHome(true);
+      resetLobbyConnectionState();
+      navigateAfterLeaveRoom();
       return;
     }
 
@@ -201,12 +292,52 @@ export function renderHome(
     ws.send(JSON.stringify({ type: mySeatIndex === 0 ? "HOST_DISBAND" : "LEAVE" }));
 
     setTimeout(() => {
-      if (!pendingRedirect) return;
-      redirectToHome(true);
+      if (!pendingRedirect && !pendingLeaveDestination) return;
+      pendingRedirect = false;
+      resetLobbyConnectionState();
+      navigateAfterLeaveRoom();
     }, 3000);
   };
 
+  const showHomeReturnInMenu = !config.isGuest;
+
   app.innerHTML = `
+
+    <div class="gameSettingsTopActions">
+      <button id="soundToggleBtn" class="soundBtn gameSettingsSoundBtn" type="button" aria-label="音の切り替え">🔊</button>
+      <button id="gameSettingsMenuBtn" class="titleMenuBtn gameSettingsMenuBtn" type="button" aria-label="メニュー" aria-expanded="false">≡</button>
+    </div>
+
+    <div id="gameSettingsMenuOverlay" class="titleMenuOverlay" aria-hidden="true">
+      <div id="gameSettingsMenuPanel" class="titleMenuPanel" role="menu" aria-label="ゲーム設定メニュー">
+        <div class="titleMenuPanelHead">
+          <div class="titleMenuPanelTitle">MENU</div>
+          <button id="gameSettingsMenuClose" class="titleMenuClose" type="button" aria-label="メニューを閉じる">×</button>
+        </div>
+        ${showHomeReturnInMenu ? `<button id="gameSettingsBackHomeBtn" class="titleMenuItem" type="button">ホームに戻る</button>` : ""}
+        <button class="titleMenuItem" type="button" data-game-settings-modal-key="privacy">プライバシーポリシー</button>
+        <button class="titleMenuItem" type="button" data-game-settings-modal-key="terms">利用規約</button>
+        <button class="titleMenuItem" type="button" data-game-settings-modal-key="credits">クレジット</button>
+        <button class="titleMenuItem" type="button" data-game-settings-modal-key="contact">お問い合わせ</button>
+        <button id="gameSettingsBackTitleBtn" class="titleMenuItem" type="button">タイトルへ戻る</button>
+      </div>
+    </div>
+
+    <div id="gameSettingsInfoModal" class="titleInfoModal" aria-hidden="true">
+      <div id="gameSettingsInfoDialog" class="titleInfoDialog" role="dialog" aria-modal="true" aria-labelledby="gameSettingsInfoHeading">
+        <div class="titleInfoHeader">
+          <div id="gameSettingsInfoHeading" class="titleInfoHeading"></div>
+        </div>
+        <div id="gameSettingsInfoBody" class="titleInfoBody"></div>
+        <div id="gameSettingsInfoAction" class="titleInfoAction" style="display:none;">
+          <button id="gameSettingsInfoActionBtn" class="btn titleInfoActionBtn" type="button"></button>
+          <div id="gameSettingsInfoActionNote" class="titleInfoActionNote"></div>
+        </div>
+        <div class="titleInfoFooter">
+          <button id="gameSettingsInfoClose" class="btn" type="button">閉じる</button>
+        </div>
+      </div>
+    </div>
 
     <!-- 通知モーダル（満員など） -->
     ${renderMpNoticeModalHtml()}
@@ -247,9 +378,9 @@ export function renderHome(
     </div>
 
     <div class="panel">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:10px;">
         <div style="font-weight:950;min-width:0;">ゲーム設定</div>
-        <button id="soundToggleBtn" class="soundBtn" type="button" aria-label="音の切り替え">🔊</button>
+        ${config.isGuest ? `<span class="guestModeBadge">ゲスト</span>` : ""}
       </div>
 
       <div style="display:grid;gap:12px;">
@@ -282,7 +413,7 @@ export function renderHome(
             </div>
 
             <div style="display:flex;gap:8px;align-items:center;flex:1;">
-              <input id="playerName" class="input" style="flex:1;" value="${escapeHtml(config.playerName)}" />
+              <input id="playerName" class="input" style="flex:1;" value="${escapeHtml(config.playerName)}" maxlength="${MAX_PLAYER_NAME_LENGTH}" />
               <button id="nameCommitBtn" class="btn" type="button" style="white-space:nowrap;">決定</button>
             </div>
           </div>
@@ -345,7 +476,7 @@ export function renderHome(
         <!-- 高さ固定：招待URL生成前後でDOMが増減して下の参加者一覧がズレないようにする -->
         <button id="leaveRoomBtn" class="btn" type="button"
           style="width:100%; display:block; min-height:40px; visibility:hidden; pointer-events:none;">
-          部屋から抜けてホームへ
+          部屋から抜けて${config.isGuest ? "タイトル" : "ホーム"}へ
         </button>
       </div>
     </div>
@@ -374,6 +505,21 @@ export function renderHome(
   const iconOptButtons = Array.from(app.querySelectorAll<HTMLButtonElement>(".iconOpt"));
 
   const soundBtn = app.querySelector<HTMLButtonElement>("#soundToggleBtn")!;
+  const gameSettingsMenuBtn = app.querySelector<HTMLButtonElement>("#gameSettingsMenuBtn")!;
+  const gameSettingsMenuOverlay = app.querySelector<HTMLDivElement>("#gameSettingsMenuOverlay")!;
+  const gameSettingsMenuPanel = app.querySelector<HTMLDivElement>("#gameSettingsMenuPanel")!;
+  const gameSettingsMenuClose = app.querySelector<HTMLButtonElement>("#gameSettingsMenuClose")!;
+  const gameSettingsBackHomeBtn = app.querySelector<HTMLButtonElement>("#gameSettingsBackHomeBtn");
+  const gameSettingsBackTitleBtn = app.querySelector<HTMLButtonElement>("#gameSettingsBackTitleBtn")!;
+  const gameSettingsInfoModal = app.querySelector<HTMLDivElement>("#gameSettingsInfoModal")!;
+  const gameSettingsInfoDialog = app.querySelector<HTMLDivElement>("#gameSettingsInfoDialog")!;
+  const gameSettingsInfoHeading = app.querySelector<HTMLDivElement>("#gameSettingsInfoHeading")!;
+  const gameSettingsInfoBody = app.querySelector<HTMLDivElement>("#gameSettingsInfoBody")!;
+  const gameSettingsInfoAction = app.querySelector<HTMLDivElement>("#gameSettingsInfoAction")!;
+  const gameSettingsInfoActionBtn = app.querySelector<HTMLButtonElement>("#gameSettingsInfoActionBtn")!;
+  const gameSettingsInfoActionNote = app.querySelector<HTMLDivElement>("#gameSettingsInfoActionNote")!;
+  const gameSettingsInfoClose = app.querySelector<HTMLButtonElement>("#gameSettingsInfoClose")!;
+  const gameSettingsMenuItems = Array.from(app.querySelectorAll<HTMLButtonElement>("[data-game-settings-modal-key]"));
   const homeSoundNoticeModal = app.querySelector<HTMLDivElement>("#homeSoundNoticeModal")!;
   const homeSoundNoticeDialog = app.querySelector<HTMLDivElement>("#homeSoundNoticeDialog")!;
   const homeSoundNoticeClose = app.querySelector<HTMLButtonElement>("#homeSoundNoticeClose")!;
@@ -405,12 +551,132 @@ export function renderHome(
 
   updateSoundButton();
 
+  const setGameSettingsMenuOpen = (open: boolean) => {
+    gameSettingsMenuOverlay.classList.toggle("is-open", open);
+    gameSettingsMenuOverlay.setAttribute("aria-hidden", open ? "false" : "true");
+    gameSettingsMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+
+    if (!open) return;
+
+    const isMobileMenu = window.matchMedia?.("(orientation: portrait) and (max-width: 820px)")?.matches ?? false;
+    if (isMobileMenu) {
+      gameSettingsMenuPanel.style.top = "";
+      gameSettingsMenuPanel.style.left = "";
+      gameSettingsMenuPanel.style.right = "";
+      return;
+    }
+
+    const rect = gameSettingsMenuBtn.getBoundingClientRect();
+    const panelWidth = gameSettingsMenuPanel.offsetWidth;
+    gameSettingsMenuPanel.style.top = `${Math.max(12, rect.top)}px`;
+    gameSettingsMenuPanel.style.left = `${Math.max(12, rect.right - panelWidth)}px`;
+    gameSettingsMenuPanel.style.right = "auto";
+  };
+
+  const closeGameSettingsMenu = () => setGameSettingsMenuOpen(false);
+
+  const setGameSettingsInfoOpen = (open: boolean) => {
+    gameSettingsInfoModal.classList.toggle("is-open", open);
+    gameSettingsInfoModal.setAttribute("aria-hidden", open ? "false" : "true");
+  };
+
+  const openGameSettingsInfo = (key: GameSettingsMenuKey) => {
+    const content = GAME_SETTINGS_MENU_CONTENT[key];
+    gameSettingsInfoHeading.textContent = content.title;
+    gameSettingsInfoBody.innerHTML = content.bodyHtml;
+
+    if (content.actionLabel) {
+      gameSettingsInfoAction.style.display = "grid";
+      gameSettingsInfoActionBtn.textContent = content.actionLabel;
+      gameSettingsInfoActionNote.textContent = content.actionNote ?? "";
+      gameSettingsInfoActionNote.style.display = content.actionNote ? "block" : "none";
+    } else {
+      gameSettingsInfoAction.style.display = "none";
+      gameSettingsInfoActionBtn.textContent = "";
+      gameSettingsInfoActionNote.textContent = "";
+      gameSettingsInfoActionNote.style.display = "none";
+    }
+
+    setGameSettingsInfoOpen(true);
+  };
+
+  const leaveCurrentLobbyForNavigation = () => {
+    if (ws && ws.readyState === WebSocket.OPEN && mySeatIndex != null) {
+      try {
+        ws.send(JSON.stringify({ type: mySeatIndex === 0 ? "HOST_DISBAND" : "LEAVE" }));
+      } catch { }
+    }
+    resetLobbyConnectionState();
+  };
+
   soundBtn.onclick = () => {
     const next = toggleSound();
     updateSoundButton();
     if (next) {
       playButtonSe();
     }
+  };
+
+  gameSettingsMenuBtn.onclick = () => {
+    playButtonSe();
+    setGameSettingsMenuOpen(!gameSettingsMenuOverlay.classList.contains("is-open"));
+  };
+
+  gameSettingsMenuClose.onclick = () => {
+    playButtonSe();
+    closeGameSettingsMenu();
+  };
+
+  gameSettingsMenuOverlay.onclick = (ev) => {
+    if (ev.target !== gameSettingsMenuOverlay) return;
+    closeGameSettingsMenu();
+  };
+
+  gameSettingsMenuPanel.onclick = (ev) => {
+    ev.stopPropagation();
+  };
+
+  gameSettingsBackHomeBtn?.addEventListener("click", () => {
+    playButtonSe();
+    closeGameSettingsMenu();
+    leaveCurrentLobbyForNavigation();
+    handlers.onGoUserHome();
+  });
+
+  gameSettingsBackTitleBtn.onclick = () => {
+    playButtonSe();
+    closeGameSettingsMenu();
+    leaveCurrentLobbyForNavigation();
+    handlers.onGoTitle();
+  };
+
+  for (const item of gameSettingsMenuItems) {
+    item.addEventListener("click", () => {
+      const key = item.dataset.gameSettingsModalKey as GameSettingsMenuKey | undefined;
+      if (!key) return;
+      playButtonSe();
+      closeGameSettingsMenu();
+      openGameSettingsInfo(key);
+    });
+  }
+
+  gameSettingsInfoActionBtn.onclick = () => {
+    playButtonSe();
+    window.location.href = new URL("./contact.html", window.location.href).toString();
+  };
+
+  gameSettingsInfoClose.onclick = () => {
+    playButtonSe();
+    setGameSettingsInfoOpen(false);
+  };
+
+  gameSettingsInfoModal.onclick = (ev) => {
+    if (ev.target !== gameSettingsInfoModal) return;
+    setGameSettingsInfoOpen(false);
+  };
+
+  gameSettingsInfoDialog.onclick = (ev) => {
+    ev.stopPropagation();
   };
 
   const setHomeSoundNoticeOpen = (open: boolean) => {
@@ -525,15 +791,24 @@ export function renderHome(
           ? `<span style="margin-left:6px;font-weight:950;">${CIRCLED[pickedAt] ?? ""}</span>`
           : "";
 
+        const titleName = lobbyTitleName(seat);
+        const guestBadge = seat.isGuest
+          ? `<span class="lobbyGuestBadge">ゲスト</span>`
+          : "";
+
         return `
           <div data-seat-index="${seatIndex}" style="display:flex;align-items:center;gap:10px;padding:10px;border:${border};border-radius:12px;background:${bg};cursor:${cursor};">
             <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
                         background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:16px;">
               ${iconContentHtml(seat.iconId, 45)}
             </div>
-            <div style="flex:1;font-weight:850;display:flex;align-items:center;gap:6px;">
-              <span>${escapeHtml(shortName(seat.name))}</span>
-              ${orderBadge}
+            <div style="flex:1;min-width:0;display:grid;gap:2px;">
+              <div style="font-weight:850;display:flex;align-items:center;gap:6px;min-width:0;">
+                <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(shortName(seat.name))}</span>
+                ${guestBadge}
+                ${orderBadge}
+              </div>
+              ${titleName ? `<div class="lobbyTitleName">称号：${escapeHtml(truncateText(titleName, 12))}</div>` : ""}
             </div>
             <div style="font-size:12px;opacity:0.75;">${escapeHtml(seatLabel(seatIndex))}</div>
           </div>
@@ -601,11 +876,11 @@ export function renderHome(
     if (isConnected) {
       leaveRoomBtn.style.visibility = "visible";
       leaveRoomBtn.style.pointerEvents = "auto";
-      leaveRoomBtn.textContent = isHost ? "部屋を解散してホームへ" : "部屋から抜けてホームへ";
+      leaveRoomBtn.textContent = getLeaveRoomButtonText(isHost);
     } else {
       leaveRoomBtn.style.visibility = "hidden";
       leaveRoomBtn.style.pointerEvents = "none";
-      leaveRoomBtn.textContent = "部屋から抜けてホームへ";
+      leaveRoomBtn.textContent = getLeaveRoomButtonText(false);
     }
 
     updateReorderHint();
@@ -640,7 +915,8 @@ export function renderHome(
     const result = validatePlayerName(nameEl.value);
     const hasDraft = nameEl.value !== committedName;
 
-    if (result === "ng") setNameError("この名前は使用できません");
+    if (result === "tooLong") setNameError(`名前は${MAX_PLAYER_NAME_LENGTH}文字以内で入力してください`);
+    else if (result === "ng") setNameError("この名前は使用できません");
     else setNameError(null);
 
     nameCommitBtn.disabled = result !== "ok" || !hasDraft;
@@ -660,7 +936,18 @@ export function renderHome(
 
   const commitName = () => {
     const result = validatePlayerName(nameEl.value);
-    if (result !== "ok") return;
+    if (result === "empty") {
+      setNameError("名前を入力してください");
+      return;
+    }
+    if (result === "tooLong") {
+      setNameError(`名前は${MAX_PLAYER_NAME_LENGTH}文字以内で入力してください`);
+      return;
+    }
+    if (result === "ng") {
+      setNameError("この名前は使用できません");
+      return;
+    }
 
     const nextName = nameEl.value.trim();
     committedName = nextName;
@@ -704,9 +991,6 @@ export function renderHome(
       const iconId = resolveIconId(btn.dataset.icon || DEFAULT_PLAYER_ICON_ID);
 
       localIconId = iconId;
-      try {
-        localStorage.setItem(ICON_STORAGE_KEY, iconId);
-      } catch { }
       iconBtn.dataset.iconId = iconId;
       iconBtn.innerHTML = iconContentHtml(iconId, 44);
       closePicker();
@@ -733,6 +1017,16 @@ export function renderHome(
     setStatus("connecting");
     ws = new WebSocket(wsUrl);
 
+    const syncGuestFlagToLobby = () => {
+      if (!ws || ws.readyState !== WebSocket.OPEN || mySeatIndex == null) return;
+      ws.send(JSON.stringify({ type: "UPDATE_GUEST", isGuest: !!config.isGuest }));
+      if (lobby?.seats?.[mySeatIndex]) {
+        lobby.seats[mySeatIndex].isGuest = !!config.isGuest;
+        if (config.isGuest) lobby.seats[mySeatIndex].titleName = "";
+        else lobby.seats[mySeatIndex].titleName = getSelectedUserTitleName();
+      }
+    };
+
     ws.onmessage = (ev) => {
       let raw: any;
       try {
@@ -742,6 +1036,13 @@ export function renderHome(
       }
 
       if (raw && raw.type === "ROOM_DISBANDED") {
+        if (pendingRedirect || pendingLeaveDestination) {
+          pendingRedirect = false;
+          resetLobbyConnectionState();
+          navigateAfterLeaveRoom();
+          return;
+        }
+
         handleHostDisbandedAtHome();
         return;
       }
@@ -787,6 +1088,7 @@ export function renderHome(
 
         inviteUrlEl.value = `${location.origin}?room=${lobby.roomId}`;
 
+        syncGuestFlagToLobby();
         renderParticipants(lobby);
         applyRole();
         return;
@@ -815,7 +1117,7 @@ export function renderHome(
     };
 
     ws.onclose = (ev) => {
-      if (ev.reason === "disband" && !pendingRedirect) {
+      if (ev.reason === "disband" && !pendingRedirect && !pendingLeaveDestination) {
         handleHostDisbandedAtHome();
         return;
       }
@@ -827,9 +1129,10 @@ export function renderHome(
       renderParticipants(null);
       applyRole();
 
-      if (pendingRedirect) {
+      if (pendingRedirect || pendingLeaveDestination) {
         pendingRedirect = false;
-        redirectToHome(true);
+        resetLobbyConnectionState();
+        navigateAfterLeaveRoom();
       }
     };
 
@@ -929,6 +1232,10 @@ export function renderHome(
       setNameError("名前を入力してください");
       return;
     }
+    if (validation === "tooLong") {
+      setNameError(`名前は${MAX_PLAYER_NAME_LENGTH}文字以内で入力してください`);
+      return;
+    }
     if (validation === "ng") {
       setNameError("この名前は使用できません");
       return;
@@ -990,7 +1297,7 @@ export function renderHome(
 
   leaveRoomBtn.onclick = () => {
     playButtonSe();
-    leaveOrDisbandAndRedirect();
+    leaveOrDisbandAndNavigate();
   };
 
   const isMobile = () => window.matchMedia("(max-width: 520px)").matches;

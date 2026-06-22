@@ -37,6 +37,8 @@ export type Seat = {
   name: string;
   hand: Card[];
   iconId?: string; // ★ホームで選んだアイコンID（任意）
+  isGuest?: boolean;
+  titleName?: string;
 };
 
 export type GameResult =

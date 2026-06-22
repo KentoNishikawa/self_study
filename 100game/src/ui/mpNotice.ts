@@ -126,13 +126,13 @@ export function getPreflightStatusNotice(status: number, hasHostToken: boolean):
     if (status === 410) {
         return hasHostToken
             ? { message: "マルチプレイを終了しました。ホーム画面へ戻ります。" }
-            : { message: "HOSTが部屋を解散しました。ホーム画面に戻ります。" };
+            : { message: "HOSTが部屋を解散しました。タイトル画面に戻ります。" };
     }
 
     if (status === 404) {
         return hasHostToken
             ? { message: "マルチプレイを終了しました。ホーム画面へ戻ります。" }
-            : { message: "roomが見つからないため入室できませんでした。ホーム画面に戻ります" };
+            : { message: "roomが見つからないため入室できませんでした。タイトル画面に戻ります。" };
     }
 
     return null;
@@ -141,21 +141,21 @@ export function getPreflightStatusNotice(status: number, hasHostToken: boolean):
 export function getPreflightUnexpectedStatusNotice(hasHostToken: boolean): MpNotice {
     return hasHostToken
         ? { message: "マルチプレイが終了しました。ホーム画面へ戻ります。" }
-        : { message: "入室できませんでした。ホーム画面に戻ります" };
+        : { message: "入室できませんでした。タイトル画面に戻ります。" };
 }
 
 export function getInviteExpiredNotice(): MpNotice {
-    return { message: "招待URLの期限が切れているため入室できませんでした。ホーム画面に戻ります" };
+    return { message: "招待URLの期限が切れているため入室できませんでした。タイトル画面に戻ります。" };
 }
 
 export function getLockedRoomNotice(): MpNotice {
-    return { message: "ゲームが開始済みのため入室できませんでした。ホーム画面に戻ります" };
+    return { message: "ゲームが開始済みのため入室できませんでした。タイトル画面に戻ります。" };
 }
 
 export function getRoomFullNotice(): MpNotice {
-    return { message: "roomが満員のため入室できませんでした。ホーム画面に戻ります" };
+    return { message: "roomが満員のため入室できませんでした。タイトル画面に戻ります。" };
 }
 
 export function getJoinFailedNotice(): MpNotice {
-    return { message: "入室できませんでした。ホーム画面に戻ります" };
+    return { message: "入室できませんでした。タイトル画面に戻ります。" };
 }

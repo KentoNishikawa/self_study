@@ -167,10 +167,11 @@ const TITLE_MODAL_CONTENT: Record<TitleModalKey, TitleModalContent> = {
   },
 };
 
-export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void }) {
+export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void; onGuestStart: () => void }) {
   app.innerHTML = `
     <div class="titleScreen">
       <div class="titleBackdrop" aria-hidden="true">
+        <img class="titleMainVisual" src="/assets/title-illustrations/00_title_load.png" alt="" />
         <div class="titleBackdropAmbient"></div>
         <div class="titleBackdropTable"></div>
         <div class="titleBackdropCards">${renderTitleBackdropCards()}</div>
@@ -209,6 +210,7 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
         <h1 class="appTitle titleHeroLogo">100GAME⁺</h1>
         <div class="titleHeroKana">100ゲームプラス</div>
         <button id="titleStartBtn" class="btn titleStartBtn" type="button">ゲームスタート</button>
+        <button id="titleGuestBtn" class="titleGuestBtn" type="button">ログインせずプレイ</button>
       </div>
 
       <div id="titleInfoModal" class="titleInfoModal" aria-hidden="true">
@@ -223,6 +225,22 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
           </div>
           <div class="titleInfoFooter">
             <button id="titleInfoClose" class="btn" type="button">閉じる</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="titleGuestConfirmModal" class="noticeModalOverlay" aria-hidden="true">
+        <div id="titleGuestConfirmDialog" class="noticeModalDialog is-compact" role="dialog" aria-modal="true" aria-labelledby="titleGuestConfirmHeading">
+          <div class="noticeModalHeader">
+            <div id="titleGuestConfirmHeading" class="noticeModalHeading">ログインせずプレイしますか？</div>
+          </div>
+          <div class="noticeModalBody is-center">
+            <p>ログインせずにプレイする場合、戦績・称号・アイコン等の取得状況は保存されません。</p>
+            <p>ログイン後にゲストプレイ中の内容を引き継ぐことはできません。</p>
+          </div>
+          <div class="noticeModalFooter titleGuestConfirmFooter">
+            <button id="titleGuestConfirmStart" class="btn" type="button">ログインせずプレイ</button>
+            <button id="titleGuestConfirmCancel" class="btn secondary" type="button">キャンセル</button>
           </div>
         </div>
       </div>
@@ -245,6 +263,7 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
   `;
 
   const startBtn = app.querySelector<HTMLButtonElement>("#titleStartBtn");
+  const guestBtn = app.querySelector<HTMLButtonElement>("#titleGuestBtn");
   const soundBtn = app.querySelector<HTMLButtonElement>("#titleSoundBtn");
   const menuBtn = app.querySelector<HTMLButtonElement>("#titleMenuBtn");
   const menuOverlay = app.querySelector<HTMLDivElement>("#titleMenuOverlay");
@@ -252,6 +271,10 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
   const menuClose = app.querySelector<HTMLButtonElement>("#titleMenuClose");
   const modal = app.querySelector<HTMLDivElement>("#titleInfoModal");
   const modalDialog = app.querySelector<HTMLDivElement>("#titleInfoDialog");
+  const guestConfirmModal = app.querySelector<HTMLDivElement>("#titleGuestConfirmModal");
+  const guestConfirmDialog = app.querySelector<HTMLDivElement>("#titleGuestConfirmDialog");
+  const guestConfirmStart = app.querySelector<HTMLButtonElement>("#titleGuestConfirmStart");
+  const guestConfirmCancel = app.querySelector<HTMLButtonElement>("#titleGuestConfirmCancel");
   const soundNoticeModal = app.querySelector<HTMLDivElement>("#titleSoundNoticeModal");
   const soundNoticeDialog = app.querySelector<HTMLDivElement>("#titleSoundNoticeDialog");
   const soundNoticeClose = app.querySelector<HTMLButtonElement>("#titleSoundNoticeClose");
@@ -265,6 +288,7 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
 
   if (
     !startBtn ||
+    !guestBtn ||
     !soundBtn ||
     !menuBtn ||
     !menuOverlay ||
@@ -272,6 +296,10 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
     !menuClose ||
     !modal ||
     !modalDialog ||
+    !guestConfirmModal ||
+    !guestConfirmDialog ||
+    !guestConfirmStart ||
+    !guestConfirmCancel ||
     !soundNoticeModal ||
     !soundNoticeDialog ||
     !soundNoticeClose ||
@@ -321,6 +349,15 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
     modal.setAttribute("aria-hidden", open ? "false" : "true");
   };
 
+  const setGuestConfirmOpen = (open: boolean) => {
+    guestConfirmModal.classList.toggle("is-open", open);
+    guestConfirmModal.setAttribute("aria-hidden", open ? "false" : "true");
+  };
+
+  const closeGuestConfirm = () => {
+    setGuestConfirmOpen(false);
+  };
+
   const setSoundNoticeOpen = (open: boolean) => {
     soundNoticeModal.classList.toggle("is-open", open);
     soundNoticeModal.setAttribute("aria-hidden", open ? "false" : "true");
@@ -356,6 +393,31 @@ export function renderTitle(app: HTMLDivElement, handlers: { onStart: () => void
   startBtn.addEventListener("click", () => {
     startButtonSe();
     handlers.onStart();
+  });
+
+  guestBtn.addEventListener("click", () => {
+    playButtonSe();
+    setGuestConfirmOpen(true);
+  });
+
+  guestConfirmStart.addEventListener("click", () => {
+    startButtonSe();
+    closeGuestConfirm();
+    handlers.onGuestStart();
+  });
+
+  guestConfirmCancel.addEventListener("click", () => {
+    playButtonSe();
+    closeGuestConfirm();
+  });
+
+  guestConfirmModal.addEventListener("click", (event) => {
+    if (event.target !== guestConfirmModal) return;
+    closeGuestConfirm();
+  });
+
+  guestConfirmDialog.addEventListener("click", (event) => {
+    event.stopPropagation();
   });
 
   soundBtn.addEventListener("click", () => {

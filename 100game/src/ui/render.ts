@@ -830,6 +830,24 @@ export function render(
       return chars.slice(0, 6).join("") + "…";
     };
 
+    const truncateText = (text: string, maxChars: number) => {
+      const chars = Array.from(text.trim());
+      if (chars.length <= maxChars) return text.trim();
+      return chars.slice(0, Math.max(0, maxChars - 1)).join("") + "…";
+    };
+
+    const playerTitleName = (seat: any) => {
+      if (!seat || seat.kind === "NPC" || seat.isGuest) return "";
+      return String(seat.titleName ?? "はじまりの挑戦者").trim();
+    };
+
+    const playerTitleSizeClass = (title: string) => {
+      const len = Array.from(title).length;
+      if (len >= 10) return "playerTitleLenLong";
+      if (len >= 7) return "playerTitleLenMedium";
+      return "playerTitleLenShort";
+    };
+
     if ((state as any).__showStartOverlay) {
       (state as any).__showStartOverlay = false;
       showGameStartOverlay(`${state.gameType}モード`, `${shortName(turnSeat.name)}のターンです`);
@@ -848,6 +866,8 @@ export function render(
     const isPlaying = state.result.status === "PLAYING";
     if (isPlaying) lastPlayedResultSeKey = null;
     const canOperate = isPlaying && state.turn === 0 && !uiLocked;
+    const isGuestPlayer = Boolean((me as any).isGuest);
+    const returnButtonLabel = isGuestPlayer ? "タイトルに戻る" : "ホーム画面に戻る";
     const shouldHideHandUntilTurnLimitStarts = Boolean((state as any).__hideHandUntilTurnLimitStarts);
 
     if (prevHideHandUntilTurnLimitStarts && !shouldHideHandUntilTurnLimitStarts && me.hand.length > 0) {
@@ -1005,13 +1025,23 @@ export function render(
             ${listSeats
         .map((s: any, idx: number) => {
           const isTurn = idx === listTurn;
+          const titleName = playerTitleName(s);
+          const displayTitleName = titleName ? truncateText(titleName, 12) : "";
+          const titleClass = displayTitleName ? playerTitleSizeClass(displayTitleName) : "";
+          const guestBadge = s.isGuest ? `<span class="playerGuestBadge">G</span>` : "";
           return `
-                  <div class=\"playerRow\">
-                    <div>
-                      <div class=\"name\" style=\"display:flex;align-items:center;gap:6px;\"><span style=\"width:18px;display:inline-flex;justify-content:center;\">${iconContentHtml((s as any).iconId, 30)}</span><span>${escapeHtml(shortName(s.name))}</span></div>
-                      <div class=\"muted\">手札 ${s.hand.length}枚</div>
+                  <div class="playerRow${isTurn ? " isTurn" : ""}">
+                    <div class="playerStatusMain">
+                      <div class="playerStatusTopLine">
+                        <span class="playerStatusIcon">${iconContentHtml((s as any).iconId, 30)}</span>
+                        <span class="name">${escapeHtml(shortName(s.name))}</span>
+                        ${guestBadge}
+                      </div>
+                      <div class="playerStatusBottomLine">
+                        <span class="muted">手札 ${s.hand.length}枚</span>
+                        ${displayTitleName ? `<span class="playerTitleBadge titleRarity1 ${titleClass}" title="${escapeHtml(titleName)}">${escapeHtml(displayTitleName)}</span>` : ""}
+                      </div>
                     </div>
-                    <div class=\"turn\" style=\"opacity:${isTurn ? 1 : 0};\">▶</div>
                   </div>
                 `;
         })
@@ -1031,7 +1061,7 @@ export function render(
         <div class="row">
           <button id="drawBtn" class="btn">山札から引いて即出し</button>
           <button id="restartBtn" class="btn">もう一度プレイする</button>
-          <button id="homeBtn" class="btn">ホーム画面に戻る</button>
+          <button id="homeBtn" class="btn">${returnButtonLabel}</button>
 
           <span style="color:rgba(255,255,255,0.65);font-weight:700;">
             ※操作できるのはあなたの手番だけ
@@ -1239,15 +1269,21 @@ export function render(
 
       const isMultiplayer = typeof mpIsHost === "boolean";
       const bodyHtml = isPlaying
-        ? "対戦中です。ホーム画面に戻りますか？"
+        ? isGuestPlayer
+          ? "対戦中です。タイトル画面に戻りますか？"
+          : "対戦中です。ホーム画面に戻りますか？"
         : isMultiplayer
-          ? "マルチプレイを終了してホームに戻りますか？<br>HOSTの場合は他プレイヤーもマルチプレイを終了します。"
-          : "ゲームを終了してホームに戻りますか？";
+          ? isGuestPlayer
+            ? "マルチプレイを終了してタイトルに戻りますか？<br>HOSTの場合は他プレイヤーもマルチプレイを終了します。"
+            : "マルチプレイを終了してホームに戻りますか？<br>HOSTの場合は他プレイヤーもマルチプレイを終了します。"
+          : isGuestPlayer
+            ? "ゲームを終了してタイトルに戻りますか？"
+            : "ゲームを終了してホームに戻りますか？";
 
       showActionConfirmModal({
-        title: "ホーム画面に戻る",
+        title: isGuestPlayer ? "タイトル画面に戻る" : "ホーム画面に戻る",
         bodyHtml,
-        confirmLabel: "ホームに戻る",
+        confirmLabel: isGuestPlayer ? "タイトルに戻る" : "ホームに戻る",
         onConfirm: () => {
           playButtonSe();
           handlers.onGoHome();

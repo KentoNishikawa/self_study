@@ -36,6 +36,9 @@ export type Seat = {
   kind: SeatKind;
   name: string;
   hand: Card[];
+  iconId?: string;
+  isGuest?: boolean;
+  titleName?: string;
 };
 
 export type GameResult =

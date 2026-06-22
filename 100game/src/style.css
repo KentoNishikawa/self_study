@@ -10,7 +10,7 @@
 :root {
   background: #0f1115;
   color: #e8e8ea;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+  font-family: "Meiryo UI", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
     "Segoe UI Emoji";
   line-height: 1.45;
 }
@@ -219,6 +219,16 @@ html {
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: #101522;
+}
+
+.playerRow.isTurn {
+  border-color: rgba(34, 197, 94, 0.86);
+  background:
+    linear-gradient(180deg, rgba(34, 197, 94, 0.13), rgba(34, 197, 94, 0.04)),
+    #101522;
+  box-shadow:
+    0 0 0 1px rgba(34, 197, 94, 0.34),
+    0 0 16px rgba(34, 197, 94, 0.24);
 }
 
 .playerRow .name {
@@ -797,13 +807,6 @@ html {
   shape-rendering: geometricPrecision;
 }
 
-.titleBackdropShade {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% 47%, rgba(7, 12, 22, 0.12), rgba(7, 12, 22, 0.30) 42%, rgba(4, 8, 16, 0.68) 100%),
-    linear-gradient(180deg, rgba(5, 8, 15, 0.70), rgba(5, 8, 15, 0.10) 22%, rgba(5, 8, 15, 0.22) 60%, rgba(5, 8, 15, 0.80));
-}
 
 .titleTopLinks {
   position: absolute;
@@ -1829,4 +1832,3001 @@ html {
     padding: 8px 10px;
     font-size: 12px;
   }
+}
+
+/* ---------- Phase4 mock: title/loading illustrations ---------- */
+.titleMainVisual {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  opacity: 1;
+}
+
+.titleMainVisual ~ .titleBackdropAmbient,
+.titleMainVisual ~ .titleBackdropTable,
+.titleMainVisual ~ .titleBackdropCards {
+  display: none;
+}
+
+.titleMainVisual ~ .titleBackdropShade {
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.20), rgba(0, 0, 0, 0.02) 34%, rgba(0, 0, 0, 0.46) 100%),
+    radial-gradient(circle at 50% 54%, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.35) 78%);
+}
+
+.titleHero {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(72px, 12vh, 132px);
+  transform: translateX(-50%);
+  padding: 0 18px;
+}
+
+.titleHeroLogo,
+.titleHeroKana {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.titleStartBtn {
+  min-width: min(340px, calc(100vw - 64px));
+  min-height: 58px;
+  border-radius: 999px;
+  border-color: rgba(255, 214, 128, 0.55);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
+    rgba(12, 16, 24, 0.88);
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.42),
+    0 0 22px rgba(255, 182, 58, 0.20);
+  backdrop-filter: blur(8px);
+}
+
+.loadingScreen {
+  position: relative;
+  width: 100vw;
+  min-height: 100vh;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #05070c;
+  font-family: "Meiryo UI", system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+.loadingVisual {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  transform: scale(1.01);
+}
+
+.loadingShade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.04) 42%, rgba(0, 0, 0, 0.72) 100%),
+    radial-gradient(circle at 50% 55%, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.44) 82%);
+}
+
+.loadingContent {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(26px, 6vh, 68px);
+  width: min(760px, calc(100vw - 38px));
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  color: #fff;
+  text-align: center;
+}
+
+.loadingLabel {
+  font-size: clamp(18px, 3.4vw, 34px);
+  font-weight: 950;
+  letter-spacing: 0.16em;
+  text-shadow: 0 12px 28px rgba(0, 0, 0, 0.52);
+}
+
+.loadingDots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  height: 14px;
+}
+
+.loadingDots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 214, 128, 0.92);
+  box-shadow: 0 0 14px rgba(255, 194, 74, 0.5);
+  animation: loadingDot 1.15s infinite ease-in-out;
+}
+
+.loadingDots span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.loadingDots span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes loadingDot {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.45; }
+  40% { transform: translateY(-5px); opacity: 1; }
+}
+
+.loadingTipBox {
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(8, 12, 20, 0.76);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(8px);
+  padding: 14px 16px;
+}
+
+.loadingTipLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  margin-bottom: 7px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 214, 128, 0.45);
+  color: rgba(255, 224, 156, 0.96);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+}
+
+.loadingTipText {
+  color: rgba(255, 255, 255, 0.90);
+  font-size: clamp(13px, 2vw, 16px);
+  font-weight: 800;
+  line-height: 1.65;
+}
+
+@media (max-width: 720px) {
+  .titleMainVisual,
+  .loadingVisual {
+    object-position: center center;
+  }
+
+  .titleHero {
+    bottom: 58px;
+  }
+
+  .loadingContent {
+    bottom: 22px;
+  }
+
+  .loadingTipBox {
+    padding: 12px 13px;
+  }
+}
+
+
+/* ---------- Phase4 mock: authenticated home / guest route ---------- */
+#app:has(.userHomeScreen),
+#app:has(.loadingScreen) {
+  max-width: none;
+  padding: 0;
+}
+
+.titleHero {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+
+.titleGuestBtn {
+  border: none;
+  background: rgba(8, 12, 20, 0.38);
+  color: rgba(255, 255, 255, 0.88);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 999px;
+  text-shadow: 0 8px 20px rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(6px);
+}
+
+.titleGuestBtn:hover {
+  color: #fff;
+  background: rgba(8, 12, 20, 0.58);
+}
+
+.titleGuestConfirmFooter {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.titleGuestConfirmFooter .btn {
+  width: min(190px, 44%);
+  min-height: 46px;
+}
+
+@media (max-width: 520px) {
+  .titleGuestConfirmFooter {
+    gap: 10px;
+  }
+
+  .titleGuestConfirmFooter .btn {
+    width: min(160px, 46%);
+    min-height: 44px;
+    padding-inline: 10px;
+    font-size: 13px;
+  }
+}
+
+.userHomeScreen {
+  min-height: 100vh;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  display: grid;
+  place-items: center;
+  padding: 24px 18px;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 214, 128, 0.16), transparent 38%),
+    radial-gradient(circle at 12% 82%, rgba(130, 98, 255, 0.14), transparent 34%),
+    linear-gradient(180deg, #111723 0%, #070a10 100%);
+  font-family: "Meiryo UI", system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+.userHomePanel {
+  width: min(720px, calc(100vw - 36px));
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(14, 18, 28, 0.82);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(10px);
+  padding: clamp(18px, 4vw, 34px);
+}
+
+.userHomeHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.userHomeEyebrow {
+  color: rgba(255, 218, 146, 0.92);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+  margin-bottom: 6px;
+}
+
+.userHomeTitle {
+  margin: 0;
+  font-size: clamp(26px, 6vw, 44px);
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+}
+
+.userHomeLead {
+  margin: 10px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 800;
+}
+
+.userHomeProfileCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(255, 255, 255, 0.055);
+  padding: 14px;
+  margin-bottom: 18px;
+}
+
+.userHomeAvatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 214, 128, 0.42);
+  background: rgba(255, 214, 128, 0.10);
+  color: rgba(255, 224, 160, 0.96);
+  font-size: 25px;
+  font-weight: 950;
+}
+
+.userHomeProfileText {
+  min-width: 0;
+}
+
+.userHomeName {
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.userHomeTitleLabel {
+  color: rgba(255, 255, 255, 0.70);
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 3px;
+}
+
+.userHomeMenuGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.userHomeMenuBtn {
+  min-height: 86px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.055);
+  color: #fff;
+  font-family: inherit;
+  font-size: clamp(15px, 3.6vw, 19px);
+  font-weight: 950;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  gap: 6px;
+}
+
+.userHomeMenuBtn.is-primary {
+  border-color: rgba(255, 214, 128, 0.48);
+  background:
+    linear-gradient(180deg, rgba(255, 214, 128, 0.20), rgba(255, 214, 128, 0.05)),
+    rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 24px rgba(255, 184, 66, 0.12);
+}
+
+.userHomeMenuBtn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.userHomeMenuIcon {
+  color: rgba(255, 222, 154, 0.96);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.guestModeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 214, 128, 0.42);
+  background: rgba(255, 214, 128, 0.12);
+  color: rgba(255, 224, 160, 0.96);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .userHomeIconList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .userHomeLoadingIllustrationList {
+    grid-template-columns: 1fr;
+  }
+
+  .userHomeCollectionTile {
+    min-height: 104px;
+    border-radius: 16px;
+    padding: 10px 8px;
+  }
+
+  .userHomeIconTileImage,
+  .userHomeCollectionLock {
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+  }
+
+  .loadingIllustrationDetailOuter {
+    grid-template-rows: 168px minmax(0, 1fr);
+  }
+
+  .collectionDetailIconPreview {
+    width: 104px;
+    height: 104px;
+    border-radius: 28px;
+  }
+
+  .userHomeMenuGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .userHomeMenuBtn {
+    min-height: 72px;
+  }
+}
+
+/* ---------- Phase4 mock: user home redesign ---------- */
+.titleGuestConfirmFooter .btn {
+  padding: 0 18px 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+}
+
+.userHomeTopActions {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.userHomeMenuBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.userHomeSoundBtn {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  font-size: 22px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+}
+
+.userHomeScreen {
+  position: relative;
+  overflow: hidden;
+}
+
+.userHomeAmbient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(255, 214, 128, 0.18), transparent 28%),
+    radial-gradient(circle at 16% 72%, rgba(52, 211, 153, 0.12), transparent 30%),
+    radial-gradient(circle at 84% 78%, rgba(129, 140, 248, 0.13), transparent 32%);
+}
+
+.userHomeLayout {
+  position: relative;
+  z-index: 2;
+  width: min(1080px, calc(100vw - 36px));
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(320px, 1fr) minmax(220px, 280px);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.userHomeMainPanel,
+.userHomeProfileCard,
+.userHomeNoticeCard {
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(14, 18, 28, 0.80);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.46);
+  backdrop-filter: blur(10px);
+}
+
+.userHomeMainPanel {
+  padding: clamp(22px, 4vw, 40px);
+  display: grid;
+  align-content: center;
+  text-align: center;
+}
+
+.userHomeProfileCard,
+.userHomeNoticeCard {
+  min-height: 270px;
+  padding: 20px;
+  align-self: center;
+}
+
+.userHomeProfileCard {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 0;
+}
+
+.userHomeAvatar {
+  width: 78px;
+  height: 78px;
+  margin-bottom: 14px;
+  font-size: 34px;
+}
+
+.userHomeTitle {
+  margin: 0;
+  font-size: clamp(32px, 6vw, 58px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.userHomeLead {
+  margin: 12px auto 22px;
+  max-width: 470px;
+}
+
+.userHomePlayBtn {
+  width: min(520px, 100%);
+  min-height: clamp(116px, 17vw, 152px);
+  margin: 0 auto;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 214, 128, 0.62);
+  background:
+    linear-gradient(180deg, rgba(255, 224, 154, 0.28), rgba(255, 184, 66, 0.08)),
+    rgba(255, 255, 255, 0.07);
+  color: #fff;
+  font-family: inherit;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.36),
+    0 0 32px rgba(255, 184, 66, 0.16);
+}
+
+.userHomePlayBtn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 224, 154, 0.86);
+  box-shadow:
+    0 28px 56px rgba(0, 0, 0, 0.42),
+    0 0 38px rgba(255, 184, 66, 0.24);
+}
+
+.userHomePlayIcon {
+  color: rgba(255, 231, 176, 0.98);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.userHomePlayText {
+  font-size: clamp(26px, 5vw, 40px);
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: 0.06em;
+}
+
+.userHomePlaySub {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.userHomeSubButtons {
+  width: min(520px, 100%);
+  margin: 14px auto 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.userHomeSubBtn {
+  min-height: 74px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.055);
+  color: #fff;
+  font-family: inherit;
+  font-size: clamp(15px, 3.2vw, 18px);
+  font-weight: 950;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.userHomeNoticeLabel {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 214, 128, 0.42);
+  color: rgba(255, 224, 160, 0.96);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+}
+
+.userHomeNoticeTitle {
+  margin-top: 14px;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.userHomeNoticeText {
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.70);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.75;
+}
+
+.userHomeNoticeDate {
+  margin-top: 6px;
+  color: rgba(255, 224, 160, 0.86);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+.userHomeNoticeMoreBtn {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 214, 128, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 214, 128, 0.16), rgba(255, 214, 128, 0.04)),
+    rgba(255, 255, 255, 0.055);
+  color: rgba(255, 237, 202, 0.96);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.userHomeNoticeMoreBtn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 224, 154, 0.72);
+  filter: brightness(1.06);
+}
+
+.userHomeAnnouncementBody {
+  line-height: 1.7;
+}
+
+.userHomeAnnouncementList {
+  display: grid;
+  gap: 10px;
+}
+
+.userHomeAnnouncementItem {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.045);
+  color: #fff;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 13px 14px;
+  display: grid;
+  gap: 5px;
+  text-align: left;
+}
+
+.userHomeAnnouncementItem:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 214, 128, 0.44);
+  background:
+    linear-gradient(180deg, rgba(255, 214, 128, 0.12), rgba(255, 214, 128, 0.035)),
+    rgba(255, 255, 255, 0.055);
+}
+
+.userHomeAnnouncementItemDate,
+.userHomeAnnouncementDetailDate {
+  color: rgba(255, 224, 160, 0.86);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+.userHomeAnnouncementItemTitle {
+  font-size: 15px;
+  font-weight: 950;
+  line-height: 1.45;
+}
+
+.userHomeAnnouncementDetailTitle {
+  margin: 6px 0 14px;
+  color: #fff;
+  font-size: clamp(20px, 4vw, 28px);
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+}
+
+.userHomeAnnouncementDetailBody p {
+  margin: 0 0 1em;
+}
+
+.userHomeAnnouncementDetailBody p:last-child {
+  margin-bottom: 0;
+}
+
+.userHomeAnnouncementFooter {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.userHomeAnnouncementFooter .btn {
+  width: 100%;
+}
+
+.userHomeAnnouncementBackBtn {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 900px) {
+  .userHomeIconList {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .userHomeLoadingIllustrationList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .userHomeLayout {
+    grid-template-columns: 1fr;
+    width: min(680px, calc(100vw - 32px));
+  }
+
+  .userHomeProfileCard,
+  .userHomeNoticeCard {
+    min-height: auto;
+  }
+
+  .userHomeProfileCard {
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .userHomeAvatar {
+    width: 58px;
+    height: 58px;
+    margin: 0;
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 520px) {
+  .userHomeTopActions {
+    top: 8px;
+    right: 8px;
+  }
+
+  .userHomeLayout {
+    padding-top: 44px;
+  }
+
+  .userHomeMainPanel,
+  .userHomeProfileCard,
+  .userHomeNoticeCard {
+    border-radius: 20px;
+  }
+
+  .userHomeSubButtons {
+    grid-template-columns: 1fr;
+  }
+
+  .titleGuestConfirmFooter .btn {
+    padding-inline: 10px;
+  }
+}
+
+/* ---------- Phase4 fix: user home top action button size ---------- */
+.userHomeTopActions .userHomeSoundBtn,
+.userHomeTopActions .userHomeMenuBtn {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  min-height: 46px;
+  flex: 0 0 46px;
+  padding: 0;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.userHomeTopActions .userHomeMenuBtn {
+  font-size: 24px;
+}
+
+/* ---------- Phase4: game settings top menu ---------- */
+.gameSettingsTopActions {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gameSettingsMenuBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gameSettingsTopActions .gameSettingsSoundBtn,
+.gameSettingsTopActions .gameSettingsMenuBtn {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  min-height: 46px;
+  flex: 0 0 46px;
+  padding: 0;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.gameSettingsTopActions .gameSettingsSoundBtn {
+  font-size: 22px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+}
+
+.gameSettingsTopActions .gameSettingsMenuBtn {
+  font-size: 24px;
+}
+
+@media (max-width: 520px) {
+  .gameSettingsTopActions {
+    top: 18px;
+    right: 18px;
+    gap: 10px;
+  }
+}
+
+/* ---------- Phase4 mock: guest/title display in lobby and player status ---------- */
+.lobbyGuestBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 214, 128, 0.42);
+  background: rgba(255, 214, 128, 0.12);
+  color: rgba(255, 224, 160, 0.96);
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.lobbyTitleName {
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerStatusMain {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.playerStatusTopLine {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.playerStatusIcon {
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 18px;
+}
+
+.playerStatusTopLine .name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerGuestBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 214, 128, 0.48);
+  background: rgba(255, 214, 128, 0.16);
+  color: rgba(255, 224, 160, 0.98);
+  font-size: 9px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.playerStatusBottomLine {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.playerStatusBottomLine .muted {
+  flex: 0 0 auto;
+}
+
+.playerTitleBadge {
+  position: relative;
+  margin-left: auto;
+  min-width: 0;
+  width: 14em;
+  max-width: 14em;
+  min-height: 18px;
+  padding: 2px 14px 3px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 214, 128, 0.44);
+  background:
+    linear-gradient(90deg,
+      rgba(255, 214, 128, 0.08),
+      rgba(255, 255, 255, 0.11) 50%,
+      rgba(255, 214, 128, 0.08)
+    ),
+    rgba(20, 24, 32, 0.74);
+  color: rgba(255, 235, 185, 0.96);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    0 0 8px rgba(255, 184, 66, 0.13);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.playerTitleBadge::before,
+.playerTitleBadge::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border: 1px solid currentColor;
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 0.82;
+  transform: translateY(-50%) rotate(45deg);
+  pointer-events: none;
+}
+
+.playerTitleBadge::before {
+  left: 5px;
+}
+
+.playerTitleBadge::after {
+  right: 5px;
+}
+
+.playerTitleBadge.titleRarity1 {
+  border-color: rgba(255, 214, 128, 0.46);
+  background:
+    linear-gradient(90deg,
+      rgba(255, 214, 128, 0.08),
+      rgba(255, 255, 255, 0.12) 50%,
+      rgba(255, 214, 128, 0.08)
+    ),
+    rgba(20, 24, 32, 0.76);
+  color: rgba(255, 235, 185, 0.96);
+}
+
+.playerTitleBadge.playerTitleLenShort {
+  font-size: 11px;
+}
+
+.playerTitleBadge.playerTitleLenMedium {
+  font-size: 10.2px;
+}
+
+.playerTitleBadge.playerTitleLenLong {
+  font-size: 9.4px;
+}
+
+@media (orientation: portrait) and (max-width: 820px) {
+  .playerStatusMain {
+    gap: 3px;
+  }
+
+  .playerStatusTopLine {
+    gap: 5px;
+  }
+
+  .playerStatusBottomLine {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .playerStatusBottomLine .muted {
+    justify-self: start;
+  }
+
+  .playerTitleBadge {
+    justify-self: stretch;
+    margin-left: 0;
+    width: 100%;
+    max-width: 100%;
+    min-height: 17px;
+    padding: 2px 9px 3px;
+  }
+
+  .playerGuestBadge {
+    min-width: 13px;
+    height: 13px;
+    padding: 0 3px;
+    font-size: 8px;
+  }
+
+  .playerTitleBadge.playerTitleLenShort {
+
+
+    font-size: 8.6px;
+
+
+  }
+
+.playerTitleBadge.playerTitleLenMedium {
+
+
+  font-size: 8.1px;
+
+
+}
+
+.playerTitleBadge.playerTitleLenLong {
+
+
+  font-size: 7.6px;
+
+
+}
+}
+
+/* ===== マルチ参加ゲート画面 ===== */
+.mpGateScreen {
+  align-items: center;
+  justify-items: center;
+}
+
+.mpGateModal {
+  position: relative;
+  z-index: 12;
+  width: min(560px, calc(100vw - 36px));
+  max-height: min(88vh, 760px);
+  overflow-y: auto;
+  padding: 70px 26px 22px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    linear-gradient(180deg, rgba(22, 28, 42, 0.96), rgba(10, 14, 22, 0.96));
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.mpGateHeader {
+  text-align: center;
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.mpGateEyebrow {
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.mpGateHeading {
+  margin: 0;
+  font-size: clamp(24px, 4.5vw, 34px);
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.mpGateLead {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.mpGateFormArea {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.mpGateField {
+  display: grid;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.mpGateInput {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.94);
+  padding: 0 14px;
+  font-size: 15px;
+  font-weight: 800;
+  outline: none;
+}
+
+.mpGateInput::placeholder {
+  color: rgba(255, 255, 255, 0.36);
+}
+
+.mpGateInput:focus {
+  border-color: rgba(96, 165, 250, 0.72);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+}
+
+.mpGateSubLinks {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.mpGateTextBtn {
+  border: 0;
+  background: transparent;
+  color: #93c5fd;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 6px 8px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.mpGateTextBtn:hover {
+  color: #bfdbfe;
+}
+
+.mpGateSubDivider {
+  color: rgba(255, 255, 255, 0.32);
+  font-size: 12px;
+}
+
+.mpGateMessage {
+  min-height: 18px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mpGateSoundBtn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 20px;
+}
+
+.mpGateActions {
+  display: grid;
+  gap: 10px;
+}
+
+.mpGateActions .btn {
+  width: 100%;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mpGatePrimaryBtn {
+  font-size: 16px;
+}
+
+.mpGateCancelBtn {
+  opacity: 0.86;
+}
+
+.mpGateGuestNote {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.7;
+  text-align: center;
+}
+
+@media (orientation: portrait) and (max-width: 820px) {
+  .mpGateModal {
+    width: min(420px, calc(100vw - 24px));
+    padding: 66px 18px 18px;
+    border-radius: 20px;
+  }
+
+  .mpGateLead {
+    font-size: 13px;
+  }
+
+  .mpGateInput {
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+
+  .mpGateSoundBtn {
+    top: 14px;
+    right: 14px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    font-size: 19px;
+  }
+
+  .mpGateActions .btn {
+    min-height: 46px;
+    font-size: 14px;
+  }
+}
+
+/* ===== User Home: Title Award Notification ===== */
+.userHomeTitleAwardDialog {
+  width: min(660px, calc(100vw - 40px));
+}
+
+.userHomeTitleAwardBody {
+  display: grid;
+  gap: 14px;
+}
+
+.userHomeTitleAwardLead {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.65;
+}
+
+.userHomeTitleAwardList {
+  display: grid;
+  gap: 9px;
+}
+
+.userHomeTitleAwardItem {
+  min-height: 46px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 214, 128, 0.32);
+  background:
+    linear-gradient(90deg, rgba(255, 238, 184, 0.16), rgba(255, 255, 255, 0.055), rgba(255, 214, 128, 0.12)),
+    rgba(255, 255, 255, 0.045);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 10px 22px rgba(0, 0, 0, 0.18);
+  padding: 9px 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.userHomeTitleAwardName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(255, 248, 226, 0.98);
+  font-size: clamp(14px, 3vw, 17px);
+  font-weight: 950;
+  letter-spacing: 0.03em;
+}
+
+.userHomeTitleAwardRarity {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 224, 160, 0.44);
+  background: rgba(255, 214, 128, 0.11);
+  color: rgba(255, 236, 195, 0.96);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.userHomeTitleAwardMore {
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.65;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.userHomeIconAwardPreview {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 214, 128, 0.32);
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 230, 170, 0.24), transparent 52%),
+    rgba(255, 255, 255, 0.055);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 12px 26px rgba(0, 0, 0, 0.2);
+  padding: 20px 16px 18px;
+}
+
+.userHomeIconAwardImage {
+  width: 112px;
+  height: 112px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 236, 190, 0.38);
+  background: rgba(0, 0, 0, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 12px 22px rgba(0, 0, 0, 0.22);
+}
+
+.userHomeIconAwardDisplayName {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(255, 248, 226, 0.98);
+  font-size: clamp(16px, 3.8vw, 21px);
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+@media (orientation: portrait) and (max-width: 820px) {
+  .userHomeTitleAwardDialog {
+    width: min(430px, calc(100vw - 28px));
+  }
+
+  .userHomeTitleAwardItem {
+    min-height: 42px;
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .userHomeTitleAwardName {
+    font-size: 13px;
+  }
+
+  .userHomeTitleAwardRarity {
+    font-size: 10px;
+    padding: 2px 7px;
+  }
+}
+
+/* ===== Phase4: User Home Title Library ===== */
+.userHomeCurrentTitleBtn {
+  width: 100%;
+  margin-top: 10px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+}
+
+.userHomeCurrentTitleBtn:hover .playerTitleBadge {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.userHomeCurrentTitleCaption {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+}
+
+.userHomeCurrentTitleBtn .playerTitleBadge {
+  margin-left: 0;
+  width: min(100%, 15em);
+  max-width: 15em;
+  transition: transform 0.16s ease, filter 0.16s ease;
+}
+
+.userHomeLibraryBtn {
+  cursor: pointer;
+}
+
+.userHomeLibraryBtn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 214, 128, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 214, 128, 0.13), rgba(255, 214, 128, 0.04)),
+    rgba(255, 255, 255, 0.06);
+}
+
+.userHomeLibraryView {
+  position: relative;
+  z-index: 3;
+  width: min(1120px, calc(100vw - 36px));
+  display: none;
+}
+
+.userHomeScreen.is-library-open .userHomeLayout {
+  display: none;
+}
+
+.userHomeScreen.is-library-open .userHomeLibraryView {
+  display: block;
+}
+
+.userHomeLibraryPanel {
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 214, 128, 0.12), transparent 34%),
+    rgba(9, 10, 20, 0.86);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(10px);
+  padding: clamp(20px, 4vw, 34px);
+}
+
+.userHomeLibraryHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.userHomeLibraryTitle {
+  margin: 4px 0 0;
+  color: #fff;
+  font-size: clamp(34px, 6vw, 58px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.userHomeLibraryLead {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.7;
+}
+
+.userHomeLibraryBackBtn {
+  min-width: 132px;
+  border-color: rgba(255, 214, 128, 0.42);
+  background: rgba(255, 214, 128, 0.08);
+}
+
+.userHomeLibraryMenu {
+  margin-top: 24px;
+  display: grid;
+  gap: 14px;
+}
+
+.userHomeLibraryMenuCard {
+  width: 100%;
+  min-height: 86px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 214, 128, 0.30);
+  background:
+    linear-gradient(180deg, rgba(255, 214, 128, 0.12), rgba(255, 214, 128, 0.025)),
+    rgba(255, 255, 255, 0.052);
+  color: #fff;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  text-align: left;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.24);
+}
+
+.userHomeLibraryMenuCard:hover:not(.is-disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(255, 214, 128, 0.58);
+  background:
+    linear-gradient(180deg, rgba(255, 214, 128, 0.18), rgba(255, 214, 128, 0.045)),
+    rgba(255, 255, 255, 0.07);
+  box-shadow: 0 22px 46px rgba(0, 0, 0, 0.32);
+}
+
+.userHomeLibraryMenuCard.is-disabled {
+  cursor: default;
+  opacity: 0.54;
+  filter: grayscale(0.35);
+}
+
+.userHomeLibraryMenuIcon {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 214, 128, 0.30);
+  background: rgba(255, 214, 128, 0.10);
+  display: grid;
+  place-items: center;
+  color: rgba(255, 238, 202, 0.98);
+  font-size: 24px;
+  font-weight: 950;
+}
+
+.userHomeLibraryMenuText {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.userHomeLibraryMenuTitle {
+  color: rgba(255, 248, 226, 0.98);
+  font-size: clamp(20px, 3.2vw, 28px);
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.userHomeLibraryMenuLead {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.45;
+}
+
+.userHomeTitleLibraryContent,
+.userHomeCollectionLibraryContent {
+  display: none;
+}
+
+.userHomeLibraryView.is-title-list .userHomeLibraryMenu,
+.userHomeLibraryView.is-icon-list .userHomeLibraryMenu,
+.userHomeLibraryView.is-loading-illustration-list .userHomeLibraryMenu {
+  display: none;
+}
+
+.userHomeLibraryView.is-title-list .userHomeTitleLibraryContent,
+.userHomeLibraryView.is-icon-list .userHomeCollectionLibraryContent#userHomeIconLibraryContent,
+.userHomeLibraryView.is-loading-illustration-list .userHomeCollectionLibraryContent#userHomeLoadingIllustrationLibraryContent {
+  display: block;
+}
+
+.userHomeTitleControls {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.userHomeTitleControlLabel {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.70);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+.userHomeTitleSelectControl {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 214, 128, 0.26);
+  background: rgba(10, 16, 28, 0.92);
+  color: rgba(255, 248, 226, 0.96);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 0 12px;
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.userHomeTitleSelectControl:focus {
+  border-color: rgba(255, 214, 128, 0.58);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 3px rgba(255, 214, 128, 0.12);
+}
+
+.userHomeLibrarySummary {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.userHomeLibrarySummary span {
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.userHomeTitleList {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  max-height: min(58vh, 620px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.userHomeTitleCard {
+  position: relative;
+  width: 100%;
+  min-height: 74px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.086), rgba(255, 255, 255, 0.026)),
+    rgba(255, 255, 255, 0.044);
+  color: #fff;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 64px minmax(74px, auto) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+}
+
+.userHomeTitleCard:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 214, 128, 0.46);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+}
+
+.userHomeTitleCard.is-selected {
+  border-color: rgba(255, 214, 128, 0.78);
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.30),
+    0 0 22px rgba(255, 214, 128, 0.16);
+}
+
+.userHomeTitleCard.is-locked {
+  opacity: 0.56;
+  filter: grayscale(0.55);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.018)),
+    rgba(255, 255, 255, 0.035);
+}
+
+.userHomeTitleCardMain {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.userHomeTitleCardNo,
+.userHomeTitleCardRarity,
+.userHomeTitleNewBadge,
+.userHomeTitleSelectedBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.userHomeTitleCardNo {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(255, 255, 255, 0.62);
+  letter-spacing: 0.03em;
+}
+
+.userHomeTitleCardRarity {
+  border: 1px solid rgba(255, 224, 160, 0.34);
+  background: rgba(255, 214, 128, 0.10);
+  color: rgba(255, 236, 195, 0.95);
+}
+
+.userHomeTitleCardBadges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.userHomeTitleNewBadge {
+  border: 1px solid rgba(52, 211, 153, 0.52);
+  background: rgba(52, 211, 153, 0.18);
+  color: rgba(190, 255, 229, 0.98);
+  letter-spacing: 0.06em;
+}
+
+.userHomeTitleSelectedBadge {
+  border: 1px solid rgba(255, 214, 128, 0.54);
+  background: rgba(255, 214, 128, 0.14);
+  color: rgba(255, 238, 202, 0.98);
+}
+
+.userHomeTitleCardName {
+  min-width: 0;
+  color: rgba(255, 248, 226, 0.98);
+  font-size: clamp(16px, 2.4vw, 20px);
+  font-weight: 950;
+  line-height: 1.25;
+  letter-spacing: 0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userHomeTitleCardCondition {
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userHomeTitleListEmpty {
+  min-height: 96px;
+  border-radius: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.035);
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.userHomeIconList {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  max-height: min(58vh, 620px);
+  overflow-y: auto;
+  padding: 4px 8px 8px 4px;
+}
+
+.userHomeLoadingIllustrationList {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  max-height: min(58vh, 620px);
+  overflow-y: auto;
+  padding: 4px 8px 8px 4px;
+}
+
+.userHomeCollectionTile {
+  position: relative;
+  min-height: 122px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.086), rgba(255, 255, 255, 0.026)),
+    rgba(255, 255, 255, 0.044);
+  color: #fff;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+  place-items: center;
+  text-align: center;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+}
+
+.userHomeCollectionTile:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 214, 128, 0.46);
+  box-shadow:
+    0 18px 36px rgba(0, 0, 0, 0.28),
+    inset 0 0 0 1px rgba(255, 214, 128, 0.20);
+}
+
+.userHomeCollectionTile.is-locked {
+  opacity: 0.68;
+  filter: grayscale(0.55);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.018)),
+    rgba(255, 255, 255, 0.035);
+}
+
+.userHomeIconTileImage {
+  width: 74px;
+  height: 74px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 214, 128, 0.28);
+  background: rgba(255, 214, 128, 0.08);
+  display: grid;
+  place-items: center;
+}
+
+.userHomeCollectionTileName {
+  min-width: 0;
+  max-width: 100%;
+  color: rgba(255, 248, 226, 0.98);
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userHomeCollectionLock {
+  width: 74px;
+  height: 74px;
+  border-radius: 22px;
+  border: 1px dashed rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.055);
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+}
+
+.userHomeLoadingIllustrationTile {
+  min-height: 148px;
+}
+
+.userHomeLoadingIllustrationThumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 214, 128, 0.24);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.userHomeLoadingIllustrationThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.titleRarityText2 { color: rgba(160, 208, 255, 0.98); }
+.titleRarityText3 { color: rgba(212, 178, 255, 0.98); }
+.titleRarityText4 { color: rgba(255, 218, 118, 0.98); }
+.titleRarityText5 { color: rgba(255, 188, 156, 0.98); }
+
+.playerTitleBadge.titleRarity2 {
+  border-color: rgba(125, 194, 255, 0.48);
+  background:
+    linear-gradient(90deg, rgba(80, 160, 255, 0.10), rgba(255, 255, 255, 0.12) 50%, rgba(80, 160, 255, 0.10)),
+    rgba(20, 24, 36, 0.78);
+  color: rgba(205, 232, 255, 0.98);
+}
+
+.playerTitleBadge.titleRarity3 {
+  border-color: rgba(190, 140, 255, 0.54);
+  background:
+    linear-gradient(90deg, rgba(158, 100, 255, 0.12), rgba(255, 255, 255, 0.12) 50%, rgba(158, 100, 255, 0.12)),
+    rgba(22, 18, 38, 0.80);
+  color: rgba(230, 216, 255, 0.98);
+}
+
+.playerTitleBadge.titleRarity4 {
+  border-color: rgba(255, 218, 118, 0.70);
+  background:
+    linear-gradient(90deg, rgba(255, 184, 66, 0.16), rgba(255, 255, 255, 0.15) 50%, rgba(255, 184, 66, 0.16)),
+    rgba(32, 26, 16, 0.82);
+  color: rgba(255, 240, 196, 0.98);
+}
+
+.playerTitleBadge.titleRarity5 {
+  border-color: rgba(255, 150, 118, 0.76);
+  background:
+    linear-gradient(90deg, rgba(255, 86, 86, 0.16), rgba(255, 222, 132, 0.18) 48%, rgba(164, 116, 255, 0.14)),
+    rgba(34, 18, 22, 0.84);
+  color: rgba(255, 236, 220, 0.98);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 0 12px rgba(255, 124, 86, 0.20);
+}
+
+.titleDetailDialog {
+  width: min(700px, calc(100vw - 32px));
+  height: min(620px, calc(100vh - 36px));
+  border-radius: 34px;
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 214, 128, 0.10), transparent 34%),
+    rgba(4, 4, 14, 0.94);
+  box-shadow: 0 34px 90px rgba(0, 0, 0, 0.58);
+  padding: clamp(16px, 2.6vw, 28px);
+  color: #fff;
+}
+
+.titleDetailBody,
+.titleDetailOuter {
+  height: 100%;
+}
+
+.titleDetailOuter {
+  display: grid;
+  grid-template-rows: 172px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.titleDetailHero,
+.titleDetailContent {
+  border-radius: 26px;
+  border: 2px solid rgba(255, 255, 255, 0.78);
+  background: rgba(5, 5, 18, 0.62);
+}
+
+.titleDetailHero {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.titleDetailStar {
+  color: rgba(255, 208, 184, 0.98);
+  font-size: clamp(38px, 8vw, 62px);
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 18px rgba(255, 184, 118, 0.20);
+}
+
+.titleDetailName {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.98);
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 500;
+  line-height: 1.16;
+  letter-spacing: 0.03em;
+}
+
+.titleDetailContent {
+  min-height: 0;
+  padding: clamp(18px, 3vw, 30px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 14px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(78, 30, 140, 0.30), transparent 46%),
+    rgba(23, 4, 46, 0.72);
+  text-align: center;
+}
+
+.titleDetailLabel {
+  color: rgba(255, 255, 255, 0.98);
+  font-size: clamp(18px, 3vw, 24px);
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.titleDetailCondition {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: clamp(15px, 2.8vw, 20px);
+  font-weight: 850;
+}
+
+.titleDetailComment {
+  justify-self: center;
+  align-self: center;
+  max-width: 610px;
+  max-height: calc(1.75em * 5);
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: clamp(14px, 2.4vw, 18px);
+  font-weight: 600;
+  line-height: 1.75;
+  letter-spacing: 0.03em;
+  white-space: pre-wrap;
+}
+
+.titleDetailDate {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: clamp(12px, 2.2vw, 15px);
+  font-weight: 850;
+}
+
+.titleDetailFooter {
+  justify-self: center;
+  width: min(430px, 100%);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.titleDetailFooter .btn {
+  min-height: 38px;
+}
+
+.titleDetailSetBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.titleDetailRarity2 .titleDetailStar { color: rgba(150, 210, 255, 0.98); }
+.titleDetailRarity3 .titleDetailStar { color: rgba(218, 190, 255, 0.98); }
+.titleDetailRarity4 .titleDetailStar { color: rgba(255, 220, 112, 0.98); }
+.titleDetailRarity5 .titleDetailStar { color: rgba(255, 178, 135, 0.98); }
+.titleDetailRarity0 .titleDetailStar { color: rgba(180, 180, 190, 0.78); }
+
+.collectionDetailHero {
+  overflow: hidden;
+}
+
+.collectionDetailIconPreview {
+  width: 132px;
+  height: 132px;
+  border-radius: 34px;
+  border: 1px solid rgba(255, 214, 128, 0.32);
+  background: rgba(255, 214, 128, 0.08);
+  display: grid;
+  place-items: center;
+}
+
+.iconDetailHero {
+  padding: 14px 16px 12px;
+  gap: 8px;
+}
+
+.iconDetailHero .collectionDetailIconPreview {
+  width: 110px;
+  height: 110px;
+  border-radius: 30px;
+}
+
+.iconDetailHero .collectionDetailIconPreview img {
+  width: 96px !important;
+  height: 96px !important;
+}
+
+.iconDetailHero .titleDetailName {
+  max-width: 100%;
+  font-size: clamp(24px, 3.2vw, 34px);
+  line-height: 1.08;
+}
+
+.loadingIllustrationDetailOuter {
+  grid-template-rows: 240px minmax(0, 1fr);
+}
+
+.loadingIllustrationDetailHero {
+  position: relative;
+  gap: 0;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.36);
+}
+
+.loadingIllustrationDetailImageButton {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: zoom-in;
+  padding: 0;
+  overflow: hidden;
+}
+
+.loadingIllustrationDetailImageButton:focus-visible {
+  outline: 3px solid rgba(255, 214, 128, 0.72);
+  outline-offset: -6px;
+}
+
+.loadingIllustrationDetailImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  opacity: 0.92;
+}
+
+.loadingIllustrationDetailContent {
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  gap: 12px;
+}
+
+.loadingIllustrationTapHint {
+  justify-self: center;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: clamp(12px, 2vw, 14px);
+  font-weight: 850;
+  line-height: 1.3;
+}
+
+.loadingIllustrationDetailTitle {
+  font-size: clamp(24px, 4.2vw, 36px);
+  font-weight: 650;
+  line-height: 1.12;
+}
+
+.loadingIllustrationDetailComment {
+  max-height: calc(1.75em * 4);
+}
+
+.loadingIllustrationPreviewModal {
+  position: fixed;
+  inset: 0;
+  z-index: 10060;
+  display: none;
+  place-items: center;
+  padding: clamp(16px, 4vw, 42px);
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(4px);
+}
+
+.loadingIllustrationPreviewModal.is-open {
+  display: grid;
+}
+
+.loadingIllustrationPreviewCloseBtn {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top));
+  right: max(14px, env(safe-area-inset-right));
+  z-index: 10061;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background: rgba(10, 12, 20, 0.86);
+  color: rgba(255, 255, 255, 0.96);
+  font-family: inherit;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.36);
+}
+
+.loadingIllustrationPreviewCloseBtn:hover {
+  border-color: rgba(255, 214, 128, 0.72);
+  background: rgba(30, 24, 18, 0.92);
+}
+
+.loadingIllustrationPreviewImage {
+  max-width: min(96vw, 1400px);
+  max-height: 88vh;
+  border-radius: 22px;
+  object-fit: contain;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
+}
+
+.titleDetailFooterSingle {
+  grid-template-columns: 1fr;
+  width: min(260px, 100%);
+}
+
+.userHomeTitleSelectDialog {
+  width: min(620px, calc(100vw - 36px));
+}
+
+.userHomeTitleSelectBody {
+  display: grid;
+  gap: 12px;
+}
+
+.userHomeTitleSelectLead {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.65;
+}
+
+.userHomeTitleSelectList {
+  display: grid;
+  gap: 9px;
+}
+
+.userHomeTitleSelectItem {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  color: #fff;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.userHomeTitleSelectItem:hover,
+.userHomeTitleSelectItem.is-selected {
+  border-color: rgba(255, 214, 128, 0.52);
+  background:
+    linear-gradient(180deg, rgba(255, 214, 128, 0.11), rgba(255, 214, 128, 0.03)),
+    rgba(255, 255, 255, 0.055);
+}
+
+.userHomeTitleSelectItem .playerTitleBadge {
+  margin-left: 0;
+  width: min(100%, 16em);
+  max-width: 16em;
+}
+
+.userHomeTitleSelectMeta {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .userHomeCurrentTitleBtn {
+    justify-items: start;
+  }
+
+  .userHomeTitleList {
+    grid-template-columns: 1fr;
+  }
+
+  .userHomeLibraryHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .userHomeLibraryBackBtn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .userHomeLibraryView {
+    width: min(520px, calc(100vw - 24px));
+  }
+
+  .userHomeTitleControls {
+    grid-template-columns: 1fr;
+  }
+
+  .userHomeTitleList {
+    grid-template-columns: 1fr;
+    max-height: min(58vh, 520px);
+  }
+
+  .userHomeLibraryMenuCard {
+    min-height: 78px;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 12px;
+    padding: 13px 14px;
+    border-radius: 18px;
+  }
+
+  .userHomeLibraryMenuIcon {
+    width: 46px;
+    height: 46px;
+    border-radius: 15px;
+    font-size: 21px;
+  }
+
+  .userHomeTitleCard {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    justify-items: start;
+  }
+
+  .userHomeTitleCardBadges {
+    justify-content: flex-start;
+  }
+
+  .userHomeTitleCardName,
+  .userHomeTitleCardCondition {
+    white-space: normal;
+  }
+
+  .titleDetailDialog {
+    width: calc(100vw - 24px);
+    height: min(620px, calc(100vh - 24px));
+    border-radius: 24px;
+    padding: 12px;
+  }
+
+  .titleDetailOuter {
+    grid-template-rows: 150px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .titleDetailHero,
+  .titleDetailContent {
+    border-radius: 20px;
+  }
+
+  .titleDetailContent {
+    padding: 16px 14px;
+  }
+
+  .titleDetailFooter {
+    gap: 8px;
+  }
+
+  .titleDetailFooter .btn {
+    padding-inline: 8px;
+    font-size: 14px;
+  }
+
+  .loadingIllustrationPreviewModal {
+    padding: 12px;
+  }
+
+  .loadingIllustrationPreviewCloseBtn {
+    width: 44px;
+    height: 44px;
+    font-size: 26px;
+  }
+
+  .loadingIllustrationPreviewImage {
+    max-width: 96vw;
+    max-height: 84vh;
+    border-radius: 16px;
+  }
+
+  .loadingIllustrationDetailOuter {
+    grid-template-rows: 170px minmax(0, 1fr);
+  }
+
+  .loadingIllustrationDetailContent {
+    gap: 10px;
+  }
+
+  .loadingIllustrationDetailTitle {
+    font-size: clamp(22px, 7vw, 30px);
+  }
+
+  .loadingIllustrationDetailComment {
+    max-height: calc(1.7em * 4);
+  }
+
+  .userHomeTitleSelectItem {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .userHomeTitleSelectItem .playerTitleBadge {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* ===== Phase4: User Home Current Title Width Fix ===== */
+.userHomeCurrentTitleBtn {
+  width: 230px;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.userHomeCurrentTitleBtn .playerTitleBadge {
+  box-sizing: border-box;
+  width: 198px;
+  min-width: 198px;
+  max-width: 198px;
+  min-height: 24px;
+  margin-left: 0;
+  padding: 4px 16px 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.userHomeCurrentTitleBtn .playerTitleBadge.playerTitleLenShort,
+.userHomeCurrentTitleBtn .playerTitleBadge.playerTitleLenMedium,
+.userHomeCurrentTitleBtn .playerTitleBadge.playerTitleLenLong {
+  font-size: 12px;
+}
+
+@media (max-width: 560px) {
+  .userHomeCurrentTitleBtn {
+    width: 220px;
+  }
+
+  .userHomeCurrentTitleBtn .playerTitleBadge {
+    width: 190px;
+    min-width: 190px;
+    max-width: 190px;
+  }
+}
+
+@media (max-width: 560px) {
+  .iconDetailHero {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+
+  .iconDetailHero .collectionDetailIconPreview {
+    width: 86px;
+    height: 86px;
+    border-radius: 24px;
+  }
+
+  .iconDetailHero .collectionDetailIconPreview img {
+    width: 76px !important;
+    height: 76px !important;
+  }
+
+  .iconDetailHero .titleDetailName {
+    font-size: clamp(20px, 7vw, 28px);
+    line-height: 1.05;
+  }
+}
+
+/* ===== Fix: mobile icon library grid ===== */
+@media (max-width: 560px) {
+  .userHomeIconList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: 6px 6px 10px;
+  }
+
+  .userHomeCollectionTile {
+    min-height: 108px;
+    padding: 10px 6px;
+  }
+
+  .userHomeIconTileImage,
+  .userHomeCollectionLock {
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+  }
+
+  .userHomeCollectionTileName {
+    font-size: 11px;
+  }
+}
+
+/* ===== Settings screen from User Home ===== */
+.userHomeSettingsView {
+  position: relative;
+  z-index: 3;
+  width: min(940px, calc(100vw - 36px));
+  display: none;
+}
+
+.userHomeScreen.is-settings-open .userHomeLayout {
+  display: none;
+}
+
+.userHomeScreen.is-settings-open .userHomeSettingsView {
+  display: block;
+}
+
+.userHomeSettingsPanel {
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 214, 128, 0.12), transparent 34%),
+    rgba(9, 10, 20, 0.86);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(10px);
+  padding: clamp(20px, 4vw, 34px);
+}
+
+.userHomeSettingsHeader {
+  display: grid;
+  gap: 6px;
+}
+
+.userHomeSettingsTitle {
+  margin: 4px 0 0;
+  color: #fff;
+  font-size: clamp(34px, 6vw, 58px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.userHomeSettingsLead {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.7;
+}
+
+.userHomeSettingsGrid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.userHomeSettingsCard {
+  min-width: 0;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 214, 128, 0.24);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.025)),
+    rgba(255, 255, 255, 0.052);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.24);
+  padding: clamp(16px, 2.8vw, 22px);
+  display: grid;
+  gap: 14px;
+}
+
+.userHomeSettingsCard:first-child {
+  grid-row: span 2;
+}
+
+.userHomeSettingsCardHead {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.userHomeSettingsCardIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 214, 128, 0.30);
+  background: rgba(255, 214, 128, 0.10);
+  display: grid;
+  place-items: center;
+  color: rgba(255, 238, 202, 0.98);
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.userHomeSettingsCardText {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.userHomeSettingsCardTitle {
+  color: rgba(255, 248, 226, 0.98);
+  font-size: clamp(20px, 3.2vw, 27px);
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.userHomeSettingsCardLead,
+.userHomeSettingNote {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.55;
+}
+
+.userHomeSettingField {
+  display: grid;
+  gap: 7px;
+}
+
+.userHomeSettingLabel {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+.userHomeSettingNameRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.userHomeSettingNameInput {
+  min-width: 0;
+}
+
+.userHomeSettingNameSaveBtn,
+.userHomeSettingRestoreNameBtn {
+  white-space: nowrap;
+  border-color: rgba(255, 214, 128, 0.42);
+  background: rgba(255, 214, 128, 0.08);
+}
+
+.userHomeSettingNameMeta {
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.userHomeSettingError {
+  min-width: 0;
+  color: #ff9b9b;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.userHomeSettingNameCount {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.60);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.userHomeSettingNameCount.is-over {
+  color: #ff9b9b;
+}
+
+.userHomeSettingPreviousNameWrap {
+  gap: 8px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.userHomeSettingPreviousNameText {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.userHomeSoundLevelRow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.userHomeSoundLevelBtn {
+  min-height: 46px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.055);
+  color: #fff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.userHomeSoundLevelBtn:hover,
+.userHomeSoundLevelBtn.is-selected {
+  border-color: rgba(255, 214, 128, 0.58);
+  background:
+    linear-gradient(180deg, rgba(255, 214, 128, 0.20), rgba(255, 214, 128, 0.045)),
+    rgba(255, 255, 255, 0.07);
+  color: rgba(255, 244, 215, 0.98);
+}
+
+.userHomeSoundLevelText {
+  color: rgba(255, 224, 160, 0.86);
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+.userHomeAccountActionList {
+  display: grid;
+  gap: 9px;
+}
+
+.userHomeAccountActionBtn {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(255, 255, 255, 0.72);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 950;
+  cursor: default;
+}
+
+@media (max-width: 900px) {
+  .userHomeSettingsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .userHomeSettingsCard:first-child {
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .userHomeSettingsView {
+    width: min(520px, calc(100vw - 24px));
+    padding-top: 44px;
+  }
+
+  .userHomeSettingsPanel {
+    border-radius: 24px;
+    padding: 20px 16px;
+  }
+
+  .userHomeSettingsCard {
+    border-radius: 20px;
+    padding: 15px 13px;
+  }
+
+  .userHomeSettingsCardHead {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .userHomeSettingsCardIcon {
+    width: 46px;
+    height: 46px;
+    border-radius: 15px;
+    font-size: 20px;
+  }
+
+  .userHomeSettingNameRow {
+    grid-template-columns: 1fr;
+  }
+
+  .userHomeSettingNameSaveBtn,
+  .userHomeSettingRestoreNameBtn {
+    width: 100%;
+  }
+}
+
+.userHomeSubBtn {
+  cursor: pointer;
+}
+
+.userHomeSubBtn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 214, 128, 0.44);
+  background:
+    linear-gradient(180deg, rgba(255, 214, 128, 0.13), rgba(255, 214, 128, 0.04)),
+    rgba(255, 255, 255, 0.06);
+}
+
+/* ===== User Home Current Icon Selector ===== */
+.userHomeAvatarBtn {
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.userHomeAvatarBtn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 214, 128, 0.68);
+  background: rgba(255, 214, 128, 0.15);
+  box-shadow: 0 12px 34px rgba(255, 214, 128, 0.12);
+}
+
+.userHomeAvatarBtn:active {
+  transform: translateY(0);
+}
+
+.userHomeAvatarImage {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.userHomeAvatarImage img {
+  width: 82% !important;
+  height: 82% !important;
+  object-fit: contain !important;
+}
+
+.userHomeIconSelectDialog {
+  width: min(680px, calc(100vw - 36px));
+}
+
+.userHomeIconSelectBody {
+  display: grid;
+  gap: 12px;
+}
+
+.userHomeIconSelectLead {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.65;
+}
+
+.userHomeIconSelectList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  max-height: min(390px, calc(100vh - 300px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 4px 6px 12px;
+  scroll-snap-type: y proximity;
+}
+
+.userHomeIconSelectItem {
+  width: 100%;
+  min-height: 126px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  color: #fff;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 12px 10px;
+  display: grid;
+  grid-template-rows: auto auto 16px;
+  justify-items: center;
+  align-items: center;
+  gap: 8px;
+  scroll-snap-align: start;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.userHomeIconSelectItem:hover,
+.userHomeIconSelectItem.is-selected {
+  transform: translateY(-1px);
+  border-color: rgba(255, 214, 128, 0.56);
+  background:
+    linear-gradient(180deg, rgba(255, 214, 128, 0.12), rgba(255, 214, 128, 0.035)),
+    rgba(255, 255, 255, 0.055);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.18);
+}
+
+.userHomeIconSelectImage {
+  width: 68px;
+  height: 68px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 214, 128, 0.35);
+  background: rgba(255, 214, 128, 0.08);
+  overflow: hidden;
+}
+
+.userHomeIconSelectName {
+  width: 100%;
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.25;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userHomeIconSelectMeta {
+  color: rgba(255, 214, 128, 0.94);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 560px) {
+  .userHomeIconSelectDialog {
+    width: min(420px, calc(100vw - 24px));
+  }
+
+  .userHomeIconSelectList {
+    gap: 10px;
+    max-height: min(360px, calc(100vh - 280px));
+    padding: 4px 4px 10px;
+  }
+
+  .userHomeIconSelectItem {
+    min-height: 118px;
+    padding: 10px 8px;
+  }
+
+  .userHomeIconSelectImage {
+    width: 60px;
+    height: 60px;
+    border-radius: 20px;
+  }
+
+  .userHomeIconSelectName {
+    font-size: 11px;
+  }
+}
+
+
+/* 図鑑：称号一覧の先頭カードをhoverした時に上枠が見切れないよう余白を確保 */
+.userHomeTitleList {
+  padding-top: 8px;
+  padding-right: 4px;
+  padding-bottom: 10px;
+  box-sizing: border-box;
 }
