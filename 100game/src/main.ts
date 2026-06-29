@@ -6,88 +6,21 @@ import { reducer } from "./core/reducer";
 import { chooseNpcAction } from "./ai/npc";
 import { renderHome, type HomeConfig } from "./ui/home";
 import { renderTitle } from "./ui/title";
-import { clearMockAuthSession, saveMockAuthSession } from "./core/authSession";
-import { getSelectedUserTitleName, renderUserHome, type TitleAwardNotification } from "./ui/userHome";
+import { AuthApiError, clearAuthSession, logoutAuthSession, requireActiveAuthSession, saveAuthSession } from "./core/authSession";
+import { clearUserSettingsCache, getUserPlayerName, loadUserSettingsFromApi } from "./core/userSettings";
+import { loadUserCollectionsFromApi, resetUserCollectionsCache } from "./core/userCollections";
+import { getPendingIconAwardNotification, getPendingTitleAwardNotification, loadUserNotificationsFromApi, markPendingIconNotificationsRead, markPendingTitleNotificationsRead, resetUserNotificationsCache } from "./core/userNotifications";
+import { getSelectedUserTitleName, renderUserHome } from "./ui/userHome";
+import { createMatchTelemetry, recordTimeoutDeckPlay, saveCompletedSoloMatch, updateMatchTelemetryFromState, type MatchTelemetry } from "./core/matchHistory";
 import { renderMpGate } from "./ui/mpGate";
 import { createLoadingConfig, renderLoading, type LoadingScreenConfig } from "./ui/loading";
+import { loadAuthenticatedLoadingImagePath } from "./core/loadingIllustrations";
 import { GAME_START_OVERLAY_FADE_MS, GAME_START_OVERLAY_HOLD_MS, render, resetRenderTransientState } from "./ui/render";
 import { pickJokerValue } from "./ui/jokerPicker";
 
 type Screen = "TITLE" | "MP_GATE" | "LOADING" | "USER_HOME" | "HOME" | "GAME";
 
 const FORCE_HOME_SCREEN_KEY = "100game.forceHomeScreen";
-const TITLE_NOTIFICATION_SESSION_ACTIVE_KEY = "100game.titleNotificationSessionActive";
-const PENDING_TITLE_NOTIFICATION_KEY = "100game.pendingTitleAwardNotification";
-
-const MOCK_TITLE_AWARD_NOTIFICATION: TitleAwardNotification = {
-  items: [
-    { id: "title-start-001", name: "はじまりの挑戦者", rarity: "☆" },
-    { id: "title-joker-001", name: "JOKERを告げし者", rarity: "☆" },
-    { id: "title-fate-001", name: "運命を拒む者", rarity: "☆☆" },
-    { id: "title-alive-001", name: "堕ちぬ者", rarity: "☆☆" },
-    { id: "title-boundary-001", name: "百の境界を越えし者", rarity: "☆☆☆" },
-    { id: "title-abyss-001", name: "深淵を覗く者", rarity: "☆☆☆" },
-    { id: "title-spade3-001", name: "黒き三刃の返礼", rarity: "☆☆" },
-  ],
-};
-
-function beginTitleNotificationSession() {
-  try {
-    sessionStorage.setItem(TITLE_NOTIFICATION_SESSION_ACTIVE_KEY, "1");
-  } catch { }
-}
-
-function hasActiveTitleNotificationSession(): boolean {
-  try {
-    return sessionStorage.getItem(TITLE_NOTIFICATION_SESSION_ACTIVE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function endTitleNotificationSession() {
-  try {
-    sessionStorage.removeItem(TITLE_NOTIFICATION_SESSION_ACTIVE_KEY);
-  } catch { }
-}
-
-function stashPendingTitleAwardNotification(notification: TitleAwardNotification) {
-  if (!notification.items.length) return;
-  try {
-    sessionStorage.setItem(PENDING_TITLE_NOTIFICATION_KEY, JSON.stringify(notification));
-  } catch { }
-}
-
-function readPendingTitleAwardNotification(): TitleAwardNotification | null {
-  try {
-    const raw = sessionStorage.getItem(PENDING_TITLE_NOTIFICATION_KEY);
-    if (!raw) return null;
-
-    const parsed = JSON.parse(raw) as TitleAwardNotification;
-    if (!parsed || !Array.isArray(parsed.items)) return null;
-
-    const items = parsed.items.filter((item) => item && typeof item.id === "string" && typeof item.name === "string" && typeof item.rarity === "string");
-    return items.length > 0 ? { items } : null;
-  } catch {
-    return null;
-  }
-}
-
-function clearPendingTitleAwardNotification() {
-  try {
-    sessionStorage.removeItem(PENDING_TITLE_NOTIFICATION_KEY);
-  } catch { }
-}
-
-function completeTitleNotificationSessionWithMockAwards() {
-  if (isGuestSession) return;
-  if (!hasActiveTitleNotificationSession()) return;
-
-  stashPendingTitleAwardNotification(MOCK_TITLE_AWARD_NOTIFICATION);
-  endTitleNotificationSession();
-}
-
-
 function consumeForceHomeScreen(): boolean {
   try {
     if (sessionStorage.getItem(FORCE_HOME_SCREEN_KEY) !== "1") return false;
@@ -115,6 +48,8 @@ let loadingConfig: LoadingScreenConfig | null = null;
 let loadingTargetScreen: "USER_HOME" | "HOME" | null = null;
 let loadingTimerId: number | null = null;
 let isGuestSession = false;
+let matchTelemetry: MatchTelemetry | null = null;
+let savingMatchId: string | null = null;
 
 type MpSession = {
   roomId: string;
@@ -180,23 +115,98 @@ function startTitleLoading(mode: "AUTHENTICATED" | "GUEST", targetScreen: "USER_
   screen = "LOADING";
   draw();
 
+  if (mode === "AUTHENTICATED") {
+    void loadAuthenticatedLoadingImagePath()
+      .then((imagePath) => {
+        if (!imagePath || screen !== "LOADING" || loadingTargetScreen !== targetScreen || !loadingConfig) return;
+        loadingConfig = { ...loadingConfig, imagePath };
+        draw();
+      })
+      .catch(() => { });
+  }
+
   loadingTimerId = window.setTimeout(() => {
     loadingTimerId = null;
     if (screen !== "LOADING") return;
 
     const nextScreen = loadingTargetScreen ?? "HOME";
-    loadingConfig = null;
-    loadingTargetScreen = null;
-    screen = nextScreen;
-    draw();
+    const showNextScreen = () => {
+      loadingConfig = null;
+      loadingTargetScreen = null;
+      screen = nextScreen;
+      draw();
+    };
+
+    if (mode === "AUTHENTICATED") {
+      void requireActiveAuthSession()
+        .then(() => (nextScreen === "USER_HOME" ? refreshUserHomeData() : undefined))
+        .then(showNextScreen)
+        .catch(handleAuthGuardFailure);
+      return;
+    }
+
+    showNextScreen();
   }, pickTitleLoadingDelayMs());
 }
 
-function startTitleLoadingToUserHome() {
+function refreshUserHomeData() {
+  return loadUserSettingsFromApi()
+    .then(() => loadUserCollectionsFromApi())
+    .then(() => loadUserNotificationsFromApi());
+}
+
+function refreshUserHomeDataAndRedraw() {
+  void refreshUserHomeData()
+    .then(() => {
+      if (screen === "USER_HOME") draw();
+    })
+    .catch(() => { });
+}
+
+function clearAuthenticatedClientState() {
+  clearAuthSession();
+  clearUserSettingsCache();
+  resetUserCollectionsCache();
+  resetUserNotificationsCache();
+  isGuestSession = false;
+}
+
+function handleAuthGuardFailure(error: unknown) {
+  const message = error instanceof AuthApiError ? error.message : "ログイン状態を確認できませんでした。もう一度ログインしてください。";
+  clearTitleLoadingTimer();
+  stopTurnLimit();
+  clearAuthenticatedClientState();
+  loadingConfig = null;
+  loadingTargetScreen = null;
+  mp = null;
+  stopMpDisbandWatch();
+  state = null;
+  matchTelemetry = null;
+  savingMatchId = null;
+  screen = "TITLE";
+  draw();
+  window.setTimeout(() => window.alert(message), 0);
+}
+
+function runAuthenticatedAction(action: () => void | Promise<void>) {
+  void requireActiveAuthSession()
+    .then(action)
+    .catch(handleAuthGuardFailure);
+}
+
+function startAuthenticatedLoadingToUserHome() {
+  refreshUserHomeDataAndRedraw();
   startTitleLoading("AUTHENTICATED", "USER_HOME");
 }
 
+async function startTitleLoadingToUserHome() {
+  await requireActiveAuthSession();
+  startAuthenticatedLoadingToUserHome();
+}
+
 function startTitleLoadingToGuestGameSettings() {
+  resetUserCollectionsCache();
+  resetUserNotificationsCache();
   startTitleLoading("GUEST", "HOME");
 }
 
@@ -300,6 +310,8 @@ function leaveMpToHome(session?: MpSession | null, notice?: { title?: string; me
   resetRenderTransientState();
   screen = "HOME";
   state = null;
+  matchTelemetry = null;
+  savingMatchId = null;
   draw();
 
   try {
@@ -347,6 +359,7 @@ function playMpFrames(session: MpSession, frames: GameState[], intervalMs: numbe
       if (token !== mpAnimToken) return;
 
       state = rotateToMe(frames[i], session.seatIndex);
+      updateMatchTelemetryFromState(matchTelemetry, state);
       (state as any).__mpSeatOffset = session.seatIndex; // プレイヤー状況をHOST→P1→P2→P3に固定する用
       (state as any).__mpIsHost = session.isHost;         // Restart制御用
       draw();
@@ -404,7 +417,11 @@ function attachMpWs(session: MpSession) {
       mpAnimToken++;
       state = rotateToMe(raw.state as GameState, session.seatIndex);
       if (state.history.length === 0) {
+        matchTelemetry = createMatchTelemetry(state);
+        savingMatchId = null;
         beginGameStartOverlayPhase(false);
+      } else {
+        updateMatchTelemetryFromState(matchTelemetry, state);
       }
       (state as any).__mpSeatOffset = session.seatIndex;
       (state as any).__mpIsHost = session.isHost;
@@ -673,6 +690,8 @@ async function forceTimeoutAction(capturedKey: string) {
     let jokerValue: number | undefined;
     if (top.rank === "JOKER") jokerValue = pickAutoJokerValueNoBust(state);
     state = reducer(state, { type: "DRAW_PLAY", jokerValue });
+    recordTimeoutDeckPlay(matchTelemetry, seatIndex);
+    updateMatchTelemetryFromState(matchTelemetry, state);
   } else {
     const hand = state.seats[seatIndex].hand;
     if (hand.length === 0) return;
@@ -680,6 +699,7 @@ async function forceTimeoutAction(capturedKey: string) {
     let jokerValue: number | undefined;
     if (card.rank === "JOKER") jokerValue = pickAutoJokerValueNoBust(state);
     state = reducer(state, { type: "PLAY_HAND", handIndex: 0, jokerValue });
+    updateMatchTelemetryFromState(matchTelemetry, state);
   }
 
   draw();
@@ -707,6 +727,8 @@ function startGame(cfg: HomeConfig) {
 
   soloIconId = getSelectedHomeIconId();
   state = createInitialState(name, cfg.gameType, soloIconId);
+  matchTelemetry = createMatchTelemetry(state);
+  savingMatchId = null;
   (state.seats[0] as any).isGuest = isGuestSession;
   (state.seats[0] as any).titleName = isGuestSession ? "" : getSelectedUserTitleName();
   screen = "GAME";
@@ -722,11 +744,13 @@ function goHome() {
 
   const shouldReturnToUserHome = !isGuestSession;
   if (shouldReturnToUserHome) {
-    completeTitleNotificationSessionWithMockAwards();
+    refreshUserHomeDataAndRedraw();
   }
 
   screen = shouldReturnToUserHome ? "USER_HOME" : "HOME";
   state = null;
+  matchTelemetry = null;
+  savingMatchId = null;
   stopMpDisbandWatch();
   draw();
 }
@@ -739,6 +763,8 @@ function restartGame() {
   const name = (homeConfig.playerName || "").trim() || "プレイヤー";
   stopMpDisbandWatch();
   state = createInitialState(name, homeConfig.gameType, soloIconId);
+  matchTelemetry = createMatchTelemetry(state);
+  savingMatchId = null;
   (state.seats[0] as any).isGuest = isGuestSession;
   (state.seats[0] as any).titleName = isGuestSession ? "" : getSelectedUserTitleName();
   beginGameStartOverlayPhase(true);
@@ -774,6 +800,7 @@ async function stepHumanPlayHandAsync(handIndex: number) {
   }
 
   state = reducer(state, { type: "PLAY_HAND", handIndex, jokerValue });
+  updateMatchTelemetryFromState(matchTelemetry, state);
 
   draw();
   await sleep(250);
@@ -809,6 +836,7 @@ async function stepHumanDrawPlayAsync() {
   }
 
   state = reducer(state, { type: "DRAW_PLAY", jokerValue });
+  updateMatchTelemetryFromState(matchTelemetry, state);
 
   draw();
   await sleep(250);
@@ -842,6 +870,7 @@ async function runNpcTurnsAnimated() {
         state = reducer(state, action as any);
       }
 
+      updateMatchTelemetryFromState(matchTelemetry, state);
       draw();
     }
   } finally {
@@ -917,6 +946,27 @@ async function mpDrawPlayAsync() {
   mp.ws.send(JSON.stringify({ type: "DRAW_PLAY", jokerValue }));
 }
 
+
+function maybeSaveCompletedLocalMatch() {
+  if (!state || !matchTelemetry) return;
+  const currentMp = mp;
+  const currentIsGuest = isGuestSession || Boolean(state.seats[0]?.isGuest);
+  if (currentIsGuest) return;
+  if (state.result.status === "PLAYING") return;
+  if (savingMatchId === matchTelemetry.matchId) return;
+
+  savingMatchId = matchTelemetry.matchId;
+  void saveCompletedSoloMatch({
+    state,
+    telemetry: matchTelemetry,
+    difficulty,
+    isGuestSession: currentIsGuest,
+    isMulti: Boolean(currentMp),
+    roomId: currentMp?.roomId ?? null,
+    mpSeatIndex: currentMp?.seatIndex ?? null,
+  }).catch(() => { });
+}
+
 // ==============================
 // 描画
 // ==============================
@@ -925,21 +975,23 @@ function draw() {
     stopTurnLimit();
 
     renderTitle(app, {
-      onStart: () => {
-        startTitleLoadingToUserHome();
-      },
+      onStart: () => startTitleLoadingToUserHome(),
       onGuestStart: () => {
         startTitleLoadingToGuestGameSettings();
       },
       onLoginSuccess: (email) => {
-        saveMockAuthSession(email);
-        startTitleLoadingToUserHome();
+        saveAuthSession(email);
+        startAuthenticatedLoadingToUserHome();
       },
       onLogout: () => {
-        clearMockAuthSession();
-        isGuestSession = false;
-        screen = "TITLE";
-        draw();
+        logoutAuthSession().finally(() => {
+          clearUserSettingsCache();
+          resetUserCollectionsCache();
+          resetUserNotificationsCache();
+          isGuestSession = false;
+          screen = "TITLE";
+          draw();
+        });
       },
       onOpenPasswordReset: () => {
         window.location.href = new URL("./password-reset.html", window.location.href).toString();
@@ -954,7 +1006,7 @@ function draw() {
 
     renderMpGate(app, {
       onLoginJoin: () => {
-        startTitleLoading("AUTHENTICATED", "HOME");
+        runAuthenticatedAction(() => startTitleLoading("AUTHENTICATED", "HOME"));
       },
       onGuestJoin: () => {
         startTitleLoading("GUEST", "HOME");
@@ -977,15 +1029,21 @@ function draw() {
     stopTurnLimit();
 
     renderUserHome(app, {
-      titleAwardNotification: readPendingTitleAwardNotification(),
+      titleAwardNotification: getPendingTitleAwardNotification(),
+      iconAwardNotification: getPendingIconAwardNotification(),
       onTitleAwardNotificationClose: () => {
-        clearPendingTitleAwardNotification();
+        void markPendingTitleNotificationsRead();
+      },
+      onIconAwardNotificationClose: () => {
+        void markPendingIconNotificationsRead();
       },
       onGoGameSettings: () => {
-        isGuestSession = false;
-        beginTitleNotificationSession();
-        screen = "HOME";
-        draw();
+        runAuthenticatedAction(() => {
+          isGuestSession = false;
+          homeConfig = { ...homeConfig, playerName: getUserPlayerName() };
+          screen = "HOME";
+          draw();
+        });
       },
       onGoTitle: () => {
         isGuestSession = false;
@@ -1001,15 +1059,21 @@ function draw() {
     stopTurnLimit();
 
     renderHome(app, { ...homeConfig, isGuest: isGuestSession }, {
-      onStart: (cfg) => startGame(cfg),
+      onStart: (cfg) => {
+        if (isGuestSession) startGame(cfg);
+        else runAuthenticatedAction(() => startGame(cfg));
+      },
       onChange: (cfg) => {
         homeConfig = cfg;
         difficulty = cfg.difficulty;
       },
       onGoUserHome: () => {
-        isGuestSession = false;
-        screen = "USER_HOME";
-        draw();
+        runAuthenticatedAction(() => {
+          isGuestSession = false;
+          refreshUserHomeDataAndRedraw();
+          screen = "USER_HOME";
+          draw();
+        });
       },
       onGoTitle: () => {
         isGuestSession = false;
@@ -1037,6 +1101,8 @@ function draw() {
         resetRenderTransientState();
 
         state = rotateToMe(initial, p.seatIndex);
+        matchTelemetry = createMatchTelemetry(state);
+        savingMatchId = null;
         (state as any).__mpSeatOffset = p.seatIndex;
         (state as any).__mpIsHost = p.isHost;
 
@@ -1068,6 +1134,8 @@ function draw() {
   if (mp && state) (state as any).__mpIsHost = mp.isHost; // （Restart制御とかに使ってるなら）
   if (state) (state as any).__hideHandUntilTurnLimitStarts = turnLimitDelayUntilMs > Date.now();
 
+  maybeSaveCompletedLocalMatch();
+
   render(app, state, difficulty, uiLocked, {
     onPlayHand: (handIndex) => {
       if (mp) void mpPlayHandAsync(handIndex);
@@ -1079,7 +1147,8 @@ function draw() {
     },
     onRestart: () => {
       if (!mp) {
-        restartGame();
+        if (isGuestSession) restartGame();
+        else runAuthenticatedAction(restartGame);
         return;
       }
       if (mp.isHost) {

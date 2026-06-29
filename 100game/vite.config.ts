@@ -7,6 +7,8 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, "index.html"),
         contact: resolve(__dirname, "contact.html"),
+        passwordReset: resolve(__dirname, "password-reset.html"),
+        admin: resolve(__dirname, "admin.html"),
       },
     },
   },

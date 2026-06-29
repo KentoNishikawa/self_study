@@ -88,6 +88,13 @@ function pickExtraTarget(): number {
     return EXTRA_CANDIDATES[i];
 }
 
+function createMatchId(): string {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+        return `match_${crypto.randomUUID()}`;
+    }
+    return `match_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function parseGameType(s: string): GameType {
     if (s === "EXTRA") return "EXTRA";
     const n = Number(s);
@@ -115,6 +122,7 @@ function makeGameFromRoom(room: RoomState): GameState {
             iconId: ls.iconId,
             isGuest: Boolean(ls.isGuest),
             titleName: ls.kind === "NPC" || ls.isGuest ? "" : (ls.titleName ?? "はじまりの挑戦者"),
+            isHost: slot === 0,
         };
     }) as unknown as [Seat, Seat, Seat, Seat];
 
@@ -129,6 +137,8 @@ function makeGameFromRoom(room: RoomState): GameState {
         target,
         discard: [],
         systemLogs: [],
+        matchId: createMatchId(),
+        startedAt: new Date().toISOString(),
         deck: restDeck,
         turn: 0,
         total: 0,

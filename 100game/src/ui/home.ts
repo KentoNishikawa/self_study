@@ -1,6 +1,7 @@
 // src/ui/home.ts
 import type { Difficulty, GameType, GameState } from "../core/types";
-import { DEFAULT_PLAYER_ICON_ID, PLAYER_ICON_PRESETS, iconContentHtml, resolveIconId } from "../icons/iconPresets";
+import { DEFAULT_PLAYER_ICON_ID } from "../icons/iconPresets";
+import { getSelectableUserIconDefinitions, resolveUserIconId, userIconContentHtml } from "../icons/userIconContent";
 import { isSoundEnabled, playButtonSe, startButtonSe, toggleSound } from "../core/sound";
 import { validatePlayerName } from "../core/nameValidation";
 import { HOME_HOST_DISBANDED_NOTICE, getInviteExpiredNotice, getJoinFailedNotice, getLockedRoomNotice, getPreflightStatusNotice, getPreflightUnexpectedStatusNotice, getRoomFullNotice, renderMpNoticeModalHtml, setupMpNoticeModal, stashMpNotice, type MpNotice } from "./mpNotice";
@@ -392,7 +393,7 @@ export function renderHome(
               style="width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);
                      background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;
                      font-size:18px;cursor:pointer;">
-              ${iconContentHtml(localIconId, 50)}
+              ${userIconContentHtml(localIconId, 50)}
             </button>
 
             <div id="iconPicker"
@@ -401,12 +402,12 @@ export function renderHome(
                      background:rgba(10,10,10,0.98);box-shadow:0 8px 30px rgba(0,0,0,0.45);
                      max-height:116px;overflow-y:auto;overflow-x:hidden;">
               <div style="display:grid;grid-template-columns:repeat(6, 44px);gap:8px;">
-                ${PLAYER_ICON_PRESETS.map((p) => `
+                ${getSelectableUserIconDefinitions().map((p) => `
                   <button type="button" class="iconOpt" data-icon="${escapeHtml(p.id)}"
-                    title="${escapeHtml(p.label)}"
+                    title="${escapeHtml(p.name)}"
                     style="width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,0.16);
                            background:rgba(255,255,255,0.06);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">
-                    ${iconContentHtml(p.id, 44)}
+                    ${userIconContentHtml(p.id, 44)}
                   </button>
                 `).join("")}
               </div>
@@ -800,7 +801,7 @@ export function renderHome(
           <div data-seat-index="${seatIndex}" style="display:flex;align-items:center;gap:10px;padding:10px;border:${border};border-radius:12px;background:${bg};cursor:${cursor};">
             <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
                         background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);font-size:16px;">
-              ${iconContentHtml(seat.iconId, 45)}
+              ${userIconContentHtml(seat.iconId, 45)}
             </div>
             <div style="flex:1;min-width:0;display:grid;gap:2px;">
               <div style="font-weight:850;display:flex;align-items:center;gap:6px;min-width:0;">
@@ -988,11 +989,11 @@ export function renderHome(
     btn.addEventListener("click", (e) => {
       playButtonSe();
       e.stopPropagation();
-      const iconId = resolveIconId(btn.dataset.icon || DEFAULT_PLAYER_ICON_ID);
+      const iconId = resolveUserIconId(btn.dataset.icon || DEFAULT_PLAYER_ICON_ID);
 
       localIconId = iconId;
       iconBtn.dataset.iconId = iconId;
-      iconBtn.innerHTML = iconContentHtml(iconId, 44);
+      iconBtn.innerHTML = userIconContentHtml(iconId, 44);
       closePicker();
 
       if (ws && ws.readyState === WebSocket.OPEN && mySeatIndex != null) {
@@ -1077,9 +1078,9 @@ export function renderHome(
 
         const me = lobby.seats[mySeatIndex];
         if (me) {
-          localIconId = resolveIconId(me.iconId);
+          localIconId = resolveUserIconId(me.iconId);
           iconBtn.dataset.iconId = localIconId;
-          iconBtn.innerHTML = iconContentHtml(localIconId, 44);
+          iconBtn.innerHTML = userIconContentHtml(localIconId, 44);
           syncCommittedName(me.name);
         }
 
@@ -1103,8 +1104,9 @@ export function renderHome(
         if (mySeatIndex != null) {
           const me = lobby.seats[mySeatIndex];
           if (me) {
-            localIconId = me.iconId;
-            iconBtn.innerHTML = iconContentHtml(me.iconId, 44);
+            localIconId = resolveUserIconId(me.iconId);
+            iconBtn.dataset.iconId = localIconId;
+            iconBtn.innerHTML = userIconContentHtml(localIconId, 44);
             syncCommittedName(me.name);
           }
         }

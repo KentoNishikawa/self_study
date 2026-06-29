@@ -1,0 +1,46 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "100game",
+	"compatibility_date": "2026-06-24",
+	"pages_build_output_dir": "./dist",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "100game-db",
+			"database_id": "494d6e2b-f32b-4546-bc42-e7cd840812ef"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "ASSETS_BUCKET",
+			"bucket_name": "100game-assets-dev"
+		},
+		{
+			"bucket_name": "100game-assets-dev",
+			"binding": "_100game_assets_dev",
+			"remote": true
+		},
+		{
+			"bucket_name": "100game-assets-prod",
+			"binding": "_100game_assets_prod",
+			"remote": true
+		}
+	],
+	"env": {
+		"production": {
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "100game-db",
+					"database_id": "494d6e2b-f32b-4546-bc42-e7cd840812ef"
+				}
+			],
+			"r2_buckets": [
+				{
+					"binding": "ASSETS_BUCKET",
+					"bucket_name": "100game-assets-prod"
+				}
+			]
+		}
+	}
+}

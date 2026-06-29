@@ -1,6 +1,6 @@
 // src/core/game.ts
 import type { GameState, GameType, Seat } from "./types";
-import { DEFAULT_PLAYER_ICON_ID, resolveIconId } from "../icons/iconPresets";
+import { DEFAULT_PLAYER_ICON_ID } from "../icons/iconPresets";
 import { createDeck, deal, shuffle } from "./deck";
 
 const EXTRA_CANDIDATES: Array<Exclude<GameType, "EXTRA">> = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500];
@@ -19,7 +19,7 @@ export function createInitialState(humanName: string, gameType: GameType, humanI
   ];
 
   // ホーム画面で選んだアイコン（ソロ用）をゲーム状態へ反映
-  const _humanIcon = resolveIconId((humanIconId ?? "").trim() || DEFAULT_PLAYER_ICON_ID);
+  const _humanIcon = (humanIconId ?? "").trim() || DEFAULT_PLAYER_ICON_ID;
   (seats[0] as any).iconId = _humanIcon;
   (seats[1] as any).iconId = "npc_default";
   (seats[2] as any).iconId = "npc_default";

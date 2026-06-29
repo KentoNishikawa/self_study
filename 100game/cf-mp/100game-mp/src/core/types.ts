@@ -39,6 +39,7 @@ export type Seat = {
   iconId?: string; // ★ホームで選んだアイコンID（任意）
   isGuest?: boolean;
   titleName?: string;
+  isHost?: boolean;
 };
 
 export type GameResult =
@@ -90,4 +91,7 @@ export type GameState = {
   lastCard: Card | null;
 
   systemLogs: SystemLog[];
+
+  matchId?: string;
+  startedAt?: string;
 };

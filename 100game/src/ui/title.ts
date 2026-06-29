@@ -1,5 +1,6 @@
-import { isSoundEnabled, playButtonSe, startButtonSe, toggleSound } from "../core/sound";
-import { getMockAuthSession } from "../core/authSession";
+import { isSoundEnabled, playButtonSe, resetSoundToDefault, startButtonSe, toggleSound } from "../core/sound";
+import { AuthApiError, getMockAuthSession, loginWithEmailPassword, registerPendingUser } from "../core/authSession";
+import { clearUserSettingsCache } from "../core/userSettings";
 import { validatePlayerName } from "../core/nameValidation";
 
 type TitleCardSpec = {
@@ -404,7 +405,7 @@ function validateRegister(values: RegisterValues): FormErrors<"email" | "passwor
 export function renderTitle(
   app: HTMLDivElement,
   handlers: {
-    onStart: () => void;
+    onStart: () => void | Promise<void>;
     onGuestStart: () => void;
     onLoginSuccess: (email: string) => void;
     onLogout: () => void;
@@ -657,6 +658,17 @@ export function renderTitle(
     setSoundNoticeOpen(false);
   };
 
+  const openMessageModal = (title: string, message: string) => {
+    modalHeading.textContent = title;
+    modalBody.innerHTML = `<p>${escapeHtml(message)}</p>`;
+    modalAction.style.display = "none";
+    modalActionBtn.textContent = "";
+    modalActionBtn.disabled = false;
+    modalActionNote.textContent = "";
+    modalActionNote.style.display = "none";
+    setModalOpen(true);
+  };
+
   const openModal = (key: TitleModalKey) => {
     const content = TITLE_MODAL_CONTENT[key];
     modalHeading.textContent = content.title;
@@ -769,8 +781,19 @@ export function renderTitle(
       }
 
       startButtonSe();
-      setLoginOpen(false);
-      handlers.onLoginSuccess(loginValues.email);
+      loginWithEmailPassword(loginValues)
+        .then((result) => {
+          setLoginOpen(false);
+          handlers.onLoginSuccess(result.email);
+        })
+        .catch((error: unknown) => {
+          const authError = error instanceof AuthApiError ? error : new AuthApiError("ログインに失敗しました。");
+          loginErrors = {
+            email: authError.fieldErrors.email,
+            password: authError.fieldErrors.password ?? authError.message,
+          };
+          renderLoginForm();
+        });
     });
 
     app.querySelector<HTMLButtonElement>("#titleOpenRegisterBtn")?.addEventListener("click", () => {
@@ -875,8 +898,24 @@ export function renderTitle(
       }
 
       startButtonSe();
-      authModalView = "verification";
-      renderAuthModalBody();
+      registerPendingUser({
+        email: registerValues.email,
+        password: registerValues.password,
+        displayName: registerValues.displayName,
+      })
+        .then(() => {
+          authModalView = "verification";
+          renderAuthModalBody();
+        })
+        .catch((error: unknown) => {
+          const authError = error instanceof AuthApiError ? error : new AuthApiError("新規登録に失敗しました。");
+          registerErrors = {
+            email: authError.fieldErrors.email,
+            password: authError.fieldErrors.password,
+            displayName: authError.fieldErrors.displayName ?? authError.message,
+          };
+          renderRegisterForm();
+        });
     });
   }
 
@@ -889,7 +928,7 @@ export function renderTitle(
         <p>ご入力いただいたメールアドレス宛に、認証メールを送信しました。</p>
         <p>メール内のリンクから認証を完了してください。</p>
         <p>認証完了後、タイトル画面からログインしてプレイできます。</p>
-        <p class="titleAuthSubText">※現在はDB/API未実装のため、実際の登録情報は保持していません。</p>
+        <p class="titleAuthSubText">※メールが届かない場合は、時間をおいて再度お試しください。</p>
       </div>
       <button id="titleVerificationBackTitleBtn" class="btn titleAuthPrimaryBtn" type="button">タイトルへ戻る</button>
     `;
@@ -933,12 +972,18 @@ export function renderTitle(
 
     authenticatedStartBtn?.addEventListener("click", () => {
       startButtonSe();
-      handlers.onStart();
+      Promise.resolve(handlers.onStart()).catch((error: unknown) => {
+        const authError = error instanceof AuthApiError ? error : new AuthApiError("ログイン状態を確認できませんでした。もう一度ログインしてください。");
+        renderAuthStage();
+        openMessageModal("ご案内", authError.message);
+      });
     });
 
     logoutBtn?.addEventListener("click", () => {
-      playButtonSe();
+      clearUserSettingsCache();
+      resetSoundToDefault();
       handlers.onLogout();
+      playButtonSe();
     });
 
     guestBtn?.addEventListener("click", () => {

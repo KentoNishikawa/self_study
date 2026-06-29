@@ -14,8 +14,20 @@ function escapeHtml(s: string): string {
     .replaceAll("'", "&#39;");
 }
 
+function decodeHashUnicodeEscapes(value: string): string {
+  return value.replace(/#U([0-9a-fA-F]{4,6})/g, (match, hex: string) => {
+    const codePoint = Number.parseInt(hex, 16);
+    if (!Number.isFinite(codePoint)) return match;
+    try {
+      return String.fromCodePoint(codePoint);
+    } catch {
+      return match;
+    }
+  });
+}
+
 function normalizeFileStem(stem: string): string {
-  return stem
+  return decodeHashUnicodeEscapes(stem)
     .replace(/^[0-9]+[._-]*/, "")
     .replace(/[_-]+/g, " ")
     .trim();

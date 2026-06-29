@@ -1,7 +1,9 @@
 import { isSoundEnabled, playButtonSe, toggleSound } from "../core/sound";
 import { validatePlayerName } from "../core/nameValidation";
-import { countPlayerNameChars, getPreviousUserPlayerName, getSoundVolumeLevel, getUserIconId, getUserPlayerName, hasChangedUserPlayerName, MAX_PLAYER_NAME_LENGTH, restorePreviousUserPlayerName, setSoundVolumeLevel, setUserIconId, setUserPlayerName } from "../core/userSettings";
-import { DEFAULT_PLAYER_ICON_ID, iconContentHtml, PLAYER_ICON_PRESETS, resolveIconId } from "../icons/iconPresets";
+import { countPlayerNameChars, getPreviousUserPlayerName, getSoundVolumeLevel, getUserIconId, getUserPlayerName, getUserTitleId, hasChangedUserPlayerName, MAX_PLAYER_NAME_LENGTH, setSoundVolumeLevel, setUserIconId, setUserTitleId, updateUserSettingsOnApi } from "../core/userSettings";
+import { DEFAULT_USER_TITLE_ID, LOADING_ILLUSTRATION_DEFINITIONS, USER_ICON_DEFINITIONS, USER_TITLE_DEFINITIONS, type LoadingIllustrationDefinition, type UserIconDefinition, type UserTitleDefinition } from "../core/userCollections";
+import { DEFAULT_PLAYER_ICON_ID, iconContentHtml, resolveIconId } from "../icons/iconPresets";
+import { loadUserRecordsFromApi, type UserRecordMatch, type UserRecordModeStats, type UserRecordsSnapshot } from "../core/userRecords";
 
 type HomeModalKey = "privacy" | "terms" | "credits" | "contact";
 
@@ -14,13 +16,20 @@ type HomeModalContent = {
 
 type HomeAnnouncement = {
   id: string;
-  date: string;
   title: string;
   summary: string;
-  bodyHtml: string;
+  body: string;
+  category: string;
+  categoryLabel: string;
+  priority: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type TitleAwardNotificationItem = {
+  notificationId?: string;
   id: string;
   name: string;
   rarity: string;
@@ -31,37 +40,14 @@ export type TitleAwardNotification = {
 };
 
 export type IconAwardNotificationItem = {
+  notificationId?: string;
   id: string;
   name: string;
+  imagePath?: string;
 };
 
 export type IconAwardNotification = {
   items: IconAwardNotificationItem[];
-};
-
-type UserTitleDefinition = {
-  id: string;
-  name: string;
-  rarity: string;
-  condition: string;
-  acquiredAt?: string;
-  comment: string;
-  owned: boolean;
-};
-
-type UserIconDefinition = {
-  id: string;
-  name: string;
-  comment: string;
-  owned: boolean;
-};
-
-type LoadingIllustrationDefinition = {
-  id: string;
-  name: string;
-  src: string;
-  comment: string;
-  owned: boolean;
 };
 
 type TitleLibraryItem =
@@ -76,123 +62,15 @@ type LoadingIllustrationLibraryItem =
   | { kind: "illustration"; illustration: LoadingIllustrationDefinition }
   | { kind: "locked" };
 
-
 type TitleLibraryFilter = "all" | "owned" | "locked" | "new" | "rarity1" | "rarity2" | "rarity3" | "rarity4" | "rarity5";
 type TitleLibrarySort = "noAsc" | "acquiredDesc" | "acquiredAsc" | "rarityDesc" | "rarityAsc";
 type LibraryPage = "index" | "titles" | "icons" | "loadingIllustrations";
-type UserHomeSubView = "home" | "library" | "settings";
+type UserHomeSubView = "home" | "library" | "settings" | "records";
 
-const SELECTED_TITLE_ID_KEY = "100game.selectedTitleId";
-const DEFAULT_TITLE_ID = "title-start-001";
+const DEFAULT_TITLE_ID = DEFAULT_USER_TITLE_ID;
 
-// Phase4の見た目確認用。詳細を開いたNEW解除は同一表示中だけ保持し、リロード時はNEWを復活させる。
+// 詳細を開いたNEW解除は同一表示中だけ保持し、リロード時はNEWを復活させる。
 const demoCheckedTitleIds = new Set<string>();
-
-const USER_TITLE_DEFINITIONS: UserTitleDefinition[] = [
-  {
-    id: "title-start-001",
-    name: "はじまりの挑戦者",
-    rarity: "☆",
-    condition: "最初から所持",
-    acquiredAt: "2026年06月01日に取得",
-    comment: "千里の道も一歩よりだけど、ここでは100から。まずは一枚、まずは一戦。挑戦の記録はここから始まる。",
-    owned: true,
-  },
-  {
-    id: "title-joker-001",
-    name: "JOKERを告げし者",
-    rarity: "☆",
-    condition: "JOKERを1回使用する",
-    acquiredAt: "2026年06月01日に取得",
-    comment: "運命を乱す札を手に取り、数字を宣言した者に贈られる称号。偶然も実力も、ここでは同じ一手になる。",
-    owned: true,
-  },
-  {
-    id: "title-fate-001",
-    name: "運命を拒む者",
-    rarity: "☆☆",
-    condition: "敗北目前の状況を回避する",
-    acquiredAt: "2026年06月02日に取得",
-    comment: "終わりが見えた盤面で、なお手を伸ばした者の証。あきらめの悪さは、ときに最高の武器になる。",
-    owned: true,
-  },
-  {
-    id: "title-alive-001",
-    name: "堕ちぬ者",
-    rarity: "☆☆",
-    condition: "ALIVEで5回ゲームを終える",
-    acquiredAt: "2026年06月02日に取得",
-    comment: "勝利ではなく、生き残った事実に意味がある。危うい境界を越えず、最後まで盤面に立ち続けた者の称号。",
-    owned: true,
-  },
-  {
-    id: "title-boundary-001",
-    name: "百の境界を越えし者",
-    rarity: "☆☆☆",
-    condition: "100到達寸前の危険状態を複数回生還する",
-    acquiredAt: "2026年06月03日に取得",
-    comment: "100という境界線のそばで、幾度も足を止めた者に贈られる。越えれば終わり、越えなければ伝説。",
-    owned: true,
-  },
-  {
-    id: "title-abyss-001",
-    name: "深淵を覗く者",
-    rarity: "☆☆☆",
-    condition: "危険なJOKER宣言を成功させる",
-    acquiredAt: "2026年06月03日に取得",
-    comment: "その一手は無謀か、それとも読み切りか。深淵を覗き込みながら、なお笑って札を置いた者の称号。",
-    owned: true,
-  },
-  {
-    id: "title-spade3-001",
-    name: "黒き三刃の返礼",
-    rarity: "☆☆",
-    condition: "♠3で直前のJOKERを無効化する",
-    acquiredAt: "2026年06月04日に取得",
-    comment: "切り札には切り返しを。黒き三の刃で、混沌の札を沈黙させた者に贈られる称号。",
-    owned: true,
-  },
-  {
-    id: "title-unknown-001",
-    name: "星狩りの観測者",
-    rarity: "☆☆☆☆",
-    condition: "未所持",
-    comment: "未所持",
-    owned: false,
-  },
-  {
-    id: "title-unknown-002",
-    name: "百界の覇者",
-    rarity: "☆☆☆☆☆",
-    condition: "未所持",
-    comment: "未所持",
-    owned: false,
-  },
-];
-
-const USER_ICON_DEFINITIONS: UserIconDefinition[] = PLAYER_ICON_PRESETS.map((preset) => ({
-  id: preset.id,
-  name: preset.label,
-  comment: `${preset.label}のプレイヤーアイコンです。ゲーム内で選択できるようになります。`,
-  owned: true,
-}));
-
-const LOADING_ILLUSTRATION_DEFINITIONS: LoadingIllustrationDefinition[] = [
-  {
-    id: "load-illustration-001",
-    name: "ロード画面１(男の子)",
-    src: "/assets/loading-illustrations/01_load.png",
-    comment: "文字数30文字数30文字数30文字数30文字数30文字数30文字数30文字数30文字数30文字数30文字数30文字数30",
-    owned: true,
-  },
-  {
-    id: "load-illustration-002",
-    name: "ロード画面２(女の子)",
-    src: "/assets/loading-illustrations/02_load.png",
-    comment: "文字数30文字数30文字数30文字数30文字数30文字数30文字数30文字数30文字数30文字数30文字数30文字数30",
-    owned: true,
-  },
-];
 
 function escapeHtml(value: string): string {
   return value
@@ -232,10 +110,73 @@ function titleNo(titleId: string): number {
 }
 
 function acquiredTime(title: UserTitleDefinition): number {
-  if (!title.owned || !title.acquiredAt) return -1;
+  if (!title.owned) return -1;
+  if (typeof title.acquiredAtOrder === "number" && Number.isFinite(title.acquiredAtOrder)) return title.acquiredAtOrder;
+  if (!title.acquiredAt) return -1;
+
   const match = title.acquiredAt.match(/(\d{4})年(\d{2})月(\d{2})日/);
   if (!match) return -1;
   return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])).getTime();
+}
+
+
+function formatAnnouncementDate(value: string | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function announcementBodyHtml(announcement: HomeAnnouncement): string {
+  const body = announcement.body.trim();
+  if (!body) return "<p>本文はありません。</p>";
+
+  return body
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${escapeHtml(paragraph).replaceAll("\n", "<br>")}</p>`)
+    .join("");
+}
+
+async function loadHomeAnnouncements(): Promise<HomeAnnouncement[]> {
+  try {
+    const response = await fetch("/api/announcements", { credentials: "include" });
+    if (!response.ok) return [];
+
+    const payload: unknown = await response.json();
+    if (!payload || typeof payload !== "object" || !("announcements" in payload)) return [];
+
+    const announcements = (payload as { announcements?: unknown }).announcements;
+    if (!Array.isArray(announcements)) return [];
+
+    return announcements.filter(isHomeAnnouncement);
+  } catch {
+    return [];
+  }
+}
+
+function isHomeAnnouncement(value: unknown): value is HomeAnnouncement {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.id === "string" &&
+    typeof record.title === "string" &&
+    typeof record.summary === "string" &&
+    typeof record.body === "string" &&
+    typeof record.category === "string" &&
+    typeof record.categoryLabel === "string" &&
+    typeof record.priority === "number" &&
+    (typeof record.startsAt === "string" || record.startsAt === null) &&
+    (typeof record.endsAt === "string" || record.endsAt === null) &&
+    typeof record.createdAt === "string" &&
+    typeof record.updatedAt === "string"
+  );
 }
 
 function findTitle(titleId: string | null | undefined): UserTitleDefinition | undefined {
@@ -244,11 +185,7 @@ function findTitle(titleId: string | null | undefined): UserTitleDefinition | un
 }
 
 function getSelectedTitle(): UserTitleDefinition {
-  let selectedId = DEFAULT_TITLE_ID;
-  try {
-    selectedId = localStorage.getItem(SELECTED_TITLE_ID_KEY) || DEFAULT_TITLE_ID;
-  } catch { }
-
+  const selectedId = getUserTitleId();
   const selected = findTitle(selectedId);
   if (selected?.owned) return selected;
 
@@ -259,14 +196,76 @@ function setSelectedTitleId(titleId: string) {
   const title = findTitle(titleId);
   if (!title?.owned) return;
 
-  try {
-    localStorage.setItem(SELECTED_TITLE_ID_KEY, titleId);
-  } catch { }
+  setUserTitleId(titleId);
 }
 
 function findIcon(iconId: string | null | undefined): UserIconDefinition | undefined {
-  const resolvedIconId = resolveIconId(iconId, DEFAULT_PLAYER_ICON_ID);
+  const rawIconId = typeof iconId === "string" ? iconId : "";
+  const directMatch = USER_ICON_DEFINITIONS.find((icon) => icon.id === rawIconId);
+  if (directMatch) return directMatch;
+
+  const resolvedIconId = resolveIconId(rawIconId, DEFAULT_PLAYER_ICON_ID);
   return USER_ICON_DEFINITIONS.find((icon) => icon.id === resolvedIconId);
+}
+
+function isDirectIconImagePath(imagePath: string): boolean {
+  return /^(?:https?:|data:|blob:)/.test(imagePath) || imagePath.startsWith("/") || imagePath.startsWith("./") || imagePath.startsWith("../");
+}
+
+function iconDefinitionContentHtml(icon: Pick<UserIconDefinition, "id" | "name"> & Partial<Pick<UserIconDefinition, "imagePath">>, sizePx: number): string {
+  const imagePath = typeof icon.imagePath === "string" ? icon.imagePath.trim() : "";
+
+  if (imagePath && isDirectIconImagePath(imagePath)) {
+    return `<img src="${escapeHtml(imagePath)}" alt="${escapeHtml(icon.name)}" style="width:${sizePx}px;height:${sizePx}px;object-fit:contain;display:block;" />`;
+  }
+
+  return iconContentHtml(imagePath || icon.id, sizePx, icon.id);
+}
+
+function formatRecordNumber(value: number): string {
+  return new Intl.NumberFormat("ja-JP").format(Math.max(0, Math.trunc(Number(value) || 0)));
+}
+
+function formatRecordDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "日時不明";
+
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatWinRate(stats: UserRecordModeStats): string {
+  if (stats.matchCount <= 0) return "0.0%";
+  return `${((stats.winCount / stats.matchCount) * 100).toFixed(1)}%`;
+}
+
+function formatRecordMode(mode: UserRecordMatch["mode"]): string {
+  return mode === "multi" ? "マルチ" : "ソロ";
+}
+
+function formatRecordDifficulty(difficulty: string): string {
+  if (difficulty === "SMART") return "SMART";
+  if (difficulty === "CASUAL") return "CASUAL";
+  return difficulty || "-";
+}
+
+function formatRecordResult(match: UserRecordMatch): string {
+  if (match.self.isLoser) return "敗北";
+  if (match.self.isWinner) return "勝利";
+  return "終了";
+}
+
+function formatRecordReason(reason: string): string {
+  if (reason === "bust") return "バースト";
+  if (reason === "deck_end") return "山札終了";
+  if (reason === "host_disband") return "部屋解散";
+  if (reason === "player_left") return "途中離脱";
+  return reason || "-";
 }
 
 function getSelectedUserIcon(): UserIconDefinition {
@@ -282,59 +281,7 @@ export function getSelectedUserTitleName(): string {
   return getSelectedTitle().name;
 }
 
-const HOME_ANNOUNCEMENTS: HomeAnnouncement[] = [
-  {
-    id: "notice-20260615-01",
-    date: "2026/06/15",
-    title: "ホーム画面のお知らせ表示を調整中",
-    summary: "最新のお知らせをホームに1件だけ表示し、一覧から詳細を確認できるようにする仮実装です。",
-    bodyHtml: `
-      <p>ホーム画面のお知らせ枠は、最新のお知らせのみを表示する方針で調整中です。</p>
-      <p>「さらに見る」から最新5件のお知らせタイトルを確認でき、タイトルを押すと詳細を表示できます。</p>
-      <p>正式公開時は、運営からのアップデート情報・メンテナンス情報・不具合修正情報などを掲載予定です。</p>
-    `,
-  },
-  {
-    id: "notice-20260610-01",
-    date: "2026/06/10",
-    title: "マルチ招待URL導線を調整中",
-    summary: "招待URLから参加する際に、ログイン参加・ゲスト参加を選べる専用ゲート画面を追加しました。",
-    bodyHtml: `
-      <p>マルチ招待URLからアクセスした場合、直接部屋へ入らず、専用の参加ゲート画面を表示する方針にしました。</p>
-      <p>ログイン済みユーザーは最後に設定した称号を表示し、ゲスト参加の場合は称号なし・ゲストバッジありで参加します。</p>
-    `,
-  },
-  {
-    id: "notice-20260605-01",
-    date: "2026/06/05",
-    title: "称号プレートの仮表示を追加",
-    summary: "ゲーム画面のプレイヤー状況に、称号プレートを仮表示する調整を行いました。",
-    bodyHtml: `
-      <p>ログイン済みユーザーのプレイヤー状況に、表示中の称号をプレート形式で出す仮UIを追加しました。</p>
-      <p>スマホ表示では、称号が切れにくいように3行目へ表示する調整を行っています。</p>
-    `,
-  },
-  {
-    id: "notice-20260601-01",
-    date: "2026/06/01",
-    title: "ログイン済みホーム画面を仮追加",
-    summary: "ゲームプレイ・図鑑・設定へ進むためのログイン済みホーム画面を仮追加しました。",
-    bodyHtml: `
-      <p>タイトル画面からロードを挟み、ログイン済みユーザー用のホーム画面へ進む仮導線を追加しました。</p>
-      <p>現在はゲームプレイボタンのみ実際に設定画面へ遷移し、図鑑・設定は今後の追加予定です。</p>
-    `,
-  },
-  {
-    id: "notice-20260528-01",
-    date: "2026/05/28",
-    title: "ロード画面の仮イラスト表示を追加",
-    summary: "タイトル画面から遷移する際に、仮ロード画面とロードイラストを表示するようにしました。",
-    bodyHtml: `
-      <p>タイトル画面からホーム画面・設定画面へ移動する前に、ロード画面を挟む仮実装を追加しました。</p>
-      <p>ロード画像は仮素材からランダム表示し、将来的にはログイン状況や称号獲得状況に応じた表示へ拡張予定です。</p>
-    `,
-  },
-];
+let HOME_ANNOUNCEMENTS: HomeAnnouncement[] = [];
 
 const HOME_MODAL_CONTENT: Record<HomeModalKey, HomeModalContent> = {
   privacy: {
@@ -422,7 +369,7 @@ export function renderUserHome(
       <main class="userHomeLayout" aria-label="100GAME⁺ ホーム">
         <section class="userHomeProfileCard" aria-label="プレイヤー情報">
           <button id="userHomeCurrentIconBtn" class="userHomeAvatar userHomeAvatarBtn" type="button" aria-label="表示アイコンを変更する">
-            <span id="userHomeCurrentIconContent" class="userHomeAvatarImage" aria-hidden="true">${iconContentHtml(selectedIcon.id, 64)}</span>
+            <span id="userHomeCurrentIconContent" class="userHomeAvatarImage" aria-hidden="true">${iconDefinitionContentHtml(selectedIcon, 64)}</span>
           </button>
           <div class="userHomeProfileText">
             <div id="userHomeName" class="userHomeName">${escapeHtml(currentPlayerName)}</div>
@@ -449,6 +396,10 @@ export function renderUserHome(
               <span class="userHomeMenuIcon">◆</span>
               <span>図鑑</span>
             </button>
+            <button id="userHomeRecordsBtn" class="userHomeSubBtn" type="button">
+              <span class="userHomeMenuIcon">📊</span>
+              <span>戦績</span>
+            </button>
             <button id="userHomeSettingsBtn" class="userHomeSubBtn" type="button">
               <span class="userHomeMenuIcon">⚙</span>
               <span>設定</span>
@@ -458,10 +409,10 @@ export function renderUserHome(
 
         <section class="userHomeNoticeCard" aria-label="お知らせ">
           <div class="userHomeNoticeLabel">NOTICE</div>
-          <div class="userHomeNoticeTitle">${HOME_ANNOUNCEMENTS[0]?.title ?? "お知らせ"}</div>
-          <div class="userHomeNoticeDate">${HOME_ANNOUNCEMENTS[0]?.date ?? ""}</div>
-          <div class="userHomeNoticeText">${HOME_ANNOUNCEMENTS[0]?.summary ?? "現在表示できるお知らせはありません。"}</div>
-          <button id="userHomeNoticeMoreBtn" class="userHomeNoticeMoreBtn" type="button">さらに見る</button>
+          <div id="userHomeNoticeTitle" class="userHomeNoticeTitle">お知らせはありません</div>
+          <div id="userHomeNoticeDate" class="userHomeNoticeDate"></div>
+          <div id="userHomeNoticeText" class="userHomeNoticeText">公開中のお知らせはありません。</div>
+          <button id="userHomeNoticeMoreBtn" class="userHomeNoticeMoreBtn" type="button" disabled>さらに見る</button>
         </section>
       </main>
 
@@ -548,6 +499,22 @@ export function renderUserHome(
             </div>
             <div id="userHomeLoadingIllustrationList" class="userHomeLoadingIllustrationList"></div>
           </div>
+        </div>
+      </section>
+
+      <section id="userHomeRecordsView" class="userHomeRecordsView" aria-hidden="true" aria-label="戦績・履歴">
+        <div class="userHomeRecordsPanel">
+          <div class="userHomeRecordsHeader">
+            <div>
+              <div class="userHomeEyebrow">RECORDS</div>
+              <h1 class="userHomeRecordsTitle">戦績・履歴</h1>
+              <p class="userHomeRecordsLead">ソロ・マルチ・総合の戦績と、最近の試合履歴を確認できます。</p>
+            </div>
+            <button id="userHomeRecordsReloadBtn" class="btn userHomeRecordsReloadBtn" type="button">更新</button>
+          </div>
+
+          <div id="userHomeRecordsStatus" class="userHomeRecordsStatus" aria-live="polite">戦績・履歴を読み込み中です。</div>
+          <div id="userHomeRecordsContent" class="userHomeRecordsContent" aria-hidden="true"></div>
         </div>
       </section>
 
@@ -718,6 +685,7 @@ export function renderUserHome(
   const root = app.querySelector<HTMLDivElement>("#userHomeScreenRoot");
   const playBtn = app.querySelector<HTMLButtonElement>("#userHomePlayBtn");
   const libraryBtn = app.querySelector<HTMLButtonElement>("#userHomeLibraryBtn");
+  const recordsBtn = app.querySelector<HTMLButtonElement>("#userHomeRecordsBtn");
   const settingsBtn = app.querySelector<HTMLButtonElement>("#userHomeSettingsBtn");
   const userHomeName = app.querySelector<HTMLDivElement>("#userHomeName");
   const currentIconBtn = app.querySelector<HTMLButtonElement>("#userHomeCurrentIconBtn");
@@ -739,6 +707,9 @@ export function renderUserHome(
   const modalActionBtn = app.querySelector<HTMLButtonElement>("#userHomeInfoActionBtn");
   const modalActionNote = app.querySelector<HTMLDivElement>("#userHomeInfoActionNote");
   const modalClose = app.querySelector<HTMLButtonElement>("#userHomeInfoClose");
+  const noticeTitle = app.querySelector<HTMLDivElement>("#userHomeNoticeTitle");
+  const noticeDate = app.querySelector<HTMLDivElement>("#userHomeNoticeDate");
+  const noticeText = app.querySelector<HTMLDivElement>("#userHomeNoticeText");
   const noticeMoreBtn = app.querySelector<HTMLButtonElement>("#userHomeNoticeMoreBtn");
   const announcementModal = app.querySelector<HTMLDivElement>("#userHomeAnnouncementModal");
   const announcementDialog = app.querySelector<HTMLDivElement>("#userHomeAnnouncementDialog");
@@ -774,6 +745,10 @@ export function renderUserHome(
   const loadingIllustrationList = app.querySelector<HTMLDivElement>("#userHomeLoadingIllustrationList");
   const loadingIllustrationOwnedCount = app.querySelector<HTMLSpanElement>("#userHomeLoadingIllustrationOwnedCount");
   const settingsView = app.querySelector<HTMLElement>("#userHomeSettingsView");
+  const recordsView = app.querySelector<HTMLElement>("#userHomeRecordsView");
+  const recordsReloadBtn = app.querySelector<HTMLButtonElement>("#userHomeRecordsReloadBtn");
+  const recordsStatus = app.querySelector<HTMLDivElement>("#userHomeRecordsStatus");
+  const recordsContent = app.querySelector<HTMLDivElement>("#userHomeRecordsContent");
   const settingNameInput = app.querySelector<HTMLInputElement>("#userHomeSettingNameInput");
   const settingNameSaveBtn = app.querySelector<HTMLButtonElement>("#userHomeSettingNameSaveBtn");
   const settingNameError = app.querySelector<HTMLSpanElement>("#userHomeSettingNameError");
@@ -803,6 +778,7 @@ export function renderUserHome(
     !root ||
     !playBtn ||
     !libraryBtn ||
+    !recordsBtn ||
     !settingsBtn ||
     !userHomeName ||
     !currentIconBtn ||
@@ -824,6 +800,9 @@ export function renderUserHome(
     !modalActionBtn ||
     !modalActionNote ||
     !modalClose ||
+    !noticeTitle ||
+    !noticeDate ||
+    !noticeText ||
     !noticeMoreBtn ||
     !announcementModal ||
     !announcementDialog ||
@@ -859,6 +838,10 @@ export function renderUserHome(
     !loadingIllustrationList ||
     !loadingIllustrationOwnedCount ||
     !settingsView ||
+    !recordsView ||
+    !recordsReloadBtn ||
+    !recordsStatus ||
+    !recordsContent ||
     !settingNameInput ||
     !settingNameSaveBtn ||
     !settingNameError ||
@@ -898,7 +881,7 @@ export function renderUserHome(
 
   const updateCurrentIconView = () => {
     const icon = getSelectedUserIcon();
-    currentIconContent.innerHTML = iconContentHtml(icon.id, 64);
+    currentIconContent.innerHTML = iconDefinitionContentHtml(icon, 64);
     currentIconBtn.setAttribute("aria-label", `表示アイコンを変更する：${icon.name}`);
   };
 
@@ -936,7 +919,7 @@ export function renderUserHome(
     }
   };
 
-  const saveSettingName = () => {
+  const saveSettingName = async () => {
     const validation = validatePlayerName(settingNameInput.value);
     if (validation === "empty") {
       setSettingNameMessage("プレイヤーネームを入力してください");
@@ -959,17 +942,26 @@ export function renderUserHome(
       return;
     }
 
-    setUserPlayerName(nextName);
-    setSettingNameMessage("プレイヤーネームを変更しました");
-    refreshSettingNameView(true);
+    try {
+      await updateUserSettingsOnApi({ displayName: nextName });
+      setSettingNameMessage("プレイヤーネームを変更しました");
+      refreshSettingNameView(true);
+    } catch {
+      setSettingNameMessage("プレイヤーネームの保存に失敗しました。時間をおいて再度お試しください");
+    }
   };
 
-  const restoreSettingName = () => {
-    const restoredName = restorePreviousUserPlayerName();
-    if (!restoredName) return;
+  const restoreSettingName = async () => {
+    const previousName = getPreviousUserPlayerName();
+    if (!previousName) return;
 
-    setSettingNameMessage("前回のプレイヤーネームに戻しました");
-    refreshSettingNameView(true);
+    try {
+      await updateUserSettingsOnApi({ displayName: previousName });
+      setSettingNameMessage("前回のプレイヤーネームに戻しました");
+      refreshSettingNameView(true);
+    } catch {
+      setSettingNameMessage("プレイヤーネームの保存に失敗しました。時間をおいて再度お試しください");
+    }
   };
 
   updateSoundButton();
@@ -1044,6 +1036,127 @@ export function renderUserHome(
   let libraryPage: LibraryPage = "index";
   let titleLibraryFilter: TitleLibraryFilter = "all";
   let titleLibrarySort: TitleLibrarySort = "noAsc";
+  let recordsSnapshot: UserRecordsSnapshot | null = null;
+  let recordsLoading = false;
+  let recordsLoadedOnce = false;
+
+  const renderRecordMetric = (label: string, value: string, note = "") => `
+    <div class="userHomeRecordMetric">
+      <span class="userHomeRecordMetricLabel">${escapeHtml(label)}</span>
+      <span class="userHomeRecordMetricValue">${escapeHtml(value)}</span>
+      ${note ? `<span class="userHomeRecordMetricNote">${escapeHtml(note)}</span>` : ""}
+    </div>
+  `;
+
+  const renderRecordStatsPanel = (title: string, stats: UserRecordModeStats, showStreaks = true) => `
+    <section class="userHomeRecordStatsCard" aria-label="${escapeHtml(title)}">
+      <h2 class="userHomeRecordSectionTitle">${escapeHtml(title)}</h2>
+      <div class="userHomeRecordMetricGrid">
+        ${renderRecordMetric("試合数", formatRecordNumber(stats.matchCount))}
+        ${renderRecordMetric("勝利", formatRecordNumber(stats.winCount))}
+        ${renderRecordMetric("敗北", formatRecordNumber(stats.loseCount))}
+        ${renderRecordMetric("勝率", formatWinRate(stats))}
+        ${showStreaks ? renderRecordMetric("現在連勝", `${formatRecordNumber(stats.currentWinStreak)}連勝`) : ""}
+        ${showStreaks ? renderRecordMetric("最大連勝", `${formatRecordNumber(stats.maxWinStreak)}連勝`) : ""}
+      </div>
+    </section>
+  `;
+
+  const renderRecordsSnapshot = (snapshot: UserRecordsSnapshot) => {
+    const recentMatches = snapshot.recentMatches;
+
+    recordsContent.innerHTML = `
+      <div class="userHomeRecordStatsGrid">
+        ${renderRecordStatsPanel("総合戦績", snapshot.stats.total, false)}
+        ${renderRecordStatsPanel("ソロ戦績", snapshot.stats.solo)}
+        ${renderRecordStatsPanel("マルチ戦績", snapshot.stats.multi)}
+      </div>
+
+      <section class="userHomeRecordHistoryCard" aria-label="最近の試合履歴">
+        <div class="userHomeRecordHistoryHead">
+          <h2 class="userHomeRecordSectionTitle">最近の試合履歴</h2>
+          <span class="userHomeRecordHistoryCount">最新${formatRecordNumber(recentMatches.length)}件</span>
+        </div>
+        ${recentMatches.length === 0 ? `
+          <div class="userHomeRecordEmpty">保存済みの試合履歴はまだありません。</div>
+        ` : `
+          <div class="userHomeRecordMatchList">
+            ${recentMatches.map((match) => renderRecordMatch(match)).join("")}
+          </div>
+        `}
+      </section>
+    `;
+  };
+
+  const renderRecordMatch = (match: UserRecordMatch) => {
+    const resultClass = match.self.isLoser ? "is-lose" : match.self.isWinner ? "is-win" : "is-end";
+    const participants = match.participants.map((participant) => `
+      <span class="userHomeRecordParticipant ${participant.isWinner ? "is-win" : ""} ${participant.isLoser ? "is-lose" : ""}">
+        ${participant.isHost ? "HOST " : ""}${escapeHtml(participant.displayNameSnapshot)}
+      </span>
+    `).join("");
+
+    return `
+      <article class="userHomeRecordMatchItem ${resultClass}">
+        <div class="userHomeRecordMatchTop">
+          <span class="userHomeRecordMatchResult">${escapeHtml(formatRecordResult(match))}</span>
+          <span class="userHomeRecordMatchMode">${escapeHtml(formatRecordMode(match.mode))}</span>
+          <span class="userHomeRecordMatchDate">${escapeHtml(formatRecordDate(match.endedAt))}</span>
+        </div>
+        <div class="userHomeRecordMatchMain">
+          <span>難易度 ${escapeHtml(formatRecordDifficulty(match.difficulty))}</span>
+          <span>タイプ ${escapeHtml(match.gameType)}</span>
+          <span>終了方向 ${escapeHtml(match.finalDirection)}</span>
+          <span>最終合計 ${formatRecordNumber(match.finalTotal)}</span>
+          <span>理由 ${escapeHtml(formatRecordReason(match.resultReason))}</span>
+        </div>
+        ${participants ? `<div class="userHomeRecordParticipantList">${participants}</div>` : ""}
+      </article>
+    `;
+  };
+
+  const renderRecords = () => {
+    if (recordsLoading) {
+      recordsStatus.textContent = "戦績・履歴を読み込み中です。";
+      recordsStatus.style.display = "";
+      recordsContent.setAttribute("aria-hidden", "true");
+      recordsContent.innerHTML = "";
+      return;
+    }
+
+    if (!recordsSnapshot) {
+      recordsStatus.textContent = recordsLoadedOnce ? "戦績・履歴を取得できませんでした。" : "戦績・履歴を読み込みます。";
+      recordsStatus.style.display = "";
+      recordsContent.setAttribute("aria-hidden", "true");
+      recordsContent.innerHTML = "";
+      return;
+    }
+
+    recordsStatus.style.display = "none";
+    recordsContent.setAttribute("aria-hidden", "false");
+    renderRecordsSnapshot(recordsSnapshot);
+  };
+
+  const loadRecords = async (force = false) => {
+    if (recordsLoading) return;
+    if (recordsSnapshot && !force) {
+      renderRecords();
+      return;
+    }
+
+    recordsLoading = true;
+    renderRecords();
+
+    try {
+      recordsSnapshot = await loadUserRecordsFromApi();
+    } catch {
+      recordsSnapshot = null;
+    } finally {
+      recordsLoading = false;
+      recordsLoadedOnce = true;
+      renderRecords();
+    }
+  };
 
   const setLibraryPage = (page: LibraryPage) => {
     libraryPage = page;
@@ -1089,8 +1202,10 @@ export function renderUserHome(
       activeSubView = "library";
       root.classList.add("is-library-open");
       root.classList.remove("is-settings-open");
+      root.classList.remove("is-records-open");
       libraryView.setAttribute("aria-hidden", "false");
       settingsView.setAttribute("aria-hidden", "true");
+      recordsView.setAttribute("aria-hidden", "true");
       clearSettingNameMessage();
       refreshSettingNameView(true);
       setLibraryPage("index");
@@ -1098,10 +1213,13 @@ export function renderUserHome(
       activeSubView = "home";
       root.classList.remove("is-library-open");
       libraryView.setAttribute("aria-hidden", "true");
+      recordsView.setAttribute("aria-hidden", "true");
+      recordsView.setAttribute("aria-hidden", "true");
       setLibraryPage("index");
     } else {
       root.classList.remove("is-library-open");
       libraryView.setAttribute("aria-hidden", "true");
+      recordsView.setAttribute("aria-hidden", "true");
     }
 
     updateSubViewMenu();
@@ -1112,8 +1230,10 @@ export function renderUserHome(
       activeSubView = "settings";
       root.classList.add("is-settings-open");
       root.classList.remove("is-library-open");
+      root.classList.remove("is-records-open");
       settingsView.setAttribute("aria-hidden", "false");
       libraryView.setAttribute("aria-hidden", "true");
+      recordsView.setAttribute("aria-hidden", "true");
       setLibraryPage("index");
       clearSettingNameMessage();
       refreshSettingNameView(true);
@@ -1122,13 +1242,40 @@ export function renderUserHome(
       activeSubView = "home";
       root.classList.remove("is-settings-open");
       settingsView.setAttribute("aria-hidden", "true");
+      recordsView.setAttribute("aria-hidden", "true");
       clearSettingNameMessage();
       refreshSettingNameView(true);
     } else {
       root.classList.remove("is-settings-open");
       settingsView.setAttribute("aria-hidden", "true");
+      recordsView.setAttribute("aria-hidden", "true");
       clearSettingNameMessage();
       refreshSettingNameView(true);
+    }
+
+    updateSubViewMenu();
+  };
+
+  const setRecordsOpen = (open: boolean) => {
+    if (open) {
+      activeSubView = "records";
+      root.classList.add("is-records-open");
+      root.classList.remove("is-library-open");
+      root.classList.remove("is-settings-open");
+      recordsView.setAttribute("aria-hidden", "false");
+      libraryView.setAttribute("aria-hidden", "true");
+      settingsView.setAttribute("aria-hidden", "true");
+      setLibraryPage("index");
+      clearSettingNameMessage();
+      refreshSettingNameView(true);
+      void loadRecords(false);
+    } else if (activeSubView === "records") {
+      activeSubView = "home";
+      root.classList.remove("is-records-open");
+      recordsView.setAttribute("aria-hidden", "true");
+    } else {
+      root.classList.remove("is-records-open");
+      recordsView.setAttribute("aria-hidden", "true");
     }
 
     updateSubViewMenu();
@@ -1169,6 +1316,7 @@ export function renderUserHome(
     if (!title?.owned) return;
 
     setSelectedTitleId(titleId);
+    void updateUserSettingsOnApi({ currentTitleId: titleId }).catch(() => { });
     updateCurrentTitleView();
     renderTitleLibraryList();
     renderTitleSelectList();
@@ -1179,6 +1327,7 @@ export function renderUserHome(
     if (!icon?.owned) return;
 
     setUserIconId(icon.id);
+    void updateUserSettingsOnApi({ currentIconId: icon.id }).catch(() => { });
     updateCurrentIconView();
     renderIconSelectList();
   };
@@ -1336,7 +1485,7 @@ export function renderUserHome(
 
       return `
         <button class="userHomeCollectionTile userHomeIconTile" type="button" data-icon-id="${escapeHtml(item.icon.id)}">
-          <span class="userHomeIconTileImage" aria-hidden="true">${iconContentHtml(item.icon.id, 58)}</span>
+          <span class="userHomeIconTileImage" aria-hidden="true">${iconDefinitionContentHtml(item.icon, 58)}</span>
           <span class="userHomeCollectionTileName">${escapeHtml(item.icon.name)}</span>
         </button>
       `;
@@ -1393,7 +1542,7 @@ export function renderUserHome(
       <div class="userHomeIconSelectList" aria-label="所持中アイコン一覧">
         ${ownedIcons.map((icon) => `
           <button class="userHomeIconSelectItem ${icon.id === selectedId ? "is-selected" : ""}" type="button" data-select-icon-id="${escapeHtml(icon.id)}">
-            <span class="userHomeIconSelectImage" aria-hidden="true">${iconContentHtml(icon.id, 58)}</span>
+            <span class="userHomeIconSelectImage" aria-hidden="true">${iconDefinitionContentHtml(icon, 58)}</span>
             <span class="userHomeIconSelectName">${escapeHtml(icon.name)}</span>
             ${icon.id === selectedId ? `<span class="userHomeIconSelectMeta">設定中</span>` : ""}
           </button>
@@ -1493,7 +1642,7 @@ export function renderUserHome(
     titleDetailBody.innerHTML = `
       <div class="titleDetailOuter collectionDetailOuter">
         <section class="titleDetailHero collectionDetailHero iconDetailHero">
-          <div class="collectionDetailIconPreview">${iconContentHtml(icon.id, 118)}</div>
+          <div class="collectionDetailIconPreview">${iconDefinitionContentHtml(icon, 118)}</div>
           <h2 id="userHomeTitleDetailName" class="titleDetailName">${escapeHtml(icon.name)}</h2>
         </section>
 
@@ -1593,7 +1742,7 @@ export function renderUserHome(
     iconAwardBody.innerHTML = `
       <div class="userHomeTitleAwardLead userHomeIconAwardLead">ホームに戻るまでに獲得したアイコンを通知しています。</div>
       <div class="userHomeIconAwardPreview">
-        <div class="userHomeIconAwardImage" aria-hidden="true">${iconContentHtml(representativeIcon.id, 92)}</div>
+        <div class="userHomeIconAwardImage" aria-hidden="true">${iconDefinitionContentHtml(representativeIcon, 92)}</div>
         <div class="userHomeIconAwardDisplayName">${escapeHtml(representativeIcon.name)}</div>
       </div>
       ${otherCount > 0 ? `<div class="userHomeTitleAwardMore userHomeIconAwardMore">他${otherCount}個のアイコンを獲得しました。</div>` : ""}
@@ -1628,17 +1777,38 @@ export function renderUserHome(
     handlers.onIconAwardNotificationClose?.();
   };
 
+  const updateAnnouncementNotice = () => {
+    const announcement = HOME_ANNOUNCEMENTS[0];
+    if (!announcement) {
+      noticeTitle.textContent = "お知らせはありません";
+      noticeDate.textContent = "";
+      noticeText.textContent = "公開中のお知らせはありません。";
+      noticeMoreBtn.disabled = true;
+      return;
+    }
+
+    noticeTitle.textContent = announcement.title;
+    noticeDate.textContent = formatAnnouncementDate(announcement.startsAt ?? announcement.createdAt);
+    noticeText.textContent = announcement.summary || announcement.body.slice(0, 80);
+    noticeMoreBtn.disabled = false;
+  };
+
   const renderAnnouncementList = () => {
     announcementHeading.textContent = "お知らせ一覧";
     announcementBackBtn.style.display = "none";
+    if (HOME_ANNOUNCEMENTS.length === 0) {
+      announcementBody.innerHTML = `<div class="userHomeAnnouncementEmpty">お知らせはありません。</div>`;
+      return;
+    }
+
     announcementBody.innerHTML = `
       <div class="userHomeAnnouncementList">
         ${HOME_ANNOUNCEMENTS.slice(0, 5)
           .map(
             (announcement) => `
               <button class="userHomeAnnouncementItem" type="button" data-announcement-id="${announcement.id}">
-                <span class="userHomeAnnouncementItemDate">${announcement.date}</span>
-                <span class="userHomeAnnouncementItemTitle">${announcement.title}</span>
+                <span class="userHomeAnnouncementItemDate">${formatAnnouncementDate(announcement.startsAt ?? announcement.createdAt)}</span>
+                <span class="userHomeAnnouncementItemTitle">${escapeHtml(announcement.title)}</span>
               </button>
             `
           )
@@ -1652,9 +1822,9 @@ export function renderUserHome(
     announcementBackBtn.style.display = "block";
     announcementBody.innerHTML = `
       <article class="userHomeAnnouncementDetail">
-        <div class="userHomeAnnouncementDetailDate">${announcement.date}</div>
-        <h2 class="userHomeAnnouncementDetailTitle">${announcement.title}</h2>
-        <div class="userHomeAnnouncementDetailBody">${announcement.bodyHtml}</div>
+        <div class="userHomeAnnouncementDetailDate">${formatAnnouncementDate(announcement.startsAt ?? announcement.createdAt)}</div>
+        <h2 class="userHomeAnnouncementDetailTitle">${escapeHtml(announcement.title)}</h2>
+        <div class="userHomeAnnouncementDetailBody">${announcementBodyHtml(announcement)}</div>
       </article>
     `;
   };
@@ -1663,6 +1833,12 @@ export function renderUserHome(
     renderAnnouncementList();
     setAnnouncementOpen(true);
   };
+
+  updateAnnouncementNotice();
+  void loadHomeAnnouncements().then((announcements) => {
+    HOME_ANNOUNCEMENTS = announcements;
+    updateAnnouncementNotice();
+  });
 
   settingNameInput.addEventListener("input", () => {
     setSettingNameMessage(null);
@@ -1673,23 +1849,24 @@ export function renderUserHome(
     if (event.key !== "Enter") return;
     event.preventDefault();
     playButtonSe();
-    saveSettingName();
+    void saveSettingName();
   });
 
   settingNameSaveBtn.addEventListener("click", () => {
     playButtonSe();
-    saveSettingName();
+    void saveSettingName();
   });
 
   settingRestoreNameBtn.addEventListener("click", () => {
     playButtonSe();
-    restoreSettingName();
+    void restoreSettingName();
   });
 
   for (const button of soundLevelButtons) {
     button.addEventListener("click", () => {
       const level = Number(button.dataset.soundVolumeLevel);
-      setSoundVolumeLevel(level);
+      const normalizedLevel = setSoundVolumeLevel(level);
+      void updateUserSettingsOnApi({ soundVolumeLevel: normalizedLevel }).catch(() => { });
       refreshSoundVolumeView();
       playButtonSe();
     });
@@ -1719,6 +1896,16 @@ export function renderUserHome(
   libraryBtn.addEventListener("click", () => {
     playButtonSe();
     setLibraryOpen(true);
+  });
+
+  recordsBtn.addEventListener("click", () => {
+    playButtonSe();
+    setRecordsOpen(true);
+  });
+
+  recordsReloadBtn.addEventListener("click", () => {
+    playButtonSe();
+    void loadRecords(true);
   });
 
   settingsBtn.addEventListener("click", () => {
@@ -2013,6 +2200,7 @@ export function renderUserHome(
     playButtonSe();
     closeMenu();
     setLibraryOpen(false);
+    setRecordsOpen(false);
     setSettingsOpen(false);
   });
 

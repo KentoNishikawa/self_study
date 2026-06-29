@@ -1,0 +1,883 @@
+:root {
+  color: #172033;
+  background: #f4f6f8;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f4f6f8;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.adminPage {
+  min-height: 100vh;
+  padding: 32px 18px 56px;
+}
+
+.adminShell {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+}
+
+.adminHeader {
+  margin-bottom: 20px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+}
+
+.adminBrand {
+  margin-bottom: 6px;
+  color: #9d202a;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.adminHeader h1 {
+  margin: 0 0 8px;
+  font-size: clamp(1.7rem, 3vw, 2.25rem);
+}
+
+.adminHeader p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+.adminTabs {
+  margin-bottom: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.adminTab {
+  min-height: 42px;
+  padding: 9px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  font-weight: 700;
+}
+
+.adminTab.is-active {
+  border-color: #9d202a;
+  background: #9d202a;
+  color: #ffffff;
+}
+
+.adminGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.adminGrid.is-list-only {
+  grid-template-columns: 1fr;
+}
+
+.adminCard {
+  padding: 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+}
+
+.adminCard h2,
+.adminModal h2 {
+  margin: 0 0 14px;
+  font-size: 1.2rem;
+}
+
+.adminCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.adminCardHeader h2 {
+  margin-bottom: 0;
+}
+
+.adminDetailCard {
+  position: sticky;
+  top: 18px;
+}
+
+.adminMessage {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #eef2ff;
+  color: #312e81;
+  line-height: 1.6;
+}
+
+.adminMessage.is-error {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.adminTableWrap {
+  overflow-x: auto;
+}
+
+.adminTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.adminTable th,
+.adminTable td {
+  padding: 10px 9px;
+  border-bottom: 1px solid #eef2f7;
+  text-align: left;
+  vertical-align: top;
+}
+
+.adminTable th {
+  color: #4b5563;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.adminTable td {
+  color: #172033;
+}
+
+.adminMuted {
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+
+.adminBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #374151;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.adminBadge.is-on {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.adminBadge.is-owner {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.adminActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.adminBtn {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #374151;
+  font-weight: 700;
+}
+
+.adminBtn.primary {
+  border-color: #9d202a;
+  background: #9d202a;
+  color: #ffffff;
+}
+
+.adminBtn.danger {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #991b1b;
+}
+
+.adminBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.adminIconBtn {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.adminIconBtn:hover {
+  border-color: #9d202a;
+  color: #9d202a;
+}
+
+.adminForm {
+  display: grid;
+  gap: 14px;
+}
+
+.adminField {
+  display: grid;
+  gap: 6px;
+}
+
+.adminField label,
+.adminCheck label {
+  color: #172033;
+  font-weight: 700;
+}
+
+.adminField input,
+.adminField select,
+.adminField textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #172033;
+}
+
+.adminField input,
+.adminField select {
+  min-height: 42px;
+  padding: 9px 11px;
+}
+
+.adminField textarea {
+  min-height: 88px;
+  padding: 10px 11px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.adminField input:focus,
+.adminField select:focus,
+.adminField textarea:focus {
+  outline: none;
+  border-color: #9d202a;
+  box-shadow: 0 0 0 4px rgba(157, 32, 42, 0.12);
+}
+
+.adminCheck {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.adminCheck input {
+  width: 18px;
+  height: 18px;
+}
+
+.adminFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.adminFull {
+  grid-column: 1 / -1;
+}
+
+.adminModalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.adminModal {
+  width: min(100%, 760px);
+  max-height: min(88vh, 840px);
+  overflow-y: auto;
+  padding: 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+}
+
+@media (max-width: 920px) {
+  .adminGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .adminDetailCard {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .adminPage {
+    padding: 18px 12px 40px;
+  }
+
+  .adminHeader,
+  .adminCard,
+  .adminModal {
+    padding: 18px;
+  }
+
+  .adminCardHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .adminCardHeader .adminIconBtn {
+    align-self: flex-end;
+  }
+
+  .adminModalBackdrop {
+    padding: 12px;
+  }
+
+  .adminFormGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.adminAssetGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.adminAssetForm {
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.adminAssetList h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.adminImagePreviewShell {
+  width: 96px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+}
+
+.adminImagePreviewShell.is-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.adminAssetPreview {
+  width: 96px;
+  height: 58px;
+  display: block;
+  object-fit: cover;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.adminAssetPreview.is-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+}
+
+.adminImagePreviewFallback {
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.adminImagePreviewShell.is-icon .adminImagePreviewFallback {
+  border-radius: 999px;
+  font-size: 0.62rem;
+}
+
+.adminImagePreviewShell.is-error .adminAssetPreview,
+.adminImagePreviewShell.is-error .adminLoadingPreviewImage {
+  display: none;
+}
+
+.adminImagePreviewShell.is-error .adminImagePreviewFallback {
+  display: flex;
+}
+
+@media (max-width: 860px) {
+  .adminAssetGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.adminRewardBox {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.adminRewardBody {
+  display: grid;
+  gap: 10px;
+}
+
+.adminRewardBody.is-disabled {
+  opacity: 0.58;
+}
+
+.adminRewardPicker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.adminRewardPicker select {
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid #d1d5db;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #172033;
+}
+
+.adminRewardList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.adminRewardItem {
+  padding: 8px 0;
+}
+
+.adminRewardItem .adminBtn {
+  margin-left: 8px;
+}
+
+@media (max-width: 640px) {
+  .adminRewardPicker {
+    grid-template-columns: 1fr;
+  }
+}
+
+.adminLoadingPreview {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.adminImagePreviewShell.is-loading-preview {
+  width: 140px;
+  height: 82px;
+}
+
+.adminLoadingPreviewImage {
+  width: 140px;
+  height: 82px;
+  display: block;
+  object-fit: cover;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .adminLoadingPreview {
+    grid-template-columns: 1fr;
+  }
+
+  .adminImagePreviewShell.is-loading-preview,
+  .adminLoadingPreviewImage {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+}
+
+.adminHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.adminLoginPage {
+  display: grid;
+  place-items: center;
+  padding: 32px 18px;
+}
+
+.adminLoginCard {
+  width: min(100%, 460px);
+  padding: 28px;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.1);
+}
+
+.adminLoginCard h1 {
+  margin: 0 0 10px;
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+}
+
+.adminSearchForm {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.adminSearchField input {
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid #d1d5db;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #172033;
+}
+
+.adminSearchActions {
+  align-items: end;
+  padding-bottom: 0;
+}
+
+.adminListMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 0 0 12px;
+  color: #4b5563;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.adminPagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.adminUserTable th,
+.adminUserTable td {
+  min-width: 110px;
+}
+
+.adminUserTable th:first-child,
+.adminUserTable td:first-child {
+  min-width: 250px;
+}
+
+@media (max-width: 700px) {
+  .adminSearchForm {
+    grid-template-columns: 1fr;
+  }
+
+  .adminPagination {
+    justify-content: flex-start;
+  }
+}
+
+.adminManagerTable .adminActionColumn,
+.adminManagerTable .adminActionCell {
+  width: 150px;
+  min-width: 150px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.adminActionPlaceholder {
+  display: inline-block;
+  width: 120px;
+  height: 1px;
+}
+
+.adminPasswordModal {
+  width: min(100%, 520px);
+}
+
+.adminManagerTable .adminActionColumn,
+.adminManagerTable .adminActionCell {
+  width: 360px;
+  min-width: 360px;
+}
+
+.adminActionStack {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.adminActionStack .adminBtn {
+  min-height: 32px;
+  padding: 5px 9px;
+  font-size: 0.82rem;
+}
+
+.adminSmallModal {
+  width: min(100%, 520px);
+}
+
+.adminUserTable .adminActionColumn,
+.adminUserTable .adminActionCell {
+  width: 96px;
+  min-width: 96px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.adminBackBtn {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.adminBackBtn:hover {
+  border-color: #9d202a;
+  color: #9d202a;
+}
+
+.adminPlayerDetailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.adminSubCard {
+  padding: 16px;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.adminSubCard h3 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+}
+.adminStatusLogPreview {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.adminStatusLogPreview p {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.adminStatusLogItem {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+
+.adminFullWidthCard {
+  margin-top: 16px;
+}
+
+.adminDefinitionList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.adminDefinitionList div {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.adminDefinitionList dt {
+  color: #6b7280;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.adminDefinitionList dd {
+  margin: 0;
+  color: #172033;
+  overflow-wrap: anywhere;
+}
+
+.adminCurrentSettingList {
+  display: grid;
+  gap: 14px;
+}
+
+.adminCurrentIconRow {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.adminOwnedIconImage,
+.adminIconPlaceholder {
+  width: 48px;
+  height: 48px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.adminOwnedIconImage {
+  display: block;
+  object-fit: cover;
+}
+
+.adminIconPlaceholder {
+  display: grid;
+  place-items: center;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.adminStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.adminStatsBox {
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.adminStreakList {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.adminStreakList div {
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+
+@media (max-width: 860px) {
+  .adminPlayerDetailGrid,
+  .adminStatsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .adminDefinitionList div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+.adminBadge.is-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.adminWideModal {
+  width: min(100%, 980px);
+}
+
+.adminChangeDetail {
+  display: grid;
+  gap: 14px;
+}
+
+.adminChangeConfirmForm {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #eef2f7;
+}
+
+.adminCompareImages {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.adminCompareImages > div {
+  display: grid;
+  gap: 8px;
+  min-width: 120px;
+}

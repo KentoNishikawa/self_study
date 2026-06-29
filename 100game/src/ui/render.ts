@@ -1,6 +1,6 @@
 // src/ui/render.ts
 import type { Card, Difficulty, GameState, SystemLog } from "../core/types";
-import { iconContentHtml } from "../icons/iconPresets";
+import { userIconContentHtml } from "../icons/userIconContent";
 import { playButtonSe, playCardDealSe, playCardPlaySe, playResultSe, startButtonSe, playMyturnSe } from "../core/sound";
 
 let prevHistoryLen = -1;
@@ -1033,7 +1033,7 @@ export function render(
                   <div class="playerRow${isTurn ? " isTurn" : ""}">
                     <div class="playerStatusMain">
                       <div class="playerStatusTopLine">
-                        <span class="playerStatusIcon">${iconContentHtml((s as any).iconId, 30)}</span>
+                        <span class="playerStatusIcon">${userIconContentHtml((s as any).iconId, 30)}</span>
                         <span class="name">${escapeHtml(shortName(s.name))}</span>
                         ${guestBadge}
                       </div>
