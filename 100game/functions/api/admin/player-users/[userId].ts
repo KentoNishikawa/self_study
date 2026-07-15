@@ -185,14 +185,19 @@ async function readPlayerUserDetail(env: Env, userId: string) {
       COALESCE(user_stats_global.max_lose_streak, 0) AS max_lose_streak
     FROM users
     LEFT JOIN user_settings ON user_settings.user_id = users.user_id
-    LEFT JOIN titles current_titles ON current_titles.title_id = user_settings.current_title_id
+    LEFT JOIN titles current_titles
+      ON current_titles.title_id = user_settings.current_title_id
+      AND current_titles.deleted_at IS NULL
     LEFT JOIN icons current_icons
       ON current_icons.icon_id = user_settings.current_icon_id
       AND current_icons.deleted_at IS NULL
     LEFT JOIN (
-      SELECT user_id, COUNT(*) AS title_count
+      SELECT user_titles.user_id, COUNT(*) AS title_count
       FROM user_titles
-      GROUP BY user_id
+      INNER JOIN titles
+        ON titles.title_id = user_titles.title_id
+        AND titles.deleted_at IS NULL
+      GROUP BY user_titles.user_id
     ) title_counts ON title_counts.user_id = users.user_id
     LEFT JOIN (
       SELECT user_id, COUNT(*) AS icon_count
@@ -242,7 +247,9 @@ async function readUserTitles(env: Env, userId: string) {
       titles.rarity,
       user_titles.acquired_at
     FROM user_titles
-    INNER JOIN titles ON titles.title_id = user_titles.title_id
+    INNER JOIN titles
+      ON titles.title_id = user_titles.title_id
+      AND titles.deleted_at IS NULL
     WHERE user_titles.user_id = ?
     ORDER BY user_titles.acquired_at DESC, titles.sort_order ASC, titles.title_id ASC
     `,

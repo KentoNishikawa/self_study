@@ -1,5 +1,5 @@
 // cf-mp/100game-mp/src/room.ts
-import type { Difficulty, GameState, GameType, Seat, SeatKind, SystemLog } from "./core/types";
+import type { Difficulty, GameState, GameType, InitialSeatSnapshot, Seat, SeatKind, SystemLog } from "./core/types";
 import { reducer, type Action } from "./core/reducer";
 import { createDeck, deal, shuffle } from "./core/deck";
 import { chooseNpcAction } from "./ai/npc";
@@ -12,6 +12,7 @@ type LobbySeat = {
     iconId: string;
     isGuest?: boolean;
     titleName?: string;
+    hasNgNameError?: boolean;
 };
 
 type RoomState = {
@@ -35,10 +36,10 @@ function makeInitialState(roomId: string, hostToken: string, expiresAt: number):
         npcDifficulty: "SMART",
         gameType: "100",
         seats: [
-            { kind: "HOST", name: "HOST", iconId: "host_default", isGuest: false, titleName: "はじまりの挑戦者" },
-            { kind: "NPC", name: "NPC1", iconId: "npc_default", isGuest: false },
-            { kind: "NPC", name: "NPC2", iconId: "npc_default", isGuest: false },
-            { kind: "NPC", name: "NPC3", iconId: "npc_default", isGuest: false },
+            { kind: "HOST", name: "HOST", iconId: "host_default", isGuest: false, titleName: "はじまりの挑戦者", hasNgNameError: false },
+            { kind: "NPC", name: "NPC1", iconId: "npc_default", isGuest: false, hasNgNameError: false },
+            { kind: "NPC", name: "NPC2", iconId: "npc_default", isGuest: false, hasNgNameError: false },
+            { kind: "NPC", name: "NPC3", iconId: "npc_default", isGuest: false, hasNgNameError: false },
         ],
         playOrder: [0, 1, 2, 3],
         disbanded: false,
@@ -60,6 +61,14 @@ function publicRoomState(st: RoomState) {
 
 function send(ws: WebSocket, type: string, payload: Record<string, unknown> = {}) {
     ws.send(JSON.stringify({ type, ...payload }));
+}
+
+function sanitizeIconId(value: string | null): string | null {
+    const iconId = (value ?? "").trim();
+    if (!iconId) return null;
+    if (iconId.length > 120) return null;
+    if (!/^[A-Za-z0-9_./:-]+$/.test(iconId)) return null;
+    return iconId;
 }
 
 // ---------------- Game helpers ----------------
@@ -106,20 +115,27 @@ function toSeatKind(k: LobbySeat["kind"]): SeatKind {
     return k === "NPC" ? "NPC" : "HUMAN";
 }
 
-function makeGameFromRoom(room: RoomState): GameState {
+function hasNgNameErrorSeat(st: RoomState) {
+    return st.seats.some((seat) => seat.kind !== "NPC" && seat.hasNgNameError === true);
+}
+
+function makeGameFromRoom(
+    room: RoomState,
+    initialSeatSnapshots: [InitialSeatSnapshot, InitialSeatSnapshot, InitialSeatSnapshot, InitialSeatSnapshot],
+): GameState {
     const gameType = parseGameType(room.gameType);
     const target = gameType === "EXTRA" ? pickExtraTarget() : gameType;
     // ★ここで iconId を GameState に埋め込む（ゲーム画面で表示するため）
     // ★playOrder（手番順）に並べ替えて GameState.seats を作る
     const order = room.playOrder ?? ([0, 1, 2, 3] as [number, number, number, number]);
 
-    const seats = order.map((slot) => {
+    const seats = order.map((slot, orderedIndex) => {
         const ls = room.seats[slot];
         return {
             kind: toSeatKind(ls.kind),
             name: ls.kind === "NPC" ? `NPC${slot}` : ls.name,
             hand: [],
-            iconId: ls.iconId,
+            iconId: initialSeatSnapshots[orderedIndex]?.iconId ?? ls.iconId,
             isGuest: Boolean(ls.isGuest),
             titleName: ls.kind === "NPC" || ls.isGuest ? "" : (ls.titleName ?? "はじまりの挑戦者"),
             isHost: slot === 0,
@@ -146,6 +162,7 @@ function makeGameFromRoom(room: RoomState): GameState {
         history: [],
         result: { status: "PLAYING" },
         lastCard: null,
+        initialSeatSnapshots,
     };
 
     return state;
@@ -172,7 +189,82 @@ export class RoomDO {
     private sessions = new Set<WebSocket>();
     private seatByWs = new WeakMap<WebSocket, number>();
 
-    constructor(private ctx: DurableObjectState) { }
+    constructor(private ctx: DurableObjectState, private env: Env) { }
+
+    private async resolveInitialSeatSnapshots(room: RoomState): Promise<[InitialSeatSnapshot, InitialSeatSnapshot, InitialSeatSnapshot, InitialSeatSnapshot]> {
+        const order = room.playOrder ?? ([0, 1, 2, 3] as [number, number, number, number]);
+        const snapshots: InitialSeatSnapshot[] = [];
+        let npcSnapshot: InitialSeatSnapshot | null = null;
+        for (const slot of order) {
+            const seat = room.seats[slot];
+            if (seat.kind === "NPC") {
+                npcSnapshot ??= await this.resolveNpcIconSnapshot();
+                snapshots.push({ ...npcSnapshot, iconTypeIds: [...npcSnapshot.iconTypeIds] });
+                continue;
+            }
+            snapshots.push(await this.resolveHumanIconSnapshot(seat.iconId));
+        }
+        if (snapshots.length !== 4) throw new Error("invalid initial seat snapshots");
+        return snapshots as [InitialSeatSnapshot, InitialSeatSnapshot, InitialSeatSnapshot, InitialSeatSnapshot];
+    }
+
+    private async resolveHumanIconSnapshot(requestedIconId: string): Promise<InitialSeatSnapshot> {
+        const requested = sanitizeIconId(requestedIconId);
+        let iconId = requested ? await this.readActiveIconId(requested) : null;
+        if (!iconId) {
+            const setting = await this.env.DB.prepare(
+                "SELECT setting_value FROM app_settings WHERE setting_key = 'default_icon_id' LIMIT 1",
+            ).first<{ setting_value: string | null }>();
+            const fallback = sanitizeIconId(setting?.setting_value ?? null);
+            iconId = fallback ? await this.readActiveIconId(fallback) : null;
+        }
+        if (!iconId) throw new Error("active icon not found");
+
+        return {
+            seatKind: "HUMAN",
+            iconId,
+            iconTypeIds: await this.readActiveIconTypeIds(iconId),
+        };
+    }
+
+    private async resolveNpcIconSnapshot(): Promise<InitialSeatSnapshot> {
+        const iconId = await this.readActiveIconId("npc_default");
+        if (!iconId) throw new Error("active npc icon not found");
+        return {
+            seatKind: "NPC",
+            iconId,
+            iconTypeIds: await this.readActiveIconTypeIds(iconId),
+        };
+    }
+
+    private async readActiveIconTypeIds(iconId: string): Promise<string[]> {
+        const links = await this.env.DB.prepare(
+            `
+            SELECT icon_type_links.icon_type_id
+            FROM icon_type_links
+            INNER JOIN icon_types
+              ON icon_types.icon_type_id = icon_type_links.icon_type_id
+              AND icon_types.is_active = 1
+            WHERE icon_type_links.icon_id = ?
+            ORDER BY icon_type_links.sort_order ASC, icon_type_links.icon_type_id ASC
+            `,
+        ).bind(iconId).all<{ icon_type_id: string }>();
+        return (links.results ?? []).map((row) => row.icon_type_id);
+    }
+
+    private async readActiveIconId(iconId: string): Promise<string | null> {
+        const row = await this.env.DB.prepare(
+            `
+            SELECT icon_id
+            FROM icons
+            WHERE icon_id = ?
+              AND is_active = 1
+              AND deleted_at IS NULL
+            LIMIT 1
+            `,
+        ).bind(iconId).first<{ icon_id: string }>();
+        return row?.icon_id ?? null;
+    }
 
     // MP用：次の手番締切をDOアラームで管理
     private async scheduleTurnAlarm(room: RoomState, game: GameState) {
@@ -221,9 +313,13 @@ export class RoomDO {
 
             const token = url.searchParams.get("token") ?? "";
             const isHost = token !== "" && token === st.hostToken;
+            const initialIconId = sanitizeIconId(url.searchParams.get("iconId"));
 
             const seatIndex = isHost ? 0 : this.assignPlayerSeat(st);
             if (seatIndex === -1) return new Response("Room full", { status: 409 });
+            if (initialIconId) {
+                st.seats[seatIndex].iconId = initialIconId;
+            }
 
             const pair = new WebSocketPair();
             const client = pair[0];
@@ -265,6 +361,14 @@ export class RoomDO {
                         const trimmed = msg.name.trim();
                         cur.seats[mySeat].name =
                             trimmed === "" ? (mySeat === 0 ? "HOST" : `プレイヤー${mySeat}`) : msg.name;
+                        cur.seats[mySeat].hasNgNameError = false;
+                        await this.ctx.storage.put("state", cur);
+                        this.broadcastRoomState(cur);
+                        return;
+                    }
+
+                    if (msg.type === "UPDATE_NAME_NG_STATUS" && typeof msg.hasNgNameError === "boolean") {
+                        cur.seats[mySeat].hasNgNameError = msg.hasNgNameError;
                         await this.ctx.storage.put("state", cur);
                         this.broadcastRoomState(cur);
                         return;
@@ -320,6 +424,15 @@ export class RoomDO {
                 if (msg.type === "HOST_START") {
                     if (mySeat !== 0) return;
                     if (cur.locked) return;
+                    if (hasNgNameErrorSeat(cur)) return;
+
+                    let initialSeatSnapshots: [InitialSeatSnapshot, InitialSeatSnapshot, InitialSeatSnapshot, InitialSeatSnapshot];
+                    try {
+                        initialSeatSnapshots = await this.resolveInitialSeatSnapshots(cur);
+                    } catch {
+                        send(server, "START_ERROR", { message: "アイコン情報の取得に失敗しました。時間をおいて再度お試しください。" });
+                        return;
+                    }
 
                     cur.locked = true;
                     await this.ctx.storage.put("state", cur);
@@ -328,7 +441,7 @@ export class RoomDO {
                     // フレーム連番を初期化
                     await this.ctx.storage.put("gameSeq", 0);
 
-                    const game0 = makeGameFromRoom(cur);
+                    const game0 = makeGameFromRoom(cur, initialSeatSnapshots);
                     await this.ctx.storage.put("game", game0);
                     this.broadcastGameState(game0);
 
@@ -350,9 +463,17 @@ export class RoomDO {
                     if (mySeat !== 0) return;
                     if (!cur.locked) return;
 
+                    let initialSeatSnapshots: [InitialSeatSnapshot, InitialSeatSnapshot, InitialSeatSnapshot, InitialSeatSnapshot];
+                    try {
+                        initialSeatSnapshots = await this.resolveInitialSeatSnapshots(cur);
+                    } catch {
+                        send(server, "START_ERROR", { message: "アイコン情報の取得に失敗しました。時間をおいて再度お試しください。" });
+                        return;
+                    }
+
                     await this.ctx.storage.put("gameSeq", 0);
 
-                    const game0 = makeGameFromRoom(cur);
+                    const game0 = makeGameFromRoom(cur, initialSeatSnapshots);
                     await this.ctx.storage.put("game", game0);
                     this.broadcastGameState(game0);
 
@@ -417,7 +538,7 @@ export class RoomDO {
                     if (mySeat !== 0 && mySeat >= 1 && mySeat <= 3) {
                         const leaverName = cur.seats[mySeat].name;
                         // ロビー：即NPCへ
-                        cur.seats[mySeat] = { kind: "NPC", name: `NPC${mySeat}`, iconId: "npc_default", isGuest: false };
+                        cur.seats[mySeat] = { kind: "NPC", name: `NPC${mySeat}`, iconId: "npc_default", isGuest: false, hasNgNameError: false };
                         await this.ctx.storage.put("state", cur);
                         this.broadcastRoomState(cur);
 
@@ -488,7 +609,7 @@ export class RoomDO {
 
                 if (typeof seatIndex === "number" && seatIndex >= 1 && seatIndex <= 3) {
                     const leaverName = cur.seats[seatIndex].name;
-                    cur.seats[seatIndex] = { kind: "NPC", name: `NPC${seatIndex}`, iconId: "npc_default", isGuest: false };
+                    cur.seats[seatIndex] = { kind: "NPC", name: `NPC${seatIndex}`, iconId: "npc_default", isGuest: false, hasNgNameError: false };
                     await this.ctx.storage.put("state", cur);
                     this.broadcastRoomState(cur);
 
@@ -597,7 +718,7 @@ export class RoomDO {
         let after: GameState;
         if (top) {
             if (top.rank === "JOKER") jokerValue = pickAutoJokerValueNoBust(game);
-            after = reducer(game, { type: "DRAW_PLAY", jokerValue });
+            after = reducer(game, { type: "DRAW_PLAY", jokerValue, trigger: "TIMEOUT" });
         } else {
             const hand = game.seats[game.turn].hand;
             if (hand.length === 0) {
@@ -609,7 +730,7 @@ export class RoomDO {
             }
             const card = hand[0];
             if (card.rank === "JOKER") jokerValue = pickAutoJokerValueNoBust(game);
-            after = reducer(game, { type: "PLAY_HAND", handIndex: 0, jokerValue });
+            after = reducer(game, { type: "PLAY_HAND", handIndex: 0, jokerValue, trigger: "TIMEOUT" });
         }
 
         const frames: GameState[] = [after];
@@ -625,7 +746,7 @@ export class RoomDO {
     private assignPlayerSeat(st: RoomState): number {
         for (let i = 1; i <= 3; i++) {
             if (st.seats[i].kind === "NPC") {
-                st.seats[i] = { kind: "PLAYER", name: `プレイヤー${i}`, iconId: "player_default", isGuest: false, titleName: "はじまりの挑戦者" };
+                st.seats[i] = { kind: "PLAYER", name: `プレイヤー${i}`, iconId: "player_default", isGuest: false, titleName: "はじまりの挑戦者", hasNgNameError: false };
                 return i;
             }
         }

@@ -8,6 +8,7 @@ declare namespace Cloudflare {
 	}
 	interface Env {
 		ROOMS: DurableObjectNamespace<import("./src/index").RoomDO>;
+		DB: D1Database;
 	}
 }
 interface Env extends Cloudflare.Env {}

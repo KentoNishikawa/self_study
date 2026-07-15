@@ -15,6 +15,13 @@
 			}
 		]
 	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "100game-db",
+			"database_id": "494d6e2b-f32b-4546-bc42-e7cd840812ef"
+		}
+	],
 	"migrations": [
 		{
 			"tag": "v1",

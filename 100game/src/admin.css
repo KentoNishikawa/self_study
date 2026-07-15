@@ -881,3 +881,541 @@ button {
   gap: 8px;
   min-width: 120px;
 }
+
+.adminConditionBox {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.adminConditionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.adminConditionHeader h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.adminConditionStatus {
+  margin: 0;
+  color: #166534;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.adminConditionStatus.is-error {
+  color: #991b1b;
+}
+
+.adminConditionPreview {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.adminConditionPreview > div {
+  display: grid;
+  gap: 4px;
+}
+
+.adminConditionPreview span {
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.adminConditionPreview code,
+.adminConditionPreview pre {
+  margin: 0;
+  padding: 8px;
+  overflow-x: auto;
+  border-radius: 9px;
+  background: #111827;
+  color: #f9fafb;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .adminConditionHeader {
+    flex-direction: column;
+  }
+}
+
+.adminConditionCardArea,
+.adminConditionParticipantArea {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+
+.adminFieldLabel {
+  color: #0f172a;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.adminSuitChoiceField {
+  gap: 8px;
+}
+
+.adminSuitChoiceGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.adminSuitChoice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 42px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.adminSuitChoice:has(input:checked) {
+  border-color: #9f1239;
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+.adminSuitChoice input {
+  margin: 0;
+}
+
+.adminConditionCardGrid,
+.adminConditionParticipantGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.adminConditionCardSlot {
+  display: grid;
+  gap: 6px;
+}
+
+.adminConditionCardSelects {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.adminConditionCardSlot.has-actor .adminConditionCardSelects {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.adminConditionParticipantSlot {
+  display: grid;
+  grid-template-columns: 72px 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.adminConditionCardSlot span,
+.adminConditionParticipantSlot span {
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.adminConditionCardSlot select,
+.adminConditionParticipantSlot select {
+  width: 100%;
+}
+
+.adminConditionSuitButton {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.adminConditionSuitButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.adminSuitPresetActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.adminConditionCardArea[hidden],
+.adminConditionParticipantArea[hidden],
+.adminCheck[hidden],
+.adminField[hidden] {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .adminConditionCardGrid,
+  .adminConditionParticipantGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .adminConditionCardSelects,
+  .adminConditionCardSlot.has-actor .adminConditionCardSelects {
+    grid-template-columns: 1fr;
+  }
+}
+
+.adminConditionCardSlot.is-disabled,
+.adminConditionParticipantSlot.is-npc {
+  opacity: 0.72;
+}
+
+/* 称号条件相関図 */
+.adminTitleWizardBackdrop {
+  z-index: 30;
+  padding: 14px;
+}
+
+.adminTitleGraphModal {
+  width: min(98vw, 1480px);
+  height: min(94vh, 980px);
+  max-height: 94vh;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.adminTitleBasicModal,
+.adminTitleConditionEditorModal {
+  width: min(96vw, 1120px);
+  max-height: 92vh;
+}
+
+.adminTitleWizardHeader {
+  margin-bottom: 0;
+}
+
+.adminTitleWizardHeader p {
+  margin: 4px 0 0;
+}
+
+.adminTitleGraphToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.adminTitleGraphViewport {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  background:
+    linear-gradient(#e2e8f0 1px, transparent 1px),
+    linear-gradient(90deg, #e2e8f0 1px, transparent 1px),
+    #f8fafc;
+  background-size: 24px 24px;
+}
+
+.adminTitleGraphCanvas {
+  position: relative;
+  min-width: 100%;
+  min-height: 100%;
+  user-select: none;
+}
+
+.adminTitleGraphSvg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.adminTitleGraphSvg marker path {
+  fill: #64748b;
+}
+
+.adminTitleGraphEdge,
+.adminTitleGraphPreviewEdge {
+  fill: none;
+  stroke: #64748b;
+  stroke-width: 3;
+}
+
+.adminTitleGraphEdge {
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.adminTitleGraphEdge:hover,
+.adminTitleGraphEdge.is-selected {
+  stroke: #9d202a;
+  stroke-width: 5;
+}
+
+.adminTitleGraphPreviewEdge {
+  stroke: #9d202a;
+  stroke-dasharray: 8 6;
+}
+
+.adminTitleGraphNode {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 26px;
+  align-items: stretch;
+  border: 2px solid #94a3b8;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.12);
+}
+
+.adminTitleGraphNode.is-condition {
+  width: 250px;
+  height: 112px;
+}
+
+.adminTitleGraphNode.is-operator {
+  width: 96px;
+  height: 72px;
+  grid-template-columns: 20px minmax(0, 1fr) 20px;
+  border-radius: 999px;
+  border-color: #9d202a;
+  background: #fff7f7;
+}
+
+.adminTitleGraphNode.is-selected {
+  z-index: 5;
+  border-color: #9d202a;
+  box-shadow: 0 0 0 4px rgba(157, 32, 42, 0.15), 0 14px 30px rgba(15, 23, 42, 0.18);
+}
+
+.adminTitleGraphNode.is-invalid {
+  border-color: #dc2626;
+  background: #fff1f2;
+}
+
+.adminTitleGraphNode.is-connect-target {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 5px rgba(22, 163, 74, 0.2);
+}
+
+.adminTitleGraphMoveHandle,
+.adminTitleGraphConnectHandle,
+.adminTitleGraphNodeBody,
+.adminTitleGraphOperatorBody {
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.adminTitleGraphMoveHandle {
+  padding: 0;
+  border-right: 1px solid #e2e8f0;
+  color: #64748b;
+  cursor: grab;
+}
+
+.adminTitleGraphMoveHandle:active {
+  cursor: grabbing;
+}
+
+.adminTitleGraphConnectHandle {
+  padding: 0;
+  border-left: 1px solid #e2e8f0;
+  color: #9d202a;
+  font-size: 0.78rem;
+  cursor: crosshair;
+}
+
+.adminTitleGraphNodeBody {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  padding: 10px;
+  text-align: left;
+}
+
+.adminTitleGraphNodeBody strong,
+.adminTitleGraphNodeBody small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adminTitleGraphNodeBody strong {
+  color: #172033;
+  font-size: 0.9rem;
+}
+
+.adminTitleGraphNodeBody small {
+  color: #64748b;
+  font-size: 0.68rem;
+}
+
+.adminTitleGraphNodeKicker {
+  color: #9d202a;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.adminTitleGraphOperatorBody {
+  padding: 0;
+  color: #9d202a;
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.adminTitleGraphNodeMenu {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 8px);
+  left: 0;
+  width: max-content;
+  max-width: 320px;
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.2);
+}
+
+.adminTitleGraphDisconnectList {
+  display: grid;
+  gap: 6px;
+  padding-top: 7px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.adminTitleGraphDisconnectList strong {
+  font-size: 0.76rem;
+}
+
+.adminTitleGraphEmpty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #64748b;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.adminTitleGraphEdgeAction {
+  position: absolute;
+  z-index: 8;
+  right: 18px;
+  bottom: 18px;
+}
+
+.adminTitleGraphJsonEditor {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+}
+
+.adminTitleGraphJsonEditor textarea {
+  width: 100%;
+  min-height: 520px;
+  padding: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.adminTitleGraphErrors {
+  padding: 10px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.adminTitleGraphErrors ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+
+.adminTitleWizardFooter {
+  justify-content: flex-end;
+}
+
+.adminTitleConditionExpression {
+  margin: 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #172033;
+  font-weight: 700;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.adminNestedModalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+[data-title-save-confirm-backdrop] {
+  z-index: 60;
+}
+
+.adminTitleConditionJsonBackdrop,
+.adminTitleConditionSuitBackdrop {
+  z-index: 70;
+}
+
+@media (max-width: 900px) {
+  .adminTitleGraphModal {
+    width: 98vw;
+  }
+
+  .adminTitleGraphToolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

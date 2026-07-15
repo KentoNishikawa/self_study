@@ -1,9 +1,12 @@
 import { createId, getString, json, nowIso, readJsonRecord, type Env, type PagesContext } from "../auth/_shared";
 import { isResponse, requireAdminSession } from "./_admin";
+import { readTitleAchievementEffect } from "./_title-effects";
+import { normalizeTitleConditionDefinition } from "./_condition-graph";
+import { validateTitleConditionInput } from "./_title-condition-validation";
 
 type ChangeBatchStatus = "draft" | "scheduled" | "applied" | "cancelled" | "failed";
 type ChangeItemStatus = "draft" | "cancelled";
-type ChangeType = "icon_delete" | "icon_replace" | "loading_illustration_delete" | "loading_illustration_replace" | "announcement_create" | "title_icon_rewards_update";
+type ChangeType = "icon_delete" | "icon_replace" | "loading_illustration_delete" | "loading_illustration_replace" | "announcement_create" | "title_create" | "title_update" | "title_icon_rewards_update" | "title_delete";
 type AnnouncementCategory = "normal" | "maintenance" | "bug" | "update" | "important";
 
 type ChangeBatchRow = {
@@ -46,6 +49,7 @@ type ChangeItemRow = {
   before_json: string | null;
   after_json: string | null;
   effect_json: string | null;
+  current_effect_json?: string | null;
   reason: string;
   created_at: string;
   status: ChangeItemStatus;
@@ -84,11 +88,13 @@ type TitleRow = {
   rarity: number;
   condition_type: string;
   condition_params_json: string | null;
+  condition_builder_json?: string | null;
   is_initial: number;
   is_active: number;
   sort_order: number;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
 };
 
 type IconSummaryRow = {
@@ -145,7 +151,10 @@ const MAIN_CHANGE_TYPES = new Set<ChangeType>([
   "icon_replace",
   "loading_illustration_delete",
   "loading_illustration_replace",
+  "title_create",
+  "title_update",
   "title_icon_rewards_update",
+  "title_delete",
 ]);
 
 
@@ -155,8 +164,9 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
 
   await ensureSingleDraftBatch(context.env);
   const [batches, items] = await Promise.all([readBatches(context.env), readItems(context.env)]);
+  const enrichedItems = await attachCurrentTitleAchievementEffects(context.env, items);
   const itemMap = new Map<string, ChangeItemRow[]>();
-  for (const item of items) {
+  for (const item of enrichedItems) {
     const list = itemMap.get(item.batch_id) ?? [];
     list.push(item);
     itemMap.set(item.batch_id, list);
@@ -178,7 +188,10 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
   const changeType = getString(body.changeType).trim();
   if (changeType === "icon_delete") return createIconDeleteChangeBatch(context, body, session.user_id);
   if (changeType === "loading_illustration_delete") return createLoadingIllustrationDeleteChangeBatch(context, body, session.user_id);
+  if (changeType === "title_create") return createTitleCreateChangeBatch(context, body, session.user_id);
+  if (changeType === "title_update") return createTitleUpdateChangeBatch(context, body, session.user_id);
   if (changeType === "title_icon_rewards_update") return createTitleIconRewardsChangeBatch(context, body, session.user_id);
+  if (changeType === "title_delete") return createTitleDeleteChangeBatch(context, body, session.user_id);
 
   return json({ ok: false, message: "変更種別が不正です。" }, { status: 400 });
 }
@@ -299,6 +312,251 @@ async function createLoadingIllustrationDeleteChangeBatch(context: PagesContext,
   return json({ ok: true, message: "ロードイラスト削除を一時保存しました。反映設定タブから反映してください。", batchId });
 }
 
+
+async function createTitleDeleteChangeBatch(context: PagesContext, body: Record<string, unknown>, adminId: string): Promise<Response> {
+  const titleId = getString(body.titleId).trim();
+  const reason = getString(body.reason).trim();
+  if (!titleId) return json({ ok: false, message: "称号IDが不正です。" }, { status: 400 });
+  if (!reason) return json({ ok: false, message: "削除理由を入力してください。" }, { status: 400 });
+  if (reason.length > 500) return json({ ok: false, message: "削除理由は500文字以内で入力してください。" }, { status: 400 });
+
+  const title = await readTitle(context.env, titleId);
+  if (!title || title.deleted_at) return json({ ok: false, message: "称号が見つかりません。" }, { status: 404 });
+  if (title.deleted_at) return json({ ok: false, message: "削除済み称号は削除できません。" }, { status: 400 });
+
+  const defaultTitle = await readDefaultTitle(context.env);
+  if (!defaultTitle) return json({ ok: false, message: "デフォルト称号が見つからないため削除できません。" }, { status: 500 });
+  if (title.is_initial === 1 || title.title_id === defaultTitle.title_id) {
+    return json({ ok: false, message: "初期称号は削除できません。" }, { status: 400 });
+  }
+
+  const conflict = await hasOpenTitleChange(context.env, titleId);
+  if (conflict) return json({ ok: false, message: "この称号には未反映の変更があります。反映設定タブを確認してください。" }, { status: 400 });
+
+  const announcement = readOptionalAnnouncement(body.announcement);
+  if (announcement instanceof Response) return announcement;
+
+  const now = nowIso();
+  const batchName = `称号削除：${title.title_name}`;
+  const batchId = await getOrCreateDraftBatchId(context.env, adminId, batchName, now);
+  const effect = await readTitleDeleteEffect(context.env, titleId, defaultTitle.title_id);
+  const after = { deletedAt: null, fallbackTitleId: defaultTitle.title_id, createAnnouncement: Boolean(announcement) };
+  const titleDeleteItemId = createId("chi");
+
+  await context.env.DB.prepare(
+    `
+    INSERT INTO admin_change_items (
+      item_id, batch_id, change_type, target_type, target_id,
+      before_json, after_json, effect_json, reason, created_at
+    )
+    VALUES (?, ?, 'title_delete', 'title', ?, ?, ?, ?, ?, ?)
+    `,
+  )
+    .bind(titleDeleteItemId, batchId, titleId, JSON.stringify(title), JSON.stringify(after), JSON.stringify(effect), reason, now)
+    .run();
+
+  if (announcement) {
+    await context.env.DB.prepare(
+      `
+      INSERT INTO admin_change_items (
+        item_id, batch_id, change_type, target_type, target_id,
+        before_json, after_json, effect_json, reason, created_at, parent_item_id
+      )
+      VALUES (?, ?, 'announcement_create', 'announcement', ?, NULL, ?, NULL, ?, ?, ?)
+      `,
+    )
+      .bind(createId("chi"), batchId, createId("announcement"), JSON.stringify(announcement), reason, now, titleDeleteItemId)
+      .run();
+  }
+
+  await refreshDraftBatchMeta(context.env, batchId, now);
+
+  return json({ ok: true, message: "称号削除を一時保存しました。反映設定タブから反映してください。", batchId });
+}
+
+
+type TitleChangeInput = {
+  titleId?: string;
+  titleCode: string;
+  titleName: string;
+  description: string;
+  unlockConditionText: string;
+  rarity: number;
+  conditionType: string;
+  conditionParamsJson: string;
+  conditionBuilderJson: string;
+  isInitial: 0 | 1;
+  isActive: 0 | 1;
+  sortOrder: number;
+  iconRewardIds: string[];
+};
+
+async function createTitleCreateChangeBatch(context: PagesContext, body: Record<string, unknown>, adminId: string): Promise<Response> {
+  const input = readTitleChangeInput(body, false);
+  if (input instanceof Response) return input;
+
+  const iconRewardsValid = await validateIconRewardIds(context.env, input.iconRewardIds);
+  if (!iconRewardsValid) return json({ ok: false, message: "紐づけるアイコンを確認してください。" }, { status: 400 });
+  for (const iconId of input.iconRewardIds) {
+    const iconConflict = await hasOpenIconDelete(context.env, iconId);
+    if (iconConflict) return json({ ok: false, message: "選択中のアイコンには未反映の削除予定があります。反映設定タブを確認してください。" }, { status: 400 });
+  }
+
+  const titleCodeConflict = await context.env.DB.prepare("SELECT COUNT(*) AS count FROM titles WHERE title_code = ? AND deleted_at IS NULL")
+    .bind(input.titleCode)
+    .first<{ count: number }>();
+  if (Number(titleCodeConflict?.count ?? 0) > 0) return json({ ok: false, message: "称号コードが重複しています。" }, { status: 409 });
+
+  const titleId = createId("title");
+  const after = { ...input, titleId };
+  const [iconRewards, achievementEffect] = await Promise.all([
+    readIconSummaries(context.env, input.iconRewardIds),
+    readTitleAchievementEffect(context.env, input.conditionType, input.conditionParamsJson),
+  ]);
+  const effect = { ...achievementEffect, iconRewardCount: input.iconRewardIds.length, iconRewards };
+  const now = nowIso();
+  const batchName = `称号追加：${input.titleName}`;
+  const batchId = await getOrCreateDraftBatchId(context.env, adminId, batchName, now);
+
+  await context.env.DB.prepare(
+    `
+    INSERT INTO admin_change_items (
+      item_id, batch_id, change_type, target_type, target_id,
+      before_json, after_json, effect_json, reason, created_at
+    )
+    VALUES (?, ?, 'title_create', 'title', ?, NULL, ?, ?, ?, ?)
+    `,
+  )
+    .bind(createId("chi"), batchId, titleId, JSON.stringify(after), JSON.stringify(effect), "称号追加", now)
+    .run();
+
+  await refreshDraftBatchMeta(context.env, batchId, now);
+  return json({ ok: true, message: "称号追加を反映設定に追加しました。", batchId, id: titleId });
+}
+
+async function createTitleUpdateChangeBatch(context: PagesContext, body: Record<string, unknown>, adminId: string): Promise<Response> {
+  const input = readTitleChangeInput(body, true);
+  if (input instanceof Response) return input;
+  if (!input.titleId) return json({ ok: false, message: "称号IDが不正です。" }, { status: 400 });
+
+  const title = await readTitle(context.env, input.titleId);
+  if (!title || title.deleted_at) return json({ ok: false, message: "称号が見つかりません。" }, { status: 404 });
+  const titleDeleteConflict = await hasOpenTitleDelete(context.env, input.titleId);
+  if (titleDeleteConflict) return json({ ok: false, message: "この称号には未反映の削除予定があります。反映設定タブを確認してください。" }, { status: 400 });
+  const titleChangeConflict = await hasOpenTitleUpdateOrRewardChange(context.env, input.titleId);
+  if (titleChangeConflict) return json({ ok: false, message: "この称号には未反映の変更があります。反映設定タブを確認してください。" }, { status: 400 });
+
+  const duplicateCode = await context.env.DB.prepare("SELECT COUNT(*) AS count FROM titles WHERE title_code = ? AND title_id != ? AND deleted_at IS NULL")
+    .bind(input.titleCode, input.titleId)
+    .first<{ count: number }>();
+  if (Number(duplicateCode?.count ?? 0) > 0) return json({ ok: false, message: "称号コードが重複しています。" }, { status: 409 });
+
+  const iconRewardsValid = await validateIconRewardIds(context.env, input.iconRewardIds);
+  if (!iconRewardsValid) return json({ ok: false, message: "紐づけるアイコンを確認してください。" }, { status: 400 });
+  for (const iconId of input.iconRewardIds) {
+    const iconConflict = await hasOpenIconDelete(context.env, iconId);
+    if (iconConflict) return json({ ok: false, message: "選択中のアイコンには未反映の削除予定があります。反映設定タブを確認してください。" }, { status: 400 });
+  }
+
+  const currentIconRewardIds = await readTitleIconRewardIds(context.env, input.titleId);
+  const [beforeIcons, afterIcons, achievementEffect, iconRewardEffect] = await Promise.all([
+    readIconSummaries(context.env, currentIconRewardIds),
+    readIconSummaries(context.env, input.iconRewardIds),
+    readTitleAchievementEffect(context.env, input.conditionType, input.conditionParamsJson),
+    readTitleIconRewardsEffect(context.env, input.titleId, currentIconRewardIds, input.iconRewardIds),
+  ]);
+
+  const before = { title, iconRewardIds: currentIconRewardIds, iconRewards: beforeIcons };
+  const after = { ...input, iconRewards: afterIcons };
+  const effect = { ...achievementEffect, iconRewardEffect };
+  const now = nowIso();
+  const batchName = `称号編集：${input.titleName}`;
+  const batchId = await getOrCreateDraftBatchId(context.env, adminId, batchName, now);
+
+  await context.env.DB.prepare(
+    `
+    INSERT INTO admin_change_items (
+      item_id, batch_id, change_type, target_type, target_id,
+      before_json, after_json, effect_json, reason, created_at
+    )
+    VALUES (?, ?, 'title_update', 'title', ?, ?, ?, ?, ?, ?)
+    `,
+  )
+    .bind(createId("chi"), batchId, input.titleId, JSON.stringify(before), JSON.stringify(after), JSON.stringify(effect), "称号編集", now)
+    .run();
+
+  await refreshDraftBatchMeta(context.env, batchId, now);
+  return json({ ok: true, message: "称号編集を反映設定に追加しました。", batchId });
+}
+
+function readTitleChangeInput(body: Record<string, unknown>, requireId: boolean): TitleChangeInput | Response {
+  const titleId = getString(body.titleId).trim();
+  const input: TitleChangeInput = {
+    titleId: titleId || undefined,
+    titleCode: getString(body.titleCode).trim(),
+    titleName: getString(body.titleName).trim(),
+    description: getString(body.description).trim(),
+    unlockConditionText: getString(body.unlockConditionText).trim(),
+    rarity: readTitleChangeInteger(body.rarity, 1),
+    conditionType: getString(body.conditionType).trim(),
+    conditionParamsJson: normalizeTitleChangeJson(body.conditionParamsJson),
+    conditionBuilderJson: normalizeTitleChangeJson(body.conditionBuilderJson),
+    isInitial: readTitleChangeFlag(body.isInitial),
+    isActive: readTitleChangeFlag(body.isActive),
+    sortOrder: readTitleChangeInteger(body.sortOrder, 0),
+    iconRewardIds: readIconRewardIds(body.iconRewardIds),
+  };
+
+  if (requireId && !input.titleId) return json({ ok: false, message: "称号IDがありません。" }, { status: 400 });
+  const normalizedCondition = normalizeTitleConditionDefinition(input.conditionType, input.conditionParamsJson, input.conditionBuilderJson);
+  if (normalizedCondition.ok === false) return json({ ok: false, message: normalizedCondition.message }, { status: 400 });
+  input.conditionType = normalizedCondition.value.conditionType;
+  input.conditionParamsJson = normalizedCondition.value.conditionParamsJson;
+  input.conditionBuilderJson = normalizedCondition.value.conditionBuilderJson;
+
+  if (!input.titleCode) return json({ ok: false, message: "称号コードを入力してください。" }, { status: 400 });
+  if (!input.titleName) return json({ ok: false, message: "称号名を入力してください。" }, { status: 400 });
+  if (!input.description) return json({ ok: false, message: "説明を入力してください。" }, { status: 400 });
+  if (!input.unlockConditionText) return json({ ok: false, message: "取得条件テキストを入力してください。" }, { status: 400 });
+  if (input.rarity < 1 || input.rarity > 5) return json({ ok: false, message: "レア度は1〜5で入力してください。" }, { status: 400 });
+  if (!input.conditionType) return json({ ok: false, message: "condition_typeを入力してください。" }, { status: 400 });
+  if (input.iconRewardIds.length > 3) return json({ ok: false, message: "紐づけるアイコンは最大3つまでです。" }, { status: 400 });
+  if (!isValidJsonObjectText(input.conditionParamsJson)) return json({ ok: false, message: "condition_params_json は正しいJSONで入力してください。" }, { status: 400 });
+  if (input.conditionBuilderJson && !isValidJsonObjectText(input.conditionBuilderJson)) return json({ ok: false, message: "condition_builder_json は正しいJSONで入力してください。" }, { status: 400 });
+  input.isInitial = input.conditionType === "initial_grant" ? 1 : 0;
+  const conditionError = validateTitleConditionInput(input.conditionType, input.conditionParamsJson, input.conditionBuilderJson);
+  if (conditionError) return json({ ok: false, message: conditionError }, { status: 400 });
+  return input;
+}
+
+function readTitleChangeInteger(value: unknown, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.trunc(parsed) : fallback;
+}
+
+function readTitleChangeFlag(value: unknown): 0 | 1 {
+  return value === true || value === 1 || value === "1" || value === "true" || value === "on" ? 1 : 0;
+}
+
+function normalizeTitleChangeJson(value: unknown) {
+  const text = getString(value).trim();
+  if (!text) return "{}";
+  try {
+    return JSON.stringify(JSON.parse(text));
+  } catch {
+    return text;
+  }
+}
+
+function isValidJsonObjectText(value: string) {
+  try {
+    const parsed: unknown = JSON.parse(value || "{}");
+    return Boolean(parsed && typeof parsed === "object" && !Array.isArray(parsed));
+  } catch {
+    return false;
+  }
+}
+
 async function createTitleIconRewardsChangeBatch(context: PagesContext, body: Record<string, unknown>, adminId: string): Promise<Response> {
   const titleId = getString(body.titleId).trim();
   const reason = getString(body.reason).trim();
@@ -310,7 +568,7 @@ async function createTitleIconRewardsChangeBatch(context: PagesContext, body: Re
   if (iconRewardIds.length > 3) return json({ ok: false, message: "紐づけるアイコンは最大3つまでです。" }, { status: 400 });
 
   const title = await readTitle(context.env, titleId);
-  if (!title) return json({ ok: false, message: "称号が見つかりません。" }, { status: 404 });
+  if (!title || title.deleted_at) return json({ ok: false, message: "称号が見つかりません。" }, { status: 404 });
 
   const iconRewardsValid = await validateIconRewardIds(context.env, iconRewardIds);
   if (!iconRewardsValid) return json({ ok: false, message: "紐づけるアイコンを確認してください。" }, { status: 400 });
@@ -319,6 +577,9 @@ async function createTitleIconRewardsChangeBatch(context: PagesContext, body: Re
     const iconConflict = await hasOpenIconDelete(context.env, iconId);
     if (iconConflict) return json({ ok: false, message: "選択中のアイコンには未反映の削除予定があります。反映設定タブを確認してください。" }, { status: 400 });
   }
+
+  const titleDeleteConflict = await hasOpenTitleDelete(context.env, titleId);
+  if (titleDeleteConflict) return json({ ok: false, message: "この称号には未反映の削除予定があります。反映設定タブを確認してください。" }, { status: 400 });
 
   const conflict = await hasOpenTitleIconRewardsChange(context.env, titleId);
   if (conflict) return json({ ok: false, message: "この称号には未反映のアイコン報酬変更があります。反映設定タブを確認してください。" }, { status: 400 });
@@ -407,7 +668,10 @@ async function applyBatch(env: Env, batchId: string, adminId: string) {
     for (const item of mainItems) {
       if (item.change_type === "icon_delete") await appendIconDeleteApplyStatements(env, statements, item, now);
       else if (item.change_type === "icon_replace") await appendIconReplaceApplyStatements(env, statements, item, adminId, now);
+      else if (item.change_type === "title_create") await appendTitleCreateApplyStatements(env, statements, item, now);
+      else if (item.change_type === "title_update") await appendTitleUpdateApplyStatements(env, statements, item, now);
       else if (item.change_type === "title_icon_rewards_update") await appendTitleIconRewardsApplyStatements(env, statements, item, now);
+      else if (item.change_type === "title_delete") await appendTitleDeleteApplyStatements(env, statements, item, now);
       else if (item.change_type === "loading_illustration_delete") await appendLoadingIllustrationDeleteApplyStatements(env, statements, item, now);
       else if (item.change_type === "loading_illustration_replace") await appendLoadingIllustrationReplaceApplyStatements(env, statements, item, adminId, now);
     }
@@ -524,9 +788,155 @@ async function appendLoadingIllustrationReplaceApplyStatements(env: Env, stateme
   );
 }
 
+
+async function appendTitleDeleteApplyStatements(env: Env, statements: unknown[], titleDelete: ChangeItemRow, now: string) {
+  const title = await readTitle(env, titleDelete.target_id);
+  if (!title || title.deleted_at) throw new Error("削除対象称号が見つかりません。");
+
+  const defaultTitle = await readDefaultTitle(env);
+  if (!defaultTitle) throw new Error("デフォルト称号が見つかりません。");
+  if (title.is_initial === 1 || title.title_id === defaultTitle.title_id) throw new Error("初期称号は削除できません。");
+
+  statements.push(
+    env.DB.prepare("DELETE FROM title_icon_rewards WHERE title_id = ?").bind(title.title_id),
+    env.DB.prepare("INSERT OR IGNORE INTO user_titles (user_id, title_id, acquired_at, created_at) SELECT user_id, ?, ?, ? FROM user_settings WHERE current_title_id = ?").bind(defaultTitle.title_id, now, now, title.title_id),
+    env.DB.prepare("UPDATE user_settings SET current_title_id = ?, updated_at = ? WHERE current_title_id = ?").bind(defaultTitle.title_id, now, title.title_id),
+    env.DB.prepare("UPDATE titles SET is_active = 0, deleted_at = ?, updated_at = ? WHERE title_id = ?").bind(now, now, title.title_id),
+  );
+}
+
+
+async function appendTitleCreateApplyStatements(env: Env, statements: unknown[], item: ChangeItemRow, now: string) {
+  const after = parseJson<TitleChangeInput & { titleId?: string }>(item.after_json);
+  if (!after?.titleId) throw new Error("追加する称号IDを読み取れませんでした。");
+  const normalizedCondition = normalizeTitleConditionDefinition(after.conditionType, after.conditionParamsJson, after.conditionBuilderJson);
+  if (normalizedCondition.ok === false) throw new Error(normalizedCondition.message);
+  after.conditionType = normalizedCondition.value.conditionType;
+  after.conditionParamsJson = normalizedCondition.value.conditionParamsJson;
+  after.conditionBuilderJson = normalizedCondition.value.conditionBuilderJson;
+  after.isInitial = after.conditionType === "initial_grant" ? 1 : 0;
+  const exists = await readTitle(env, after.titleId);
+  if (exists) throw new Error("追加予定の称号IDはすでに存在しています。");
+  if (!isValidJsonObjectText(after.conditionParamsJson)) throw new Error("condition_params_json を確認してください。");
+  if (after.conditionBuilderJson && !isValidJsonObjectText(after.conditionBuilderJson)) throw new Error("condition_builder_json を確認してください。");
+  if (after.iconRewardIds.length > 3) throw new Error("紐づけるアイコンは最大3つまでです。");
+  const iconRewardsValid = await validateIconRewardIds(env, after.iconRewardIds);
+  if (!iconRewardsValid) throw new Error("紐づけるアイコンを確認してください。");
+
+  statements.push(
+    env.DB.prepare(
+      `
+      INSERT INTO titles (
+        title_id, title_code, title_name, description, unlock_condition_text,
+        rarity, condition_type, condition_params_json, condition_builder_json, is_initial, is_active,
+        sort_order, created_at, updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+    )
+      .bind(
+        after.titleId,
+        after.titleCode,
+        after.titleName,
+        after.description,
+        after.unlockConditionText,
+        after.rarity,
+        after.conditionType,
+        after.conditionParamsJson,
+        after.conditionBuilderJson,
+        after.isInitial,
+        after.isActive,
+        after.sortOrder,
+        now,
+        now,
+      ),
+  );
+
+  for (const [index, iconId] of after.iconRewardIds.entries()) {
+    statements.push(
+      env.DB.prepare(
+        `
+        INSERT INTO title_icon_rewards (title_id, icon_id, sort_order, created_at)
+        VALUES (?, ?, ?, ?)
+        `,
+      )
+        .bind(after.titleId, iconId, index + 1, now),
+    );
+  }
+}
+
+async function appendTitleUpdateApplyStatements(env: Env, statements: unknown[], item: ChangeItemRow, now: string) {
+  const after = parseJson<TitleChangeInput>(item.after_json);
+  if (!after?.titleId) throw new Error("編集する称号IDを読み取れませんでした。");
+  const normalizedCondition = normalizeTitleConditionDefinition(after.conditionType, after.conditionParamsJson, after.conditionBuilderJson);
+  if (normalizedCondition.ok === false) throw new Error(normalizedCondition.message);
+  after.conditionType = normalizedCondition.value.conditionType;
+  after.conditionParamsJson = normalizedCondition.value.conditionParamsJson;
+  after.conditionBuilderJson = normalizedCondition.value.conditionBuilderJson;
+  after.isInitial = after.conditionType === "initial_grant" ? 1 : 0;
+  const title = await readTitle(env, after.titleId);
+  if (!title || title.deleted_at) throw new Error("称号が見つかりません。");
+  if (!isValidJsonObjectText(after.conditionParamsJson)) throw new Error("condition_params_json を確認してください。");
+  if (after.conditionBuilderJson && !isValidJsonObjectText(after.conditionBuilderJson)) throw new Error("condition_builder_json を確認してください。");
+  if (after.iconRewardIds.length > 3) throw new Error("紐づけるアイコンは最大3つまでです。");
+  const iconRewardsValid = await validateIconRewardIds(env, after.iconRewardIds);
+  if (!iconRewardsValid) throw new Error("紐づけるアイコンを確認してください。");
+
+  statements.push(
+    env.DB.prepare(
+      `
+      UPDATE titles
+      SET
+        title_code = ?,
+        title_name = ?,
+        description = ?,
+        unlock_condition_text = ?,
+        rarity = ?,
+        condition_type = ?,
+        condition_params_json = ?,
+        condition_builder_json = ?,
+        is_initial = ?,
+        is_active = ?,
+        sort_order = ?,
+        updated_at = ?
+      WHERE title_id = ?
+        AND deleted_at IS NULL
+      `,
+    )
+      .bind(
+        after.titleCode,
+        after.titleName,
+        after.description,
+        after.unlockConditionText,
+        after.rarity,
+        after.conditionType,
+        after.conditionParamsJson,
+        after.conditionBuilderJson,
+        after.isInitial,
+        after.isActive,
+        after.sortOrder,
+        now,
+        after.titleId,
+      ),
+    env.DB.prepare("DELETE FROM title_icon_rewards WHERE title_id = ?").bind(after.titleId),
+  );
+
+  for (const [index, iconId] of after.iconRewardIds.entries()) {
+    statements.push(
+      env.DB.prepare(
+        `
+        INSERT INTO title_icon_rewards (title_id, icon_id, sort_order, created_at)
+        VALUES (?, ?, ?, ?)
+        `,
+      )
+        .bind(after.titleId, iconId, index + 1, now),
+    );
+  }
+}
+
 async function appendTitleIconRewardsApplyStatements(env: Env, statements: unknown[], item: ChangeItemRow, now: string) {
   const title = await readTitle(env, item.target_id);
-  if (!title) throw new Error("称号が見つかりません。");
+  if (!title || title.deleted_at) throw new Error("称号が見つかりません。");
 
   const after = parseJson<{ iconRewardIds?: unknown }>(item.after_json);
   const iconRewardIds = readIconRewardIds(after?.iconRewardIds);
@@ -713,7 +1123,7 @@ async function applyLoadingIllustrationReplaceBatch(env: Env, batchId: string, a
 
 async function applyTitleIconRewardsBatch(env: Env, batchId: string, adminId: string, item: ChangeItemRow) {
   const title = await readTitle(env, item.target_id);
-  if (!title) throw new Error("称号が見つかりません。");
+  if (!title || title.deleted_at) throw new Error("称号が見つかりません。");
 
   const after = parseJson<{ iconRewardIds?: unknown }>(item.after_json);
   const iconRewardIds = readIconRewardIds(after?.iconRewardIds);
@@ -977,6 +1387,29 @@ async function readBatchItems(env: Env, batchId: string) {
   return result.results ?? [];
 }
 
+async function attachCurrentTitleAchievementEffects(env: Env, items: ChangeItemRow[]): Promise<ChangeItemRow[]> {
+  return await Promise.all(items.map(async (item) => {
+    if (!isActiveChangeItem(item) || (item.change_type !== "title_create" && item.change_type !== "title_update")) return item;
+    const after = parseJson<Partial<TitleChangeInput>>(item.after_json);
+    const conditionType = typeof after?.conditionType === "string" ? after.conditionType : "";
+    const conditionParamsJson = typeof after?.conditionParamsJson === "string" ? after.conditionParamsJson : "{}";
+    if (!conditionType) return item;
+    try {
+      const currentEffect = await readTitleAchievementEffect(env, conditionType, conditionParamsJson);
+      return { ...item, current_effect_json: JSON.stringify(currentEffect) };
+    } catch {
+      return {
+        ...item,
+        current_effect_json: JSON.stringify({
+          achievementCountStatus: "not_countable",
+          achievedUserCount: null,
+          note: "現在の達成ユーザー数を集計できませんでした。",
+        }),
+      };
+    }
+  }));
+}
+
 async function readIcon(env: Env, iconId: string) {
   return await env.DB.prepare(
     `
@@ -1070,7 +1503,7 @@ async function readTitle(env: Env, titleId: string) {
     SELECT
       title_id, title_code, title_name, description, unlock_condition_text,
       rarity, condition_type, condition_params_json, is_initial, is_active,
-      sort_order, created_at, updated_at
+      sort_order, created_at, updated_at, deleted_at
     FROM titles
     WHERE title_id = ?
     LIMIT 1
@@ -1078,6 +1511,75 @@ async function readTitle(env: Env, titleId: string) {
   )
     .bind(titleId)
     .first<TitleRow>();
+}
+
+
+async function readDefaultTitle(env: Env) {
+  return await env.DB.prepare(
+    `
+    SELECT
+      title_id, title_code, title_name, description, unlock_condition_text,
+      rarity, condition_type, condition_params_json, is_initial, is_active,
+      sort_order, created_at, updated_at, deleted_at
+    FROM titles
+    WHERE deleted_at IS NULL
+    ORDER BY
+      CASE WHEN is_initial = 1 THEN 0 ELSE 1 END ASC,
+      sort_order ASC,
+      title_id ASC
+    LIMIT 1
+    `,
+  ).first<TitleRow>();
+}
+
+async function hasOpenTitleChange(env: Env, titleId: string) {
+  const row = await env.DB.prepare(
+    `
+    SELECT COUNT(*) AS count
+    FROM admin_change_items
+    INNER JOIN admin_change_batches ON admin_change_batches.batch_id = admin_change_items.batch_id
+    WHERE admin_change_items.target_type = 'title'
+      AND admin_change_items.target_id = ?
+      AND admin_change_batches.status IN ('draft', 'scheduled')
+      AND admin_change_items.status = 'draft'
+    `,
+  )
+    .bind(titleId)
+    .first<{ count: number }>();
+  return Number(row?.count ?? 0) > 0;
+}
+
+async function hasOpenTitleDelete(env: Env, titleId: string) {
+  const row = await env.DB.prepare(
+    `
+    SELECT COUNT(*) AS count
+    FROM admin_change_items
+    INNER JOIN admin_change_batches ON admin_change_batches.batch_id = admin_change_items.batch_id
+    WHERE admin_change_items.change_type = 'title_delete'
+      AND admin_change_items.target_type = 'title'
+      AND admin_change_items.target_id = ?
+      AND admin_change_batches.status IN ('draft', 'scheduled')
+      AND admin_change_items.status = 'draft'
+    `,
+  )
+    .bind(titleId)
+    .first<{ count: number }>();
+  return Number(row?.count ?? 0) > 0;
+}
+
+async function readTitleDeleteEffect(env: Env, titleId: string, fallbackTitleId: string) {
+  const [owned, selected, rewards] = await Promise.all([
+    env.DB.prepare("SELECT COUNT(*) AS count FROM user_titles WHERE title_id = ?").bind(titleId).first<{ count: number }>(),
+    env.DB.prepare("SELECT COUNT(*) AS count FROM user_settings WHERE current_title_id = ?").bind(titleId).first<{ count: number }>(),
+    env.DB.prepare("SELECT COUNT(*) AS count FROM title_icon_rewards WHERE title_id = ?").bind(titleId).first<{ count: number }>(),
+  ]);
+
+  return {
+    ownedUserCount: Number(owned?.count ?? 0),
+    selectedUserCount: Number(selected?.count ?? 0),
+    rewardLinkCount: Number(rewards?.count ?? 0),
+    fallbackTitleId,
+  };
 }
 
 async function readTitleIconRewardIds(env: Env, titleId: string) {
@@ -1127,6 +1629,25 @@ async function readIconSummaries(env: Env, iconIds: string[]) {
 
   const iconMap = new Map((result.results ?? []).map((row) => [row.icon_id, row]));
   return iconIds.map((iconId) => iconMap.get(iconId) ?? { icon_id: iconId, icon_code: iconId, icon_name: iconId });
+}
+
+
+async function hasOpenTitleUpdateOrRewardChange(env: Env, titleId: string) {
+  const row = await env.DB.prepare(
+    `
+    SELECT COUNT(*) AS count
+    FROM admin_change_items
+    INNER JOIN admin_change_batches ON admin_change_batches.batch_id = admin_change_items.batch_id
+    WHERE admin_change_items.change_type IN ('title_update', 'title_icon_rewards_update')
+      AND admin_change_items.target_type = 'title'
+      AND admin_change_items.target_id = ?
+      AND admin_change_batches.status IN ('draft', 'scheduled')
+      AND admin_change_items.status = 'draft'
+    `,
+  )
+    .bind(titleId)
+    .first<{ count: number }>();
+  return Number(row?.count ?? 0) > 0;
 }
 
 async function hasOpenTitleIconRewardsChange(env: Env, titleId: string) {
@@ -1388,6 +1909,9 @@ function formatChangeItemDisplayName(item: ChangeItemRow) {
   if (item.change_type === "icon_replace") return `アイコン差し替え：${readRecordText(before, "icon_name", item.target_id)}`;
   if (item.change_type === "loading_illustration_delete") return `ロードイラスト削除：${readRecordText(before, "illustration_name", item.target_id)}`;
   if (item.change_type === "loading_illustration_replace") return `ロードイラスト差し替え：${readRecordText(before, "illustration_name", item.target_id)}`;
+  if (item.change_type === "title_create") return `称号追加：${readRecordText(after, "titleName", item.target_id)}`;
+  if (item.change_type === "title_update") return `称号編集：${readRecordText(after, "titleName", item.target_id)}`;
+  if (item.change_type === "title_delete") return `称号削除：${readRecordText(before, "title_name", item.target_id)}`;
   if (item.change_type === "title_icon_rewards_update") {
     const title = before.title;
     if (title && typeof title === "object" && !Array.isArray(title)) return `称号アイコン報酬変更：${readRecordText(title as Record<string, unknown>, "title_name", item.target_id)}`;
@@ -1436,6 +1960,7 @@ function toItemResponse(item: ChangeItemRow) {
     before: parseJson(item.before_json),
     after: parseJson(item.after_json),
     effect: parseJson(item.effect_json),
+    currentEffect: parseJson(item.current_effect_json ?? null),
     reason: item.reason,
     createdAt: item.created_at,
     status: item.status,

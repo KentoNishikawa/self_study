@@ -6,8 +6,8 @@ import { applyCardEffects } from "./rules";
 // cspell:ignore REDEAL
 
 export type GameAction =
-  | { type: "PLAY_HAND"; handIndex: number; jokerValue?: number }
-  | { type: "DRAW_PLAY"; jokerValue?: number };
+  | { type: "PLAY_HAND"; handIndex: number; jokerValue?: number; trigger?: "TIMEOUT" }
+  | { type: "DRAW_PLAY"; jokerValue?: number; trigger?: "TIMEOUT" };
 
 export type Action = GameAction;
 
@@ -153,7 +153,7 @@ export function reducer(state: GameState, action: GameAction): GameState {
     next = pushTableCard(next, card);
 
     // 効果計算
-    const r = applyCardEffects(next, seatIndex, card, "HAND", action.jokerValue);
+    const r = applyCardEffects(next, seatIndex, card, "HAND", action.jokerValue, action.trigger);
 
     // history（♠3相殺なら直前ログ差し替え）
     const history = r.patchedPrev
@@ -197,7 +197,7 @@ export function reducer(state: GameState, action: GameAction): GameState {
     // ★場札管理
     next = pushTableCard(next, card);
 
-    const r = applyCardEffects(next, seatIndex, card, "DECK", action.jokerValue);
+    const r = applyCardEffects(next, seatIndex, card, "DECK", action.jokerValue, action.trigger);
 
     const history = r.patchedPrev
       ? [...next.history.slice(0, -1), r.patchedPrev, r.log]

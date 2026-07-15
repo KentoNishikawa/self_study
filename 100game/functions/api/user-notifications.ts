@@ -103,6 +103,7 @@ async function readUnreadNotifications(env: Env, userId: string) {
     LEFT JOIN titles
       ON user_notifications.target_type = 'title'
       AND titles.title_id = user_notifications.target_id
+      AND titles.deleted_at IS NULL
     LEFT JOIN icons
       ON user_notifications.target_type = 'icon'
       AND icons.icon_id = user_notifications.target_id
@@ -111,6 +112,7 @@ async function readUnreadNotifications(env: Env, userId: string) {
       AND title_illustrations.illustration_id = user_notifications.target_id
     WHERE user_notifications.user_id = ?
       AND user_notifications.is_read = 0
+      AND (user_notifications.target_type <> 'title' OR titles.title_id IS NOT NULL)
     ORDER BY user_notifications.priority ASC, user_notifications.created_at ASC, user_notifications.notification_id ASC
     LIMIT ?
     `,

@@ -1,7 +1,6 @@
 // src/ui/home.ts
 import type { Difficulty, GameType, GameState } from "../core/types";
-import { DEFAULT_PLAYER_ICON_ID } from "../icons/iconPresets";
-import { getSelectableUserIconDefinitions, resolveUserIconId, userIconContentHtml } from "../icons/userIconContent";
+import { getGuestDefaultUserIconId, getSelectableUserIconDefinitions, resolveSelectableUserIconId, resolveUserIconId, userIconContentHtml } from "../icons/userIconContent";
 import { isSoundEnabled, playButtonSe, startButtonSe, toggleSound } from "../core/sound";
 import { validatePlayerName } from "../core/nameValidation";
 import { HOME_HOST_DISBANDED_NOTICE, getInviteExpiredNotice, getJoinFailedNotice, getLockedRoomNotice, getPreflightStatusNotice, getPreflightUnexpectedStatusNotice, getRoomFullNotice, renderMpNoticeModalHtml, setupMpNoticeModal, stashMpNotice, type MpNotice } from "./mpNotice";
@@ -21,6 +20,7 @@ type LobbySeat = {
   iconId: string;
   isGuest?: boolean;
   titleName?: string;
+  hasNgNameError?: boolean;
 };
 
 type LobbyState = {
@@ -193,7 +193,9 @@ export function renderHome(
   let pendingLeaveDestination: "TITLE" | "USER_HOME" | null = null;
   let committedName = config.playerName;
   const FORCE_HOME_SCREEN_KEY = "100game.forceHomeScreen";
-  let localIconId = config.isGuest ? DEFAULT_PLAYER_ICON_ID : getUserIconId();
+  let localIconId = config.isGuest ? getGuestDefaultUserIconId() : resolveSelectableUserIconId(getUserIconId());
+  let lastSentNameNgError: boolean | null = null;
+  let nameAttemptQueue: Promise<void> = Promise.resolve();
 
 
   const redirectToHome = (forceHomeScreen = false) => {
@@ -301,6 +303,7 @@ export function renderHome(
   };
 
   const showHomeReturnInMenu = !config.isGuest;
+  const selectableIcons = getSelectableUserIconDefinitions();
 
   app.innerHTML = `
 
@@ -401,16 +404,20 @@ export function renderHome(
                      padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.16);
                      background:rgba(10,10,10,0.98);box-shadow:0 8px 30px rgba(0,0,0,0.45);
                      max-height:116px;overflow-y:auto;overflow-x:hidden;">
-              <div style="display:grid;grid-template-columns:repeat(6, 44px);gap:8px;">
-                ${getSelectableUserIconDefinitions().map((p) => `
-                  <button type="button" class="iconOpt" data-icon="${escapeHtml(p.id)}"
-                    title="${escapeHtml(p.name)}"
-                    style="width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,0.16);
-                           background:rgba(255,255,255,0.06);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">
-                    ${userIconContentHtml(p.id, 44)}
-                  </button>
-                `).join("")}
-              </div>
+              ${selectableIcons.length === 0 ? `
+                <div style="width:220px;color:rgba(255,255,255,0.78);font-size:12px;line-height:1.6;">利用可能なアイコンがありません。</div>
+              ` : `
+                <div style="display:grid;grid-template-columns:repeat(6, 44px);gap:8px;">
+                  ${selectableIcons.map((p) => `
+                    <button type="button" class="iconOpt" data-icon="${escapeHtml(p.id)}"
+                      title="${escapeHtml(p.name)}"
+                      style="width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,0.16);
+                             background:rgba(255,255,255,0.06);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">
+                      ${userIconContentHtml(p.id, 44)}
+                    </button>
+                  `).join("")}
+                </div>
+              `}
             </div>
 
             <div style="display:flex;gap:8px;align-items:center;flex:1;">
@@ -853,14 +860,64 @@ export function renderHome(
   };
 
 
+
+  const hasOwnNgNameError = () => validatePlayerName(nameEl.value) === "ng";
+
+  const hasLobbyNgNameError = () => {
+    if (!lobby) return false;
+    return lobby.seats.some((seat) => seat.kind !== "NPC" && seat.hasNgNameError === true);
+  };
+
+  const getStartBlockedByNgNameMessage = () => {
+    if (hasOwnNgNameError()) return "この名前は使用できません。";
+    if (hasLobbyNgNameError()) return "参加者の名前に使用できない文字列が含まれています。";
+    return "";
+  };
+
+  const syncNameNgStatusToLobby = (force = false) => {
+    const hasNgNameError = hasOwnNgNameError();
+
+    if (lobby && mySeatIndex != null && lobby.seats[mySeatIndex]) {
+      lobby.seats[mySeatIndex].hasNgNameError = hasNgNameError;
+    }
+
+    if (!ws || ws.readyState !== WebSocket.OPEN || mySeatIndex == null) return;
+    if (!force && lastSentNameNgError === hasNgNameError) return;
+
+    lastSentNameNgError = hasNgNameError;
+    ws.send(JSON.stringify({ type: "UPDATE_NAME_NG_STATUS", hasNgNameError }));
+  };
+
+  const recordNameDecisionAttempt = (displayName: string) => {
+    if (config.isGuest) return;
+
+    nameAttemptQueue = nameAttemptQueue
+      .catch(() => { })
+      .then(async () => {
+        try {
+          await fetch("/api/user-name-attempt", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ displayName }),
+          });
+        } catch {
+          // 称号カウント用の送信に失敗しても、ゲーム設定画面の操作は止めない。
+        }
+      });
+  };
+
   const applyRole = () => {
     const isConnected = !!ws && ws.readyState === WebSocket.OPEN && !!lobby;
     const isHost = isConnected && mySeatIndex === 0;
 
     // 接続中：名前/アイコンは全員OK、難易度/タイプ/開始はHOSTのみ
+    const ngBlockedMessage = getStartBlockedByNgNameMessage();
+    const isStartBlockedByRole = isConnected ? !isHost : false;
+    const isStartBlockedByNgName = ngBlockedMessage !== "";
     diffEl.disabled = isConnected ? !isHost : false;
     gameTypeEl.disabled = isConnected ? !isHost : false;
-    startBtn.disabled = isConnected ? !isHost : false;
+    startBtn.disabled = isStartBlockedByRole || isStartBlockedByNgName;
+    startBtn.title = isStartBlockedByNgName ? ngBlockedMessage : "";
 
     createRoomBtn.disabled = !!roomId;
     // 入れ替えボタン（HOSTのみ・開始前のみ）
@@ -886,11 +943,14 @@ export function renderHome(
 
     updateReorderHint();
 
-    roleHintEl.textContent = !isConnected
+    const baseRoleHint = !isConnected
       ? "ローカルプレイ（マルチ未接続）"
       : isHost
         ? "HOSTとして接続中（難易度/タイプ/開始が操作可能）"
         : "参加者として接続中（名前/アイコンのみ変更可能）";
+    roleHintEl.textContent = ngBlockedMessage && (isHost || !isConnected)
+      ? `${baseRoleHint} / ${ngBlockedMessage}`
+      : baseRoleHint;
   };
 
   const updateConfigLocal = (playerName = committedName) => {
@@ -920,7 +980,8 @@ export function renderHome(
     else if (result === "ng") setNameError("この名前は使用できません");
     else setNameError(null);
 
-    nameCommitBtn.disabled = result !== "ok" || !hasDraft;
+    nameCommitBtn.disabled = !hasDraft;
+    applyRole();
   };
 
   const syncCommittedName = (nextName: string) => {
@@ -936,21 +997,28 @@ export function renderHome(
   };
 
   const commitName = () => {
-    const result = validatePlayerName(nameEl.value);
+    const rawName = nameEl.value;
+    const result = validatePlayerName(rawName);
     if (result === "empty") {
       setNameError("名前を入力してください");
+      recordNameDecisionAttempt(rawName);
       return;
     }
     if (result === "tooLong") {
       setNameError(`名前は${MAX_PLAYER_NAME_LENGTH}文字以内で入力してください`);
+      recordNameDecisionAttempt(rawName);
       return;
     }
     if (result === "ng") {
       setNameError("この名前は使用できません");
+      recordNameDecisionAttempt(rawName);
+      syncNameNgStatusToLobby(true);
+      applyRole();
       return;
     }
 
-    const nextName = nameEl.value.trim();
+    const nextName = rawName.trim();
+    recordNameDecisionAttempt(nextName);
     committedName = nextName;
     nameEl.value = nextName;
     setNameError(null);
@@ -958,11 +1026,14 @@ export function renderHome(
 
     if (lobby && mySeatIndex != null && lobby.seats[mySeatIndex]) {
       lobby.seats[mySeatIndex].name = committedName;
+      lobby.seats[mySeatIndex].hasNgNameError = false;
       renderParticipants(lobby);
     }
 
     if (ws && ws.readyState === WebSocket.OPEN && mySeatIndex != null) {
       ws.send(JSON.stringify({ type: "COMMIT_NAME", name: committedName }));
+      ws.send(JSON.stringify({ type: "UPDATE_NAME_NG_STATUS", hasNgNameError: false }));
+      lastSentNameNgError = false;
     }
 
     updateNameControls();
@@ -985,19 +1056,35 @@ export function renderHome(
     pickerOpen ? closePicker() : openPicker();
   });
 
+  const applyLocalIcon = (iconId: string) => {
+    localIconId = resolveUserIconId(iconId);
+    iconBtn.dataset.iconId = localIconId;
+    iconBtn.innerHTML = userIconContentHtml(localIconId, 44);
+  };
+
+  const syncLocalIconToLobby = () => {
+    const iconId = config.isGuest ? resolveUserIconId(localIconId || getGuestDefaultUserIconId()) : resolveSelectableUserIconId(localIconId);
+    applyLocalIcon(iconId);
+
+    if (lobby && mySeatIndex != null && lobby.seats[mySeatIndex]) {
+      lobby.seats[mySeatIndex].iconId = localIconId;
+      renderParticipants(lobby);
+    }
+
+    if (ws && ws.readyState === WebSocket.OPEN && mySeatIndex != null) {
+      ws.send(JSON.stringify({ type: "UPDATE_ICON", iconId: localIconId }));
+    }
+  };
+
   iconOptButtons.forEach((btn) => {
     btn.addEventListener("click", (e) => {
       playButtonSe();
       e.stopPropagation();
-      const iconId = resolveUserIconId(btn.dataset.icon || DEFAULT_PLAYER_ICON_ID);
-
-      localIconId = iconId;
-      iconBtn.dataset.iconId = iconId;
-      iconBtn.innerHTML = userIconContentHtml(iconId, 44);
+      applyLocalIcon(resolveSelectableUserIconId(btn.dataset.icon));
       closePicker();
 
       if (ws && ws.readyState === WebSocket.OPEN && mySeatIndex != null) {
-        ws.send(JSON.stringify({ type: "UPDATE_ICON", iconId }));
+        ws.send(JSON.stringify({ type: "UPDATE_ICON", iconId: localIconId }));
       }
     });
   });
@@ -1011,9 +1098,12 @@ export function renderHome(
     } catch { }
 
     const token = sessionStorage.getItem(`hostToken:${rid}`) ?? "";
-    const wsUrl = token
-      ? `${wsBase}/api/rooms/${rid}/ws?token=${encodeURIComponent(token)}`
-      : `${wsBase}/api/rooms/${rid}/ws`;
+    const wsParams = new URLSearchParams();
+    if (token) wsParams.set("token", token);
+    const initialIconId = config.isGuest ? resolveUserIconId(localIconId || getGuestDefaultUserIconId()) : resolveSelectableUserIconId(localIconId);
+    if (initialIconId) wsParams.set("iconId", initialIconId);
+    const wsQuery = wsParams.toString();
+    const wsUrl = `${wsBase}/api/rooms/${rid}/ws${wsQuery ? `?${wsQuery}` : ""}`;
 
     setStatus("connecting");
     ws = new WebSocket(wsUrl);
@@ -1033,6 +1123,15 @@ export function renderHome(
       try {
         raw = JSON.parse(String(ev.data));
       } catch {
+        return;
+      }
+
+      if (raw?.type === "START_ERROR") {
+        const message = typeof raw.message === "string" && raw.message
+          ? raw.message
+          : "アイコン情報の取得に失敗しました。時間をおいて再度お試しください。";
+        setStatus(message);
+        window.alert(message);
         return;
       }
 
@@ -1078,10 +1177,9 @@ export function renderHome(
 
         const me = lobby.seats[mySeatIndex];
         if (me) {
-          localIconId = resolveUserIconId(me.iconId);
-          iconBtn.dataset.iconId = localIconId;
-          iconBtn.innerHTML = userIconContentHtml(localIconId, 44);
+          applyLocalIcon(localIconId);
           syncCommittedName(me.name);
+          syncNameNgStatusToLobby(true);
         }
 
         diffEl.value = lobby.npcDifficulty;
@@ -1089,6 +1187,7 @@ export function renderHome(
 
         inviteUrlEl.value = `${location.origin}?room=${lobby.roomId}`;
 
+        syncLocalIconToLobby();
         syncGuestFlagToLobby();
         renderParticipants(lobby);
         applyRole();
@@ -1108,6 +1207,7 @@ export function renderHome(
             iconBtn.dataset.iconId = localIconId;
             iconBtn.innerHTML = userIconContentHtml(localIconId, 44);
             syncCommittedName(me.name);
+            syncNameNgStatusToLobby();
           }
         }
 
@@ -1187,6 +1287,7 @@ export function renderHome(
   // ---- events ----
   nameEl.oninput = () => {
     updateNameControls();
+    syncNameNgStatusToLobby();
   };
 
   nameEl.onkeydown = (ev) => {
@@ -1240,6 +1341,15 @@ export function renderHome(
     }
     if (validation === "ng") {
       setNameError("この名前は使用できません");
+      syncNameNgStatusToLobby(true);
+      applyRole();
+      return;
+    }
+
+    const ngBlockedMessage = getStartBlockedByNgNameMessage();
+    if (ngBlockedMessage) {
+      setNameError(ngBlockedMessage);
+      applyRole();
       return;
     }
 

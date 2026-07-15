@@ -34,6 +34,7 @@ export async function grantAutomaticAcquisitions(
   }
 
   const grantedTitleIds = await grantAutomaticTitles(env, userId, context, options.acquiredAt);
+  for (const titleId of grantedTitleIds) await createAcquiredNotification(env, userId, "title_acquired", titleId);
   const titleRewardIconIds = await grantTitleRewardIcons(env, userId, grantedTitleIds, options.acquiredAt);
   const automaticIconIds = await grantAutomaticIcons(env, userId, context, options.acquiredAt);
 
@@ -48,10 +49,11 @@ async function buildConditionContext(
   userId: string,
   options: AutomaticAcquisitionOptions,
 ): Promise<ConditionEvaluationContext | null> {
-  const [soloStats, multiStats, globalStats] = await Promise.all([
+  const [soloStats, multiStats, globalStats, titleAcquiredCount] = await Promise.all([
     readStatsRow(env, "user_stats_solo", userId),
     readStatsRow(env, "user_stats_multi", userId),
     readStatsRow(env, "user_stats_global", userId),
+    readActiveTitleAcquiredCount(env, userId),
   ]);
 
   if (!soloStats || !multiStats || !globalStats) return null;
@@ -59,7 +61,7 @@ async function buildConditionContext(
   return {
     soloStats,
     multiStats,
-    globalStats,
+    globalStats: { ...globalStats, title_acquired_count: titleAcquiredCount },
     matchStats: options.matchStats ?? null,
     matchAchievementKeys: options.matchAchievementKeys ?? [],
   };
@@ -71,24 +73,57 @@ async function readStatsRow(env: Env, tableName: "user_stats_solo" | "user_stats
     .first<StatsDbRow>();
 }
 
+async function readActiveTitleAcquiredCount(env: Env, userId: string) {
+  const row = await env.DB.prepare(
+    `
+    SELECT COUNT(*) AS count
+    FROM user_titles
+    INNER JOIN titles
+      ON titles.title_id = user_titles.title_id
+      AND titles.deleted_at IS NULL
+      AND titles.is_active = 1
+    WHERE user_titles.user_id = ?
+    `,
+  )
+    .bind(userId)
+    .first<{ count: number }>();
+
+  return Number(row?.count ?? 0);
+}
+
 async function grantAutomaticTitles(env: Env, userId: string, context: ConditionEvaluationContext, acquiredAt: string) {
-  const candidates = await readTitleCandidates(env, userId);
+  let candidates = await readTitleCandidates(env, userId);
   const grantedTitleIds: string[] = [];
+  const maxRounds = candidates.length;
 
-  for (const candidate of candidates) {
-    if (!evaluateCondition(candidate, context)) continue;
+  for (let round = 0; round < maxRounds && candidates.length > 0; round += 1) {
+    const grantedThisRound: string[] = [];
+    const remaining: AcquisitionMasterRow[] = [];
 
-    await env.DB.prepare(
-      `
-      INSERT OR IGNORE INTO user_titles (user_id, title_id, acquired_at, created_at)
-      VALUES (?, ?, ?, ?)
-      `,
-    )
-      .bind(userId, candidate.target_id, acquiredAt, acquiredAt)
-      .run();
+    for (const candidate of candidates) {
+      if (!evaluateCondition(candidate, context)) {
+        remaining.push(candidate);
+        continue;
+      }
 
-    await createAcquiredNotification(env, userId, "title_acquired", candidate.target_id);
-    grantedTitleIds.push(candidate.target_id);
+      const result = await env.DB.prepare(
+        `
+        INSERT OR IGNORE INTO user_titles (user_id, title_id, acquired_at, created_at)
+        VALUES (?, ?, ?, ?)
+        `,
+      )
+        .bind(userId, candidate.target_id, acquiredAt, acquiredAt)
+        .run() as { meta?: { changes?: number } };
+
+      if (Number(result.meta?.changes ?? 0) <= 0) continue;
+      grantedThisRound.push(candidate.target_id);
+      grantedTitleIds.push(candidate.target_id);
+    }
+
+    if (grantedThisRound.length === 0) break;
+    const currentCount = Number(context.globalStats?.title_acquired_count ?? 0);
+    if (context.globalStats) context.globalStats.title_acquired_count = currentCount + grantedThisRound.length;
+    candidates = remaining;
   }
 
   return grantedTitleIds;
@@ -191,6 +226,7 @@ async function readTitleCandidates(env: Env, userId: string) {
       ON user_titles.title_id = titles.title_id
       AND user_titles.user_id = ?
     WHERE titles.is_active = 1
+      AND titles.deleted_at IS NULL
       AND titles.is_initial = 0
       AND titles.condition_type <> 'initial_grant'
       AND user_titles.title_id IS NULL

@@ -8,10 +8,10 @@ import { renderHome, type HomeConfig } from "./ui/home";
 import { renderTitle } from "./ui/title";
 import { AuthApiError, clearAuthSession, logoutAuthSession, requireActiveAuthSession, saveAuthSession } from "./core/authSession";
 import { clearUserSettingsCache, getUserPlayerName, loadUserSettingsFromApi } from "./core/userSettings";
-import { loadUserCollectionsFromApi, resetUserCollectionsCache } from "./core/userCollections";
+import { loadGuestIconsFromApi, loadUserCollectionsFromApi, resetUserCollectionsCache } from "./core/userCollections";
 import { getPendingIconAwardNotification, getPendingTitleAwardNotification, loadUserNotificationsFromApi, markPendingIconNotificationsRead, markPendingTitleNotificationsRead, resetUserNotificationsCache } from "./core/userNotifications";
 import { getSelectedUserTitleName, renderUserHome } from "./ui/userHome";
-import { createMatchTelemetry, recordTimeoutDeckPlay, saveCompletedSoloMatch, updateMatchTelemetryFromState, type MatchTelemetry } from "./core/matchHistory";
+import { createMatchTelemetry, recordCurrentPlayerLoseCertainExit, saveCompletedSoloMatch, saveLoseCertainEventCounts, updateMatchTelemetryFromState, type MatchTelemetry, type RematchSessionStats } from "./core/matchHistory";
 import { renderMpGate } from "./ui/mpGate";
 import { createLoadingConfig, renderLoading, type LoadingScreenConfig } from "./ui/loading";
 import { loadAuthenticatedLoadingImagePath } from "./core/loadingIllustrations";
@@ -50,6 +50,8 @@ let loadingTimerId: number | null = null;
 let isGuestSession = false;
 let matchTelemetry: MatchTelemetry | null = null;
 let savingMatchId: string | null = null;
+let rematchSessionStats: RematchSessionStats = createEmptyRematchSessionStats();
+const rematchSessionRecordedMatchIds = new Set<string>();
 
 type MpSession = {
   roomId: string;
@@ -110,6 +112,10 @@ function startTitleLoading(mode: "AUTHENTICATED" | "GUEST", targetScreen: "USER_
   stopTurnLimit();
 
   isGuestSession = mode === "GUEST";
+  if (mode === "GUEST") {
+    resetUserCollectionsCache();
+    resetUserNotificationsCache();
+  }
   loadingConfig = createLoadingConfig(mode);
   loadingTargetScreen = targetScreen;
   screen = "LOADING";
@@ -139,13 +145,15 @@ function startTitleLoading(mode: "AUTHENTICATED" | "GUEST", targetScreen: "USER_
 
     if (mode === "AUTHENTICATED") {
       void requireActiveAuthSession()
-        .then(() => (nextScreen === "USER_HOME" ? refreshUserHomeData() : undefined))
+        .then(() => refreshUserHomeData())
         .then(showNextScreen)
         .catch(handleAuthGuardFailure);
       return;
     }
 
-    showNextScreen();
+    void loadGuestIconsFromApi()
+      .then(showNextScreen)
+      .catch(showNextScreen);
   }, pickTitleLoadingDelayMs());
 }
 
@@ -183,6 +191,7 @@ function handleAuthGuardFailure(error: unknown) {
   state = null;
   matchTelemetry = null;
   savingMatchId = null;
+  resetRematchSessionStats();
   screen = "TITLE";
   draw();
   window.setTimeout(() => window.alert(message), 0);
@@ -205,8 +214,6 @@ async function startTitleLoadingToUserHome() {
 }
 
 function startTitleLoadingToGuestGameSettings() {
-  resetUserCollectionsCache();
-  resetUserNotificationsCache();
   startTitleLoading("GUEST", "HOME");
 }
 
@@ -225,7 +232,40 @@ function cancelMpGateToTitle() {
 
 
 // ソロ時にホームで選んだアイコンを引き継ぐ
-let soloIconId = "player_default";
+let soloIconId = "npc_default";
+
+type StartIconSnapshot = {
+  iconId: string;
+  iconTypeIds: string[];
+  npcIconId: string;
+  npcIconTypeIds: string[];
+};
+
+async function fetchStartIconSnapshot(iconId: string): Promise<StartIconSnapshot> {
+  const response = await fetch("/api/icon-start-snapshot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ iconId }),
+  });
+  const data = await response.json().catch(() => null) as { ok?: boolean; snapshot?: StartIconSnapshot; message?: string } | null;
+  if (
+    !response.ok
+    || data?.ok !== true
+    || !data.snapshot
+    || typeof data.snapshot.iconId !== "string"
+    || !Array.isArray(data.snapshot.iconTypeIds)
+    || typeof data.snapshot.npcIconId !== "string"
+    || !Array.isArray(data.snapshot.npcIconTypeIds)
+  ) {
+    throw new Error(data?.message || "アイコン情報の取得に失敗しました。時間をおいて再度お試しください。");
+  }
+  return {
+    iconId: data.snapshot.iconId,
+    iconTypeIds: data.snapshot.iconTypeIds.filter((value): value is string => typeof value === "string"),
+    npcIconId: data.snapshot.npcIconId,
+    npcIconTypeIds: data.snapshot.npcIconTypeIds.filter((value): value is string => typeof value === "string"),
+  };
+}
 
 function getSelectedHomeIconId(): string {
   // 1) sessionStorage に入っていればそれを優先（将来拡張用）
@@ -254,7 +294,7 @@ function getSelectedHomeIconId(): string {
   };
   if (emoji && map[emoji]) return map[emoji];
 
-  return "player_default";
+  return "npc_default";
 }
 
 
@@ -276,7 +316,75 @@ function rotateToMe(server: GameState, seatIndex: number): GameState {
       ? { ...server.result, loserSeat: mapIndex(server.result.loserSeat) }
       : server.result;
 
-  return { ...server, seats, turn: mapIndex(server.turn), history, result };
+  const initialSeatSnapshots = server.initialSeatSnapshots
+    ? [
+        server.initialSeatSnapshots[unmapIndex(0)],
+        server.initialSeatSnapshots[unmapIndex(1)],
+        server.initialSeatSnapshots[unmapIndex(2)],
+        server.initialSeatSnapshots[unmapIndex(3)],
+      ] as GameState["initialSeatSnapshots"]
+    : undefined;
+
+  return { ...server, seats, turn: mapIndex(server.turn), history, result, initialSeatSnapshots };
+}
+
+function createEmptyRematchSessionStats(): RematchSessionStats {
+  return {
+    totalCount: 0,
+    aliveTotal: 0,
+    deadTotal: 0,
+    aliveStreak: 0,
+    deadStreak: 0,
+  };
+}
+
+function resetRematchSessionStats() {
+  rematchSessionStats = createEmptyRematchSessionStats();
+  rematchSessionRecordedMatchIds.clear();
+}
+
+function recordRematchSessionCompletedMatch(s: GameState, matchId: string) {
+  if (s.result.status === "PLAYING") return;
+  if (rematchSessionRecordedMatchIds.has(matchId)) return;
+  rematchSessionRecordedMatchIds.add(matchId);
+
+  rematchSessionStats = {
+    ...rematchSessionStats,
+    totalCount: rematchSessionStats.totalCount + 1,
+  };
+
+  if (s.result.status === "LOSE" && s.result.loserSeat === 0) {
+    rematchSessionStats = {
+      ...rematchSessionStats,
+      deadTotal: rematchSessionStats.deadTotal + 1,
+      aliveStreak: 0,
+      deadStreak: rematchSessionStats.deadStreak + 1,
+    };
+    return;
+  }
+
+  if (s.result.status === "LOSE") {
+    rematchSessionStats = {
+      ...rematchSessionStats,
+      aliveTotal: rematchSessionStats.aliveTotal + 1,
+      aliveStreak: rematchSessionStats.aliveStreak + 1,
+      deadStreak: 0,
+    };
+    return;
+  }
+
+  rematchSessionStats = {
+    ...rematchSessionStats,
+    aliveStreak: 0,
+    deadStreak: 0,
+  };
+}
+
+function recordAndSaveCurrentPlayerLoseCertainExitIfPlaying() {
+  if (!state || state.result.status !== "PLAYING") return;
+  if (!matchTelemetry) return;
+  recordCurrentPlayerLoseCertainExit(matchTelemetry);
+  void saveLoseCertainEventCounts(matchTelemetry);
 }
 
 function leaveMpToHome(session?: MpSession | null, notice?: { title?: string; message: string } | null) {
@@ -312,6 +420,7 @@ function leaveMpToHome(session?: MpSession | null, notice?: { title?: string; me
   state = null;
   matchTelemetry = null;
   savingMatchId = null;
+  resetRematchSessionStats();
   draw();
 
   try {
@@ -396,6 +505,16 @@ function attachMpWs(session: MpSession) {
     try {
       raw = JSON.parse(String(ev.data));
     } catch {
+      return;
+    }
+
+    if (raw?.type === "START_ERROR") {
+      const message = typeof raw.message === "string" && raw.message
+        ? raw.message
+        : "アイコン情報の取得に失敗しました。時間をおいて再度お試しください。";
+      uiLocked = false;
+      window.alert(message);
+      draw();
       return;
     }
 
@@ -689,8 +808,7 @@ async function forceTimeoutAction(capturedKey: string) {
   if (top) {
     let jokerValue: number | undefined;
     if (top.rank === "JOKER") jokerValue = pickAutoJokerValueNoBust(state);
-    state = reducer(state, { type: "DRAW_PLAY", jokerValue });
-    recordTimeoutDeckPlay(matchTelemetry, seatIndex);
+    state = reducer(state, { type: "DRAW_PLAY", jokerValue, trigger: "TIMEOUT" });
     updateMatchTelemetryFromState(matchTelemetry, state);
   } else {
     const hand = state.seats[seatIndex].hand;
@@ -698,7 +816,7 @@ async function forceTimeoutAction(capturedKey: string) {
     const card = hand[0];
     let jokerValue: number | undefined;
     if (card.rank === "JOKER") jokerValue = pickAutoJokerValueNoBust(state);
-    state = reducer(state, { type: "PLAY_HAND", handIndex: 0, jokerValue });
+    state = reducer(state, { type: "PLAY_HAND", handIndex: 0, jokerValue, trigger: "TIMEOUT" });
     updateMatchTelemetryFromState(matchTelemetry, state);
   }
 
@@ -711,7 +829,16 @@ async function forceTimeoutAction(capturedKey: string) {
 // ==============================
 // ローカルゲーム処理
 // ==============================
-function startGame(cfg: HomeConfig) {
+async function startGame(cfg: HomeConfig) {
+  const requestedIconId = getSelectedHomeIconId();
+  let iconSnapshot: StartIconSnapshot;
+  try {
+    iconSnapshot = await fetchStartIconSnapshot(requestedIconId);
+  } catch (error) {
+    window.alert(error instanceof Error ? error.message : "アイコン情報の取得に失敗しました。時間をおいて再度お試しください。");
+    return;
+  }
+
   mpAnimToken++;
   mpLastSeq = 0;
   mp = null;
@@ -721,12 +848,14 @@ function startGame(cfg: HomeConfig) {
   uiLocked = false;
   stopTurnLimit();
 
+  resetRematchSessionStats();
+
   const name = (cfg.playerName || "").trim() || "プレイヤー";
   homeConfig = { ...cfg, playerName: name };
   difficulty = cfg.difficulty;
 
-  soloIconId = getSelectedHomeIconId();
-  state = createInitialState(name, cfg.gameType, soloIconId);
+  soloIconId = iconSnapshot.iconId;
+  state = createInitialState(name, cfg.gameType, soloIconId, iconSnapshot.iconTypeIds, iconSnapshot.npcIconId, iconSnapshot.npcIconTypeIds);
   matchTelemetry = createMatchTelemetry(state);
   savingMatchId = null;
   (state.seats[0] as any).isGuest = isGuestSession;
@@ -738,6 +867,7 @@ function startGame(cfg: HomeConfig) {
 }
 
 function goHome() {
+  recordAndSaveCurrentPlayerLoseCertainExitIfPlaying();
   npcRunToken++;
   uiLocked = false;
   stopTurnLimit();
@@ -751,18 +881,28 @@ function goHome() {
   state = null;
   matchTelemetry = null;
   savingMatchId = null;
+  resetRematchSessionStats();
   stopMpDisbandWatch();
   draw();
 }
 
-function restartGame() {
+async function restartGame() {
+  let iconSnapshot: StartIconSnapshot;
+  try {
+    iconSnapshot = await fetchStartIconSnapshot(soloIconId);
+  } catch (error) {
+    window.alert(error instanceof Error ? error.message : "アイコン情報の取得に失敗しました。時間をおいて再度お試しください。");
+    return;
+  }
+
   npcRunToken++;
   uiLocked = false;
   stopTurnLimit();
 
   const name = (homeConfig.playerName || "").trim() || "プレイヤー";
   stopMpDisbandWatch();
-  state = createInitialState(name, homeConfig.gameType, soloIconId);
+  soloIconId = iconSnapshot.iconId;
+  state = createInitialState(name, homeConfig.gameType, soloIconId, iconSnapshot.iconTypeIds, iconSnapshot.npcIconId, iconSnapshot.npcIconTypeIds);
   matchTelemetry = createMatchTelemetry(state);
   savingMatchId = null;
   (state.seats[0] as any).isGuest = isGuestSession;
@@ -951,8 +1091,9 @@ function maybeSaveCompletedLocalMatch() {
   if (!state || !matchTelemetry) return;
   const currentMp = mp;
   const currentIsGuest = isGuestSession || Boolean(state.seats[0]?.isGuest);
-  if (currentIsGuest) return;
   if (state.result.status === "PLAYING") return;
+  recordRematchSessionCompletedMatch(state, matchTelemetry.matchId);
+  if (currentIsGuest) return;
   if (savingMatchId === matchTelemetry.matchId) return;
 
   savingMatchId = matchTelemetry.matchId;
@@ -964,6 +1105,7 @@ function maybeSaveCompletedLocalMatch() {
     isMulti: Boolean(currentMp),
     roomId: currentMp?.roomId ?? null,
     mpSeatIndex: currentMp?.seatIndex ?? null,
+    rematchSessionStats,
   }).catch(() => { });
 }
 
@@ -1009,7 +1151,7 @@ function draw() {
         runAuthenticatedAction(() => startTitleLoading("AUTHENTICATED", "HOME"));
       },
       onGuestJoin: () => {
-        startTitleLoading("GUEST", "HOME");
+        startTitleLoadingToGuestGameSettings();
       },
       onCancel: () => {
         cancelMpGateToTitle();
@@ -1041,12 +1183,14 @@ function draw() {
         runAuthenticatedAction(() => {
           isGuestSession = false;
           homeConfig = { ...homeConfig, playerName: getUserPlayerName() };
+          resetRematchSessionStats();
           screen = "HOME";
           draw();
         });
       },
       onGoTitle: () => {
         isGuestSession = false;
+        resetRematchSessionStats();
         screen = "TITLE";
         draw();
       },
@@ -1060,7 +1204,7 @@ function draw() {
 
     renderHome(app, { ...homeConfig, isGuest: isGuestSession }, {
       onStart: (cfg) => {
-        if (isGuestSession) startGame(cfg);
+        if (isGuestSession) void startGame(cfg);
         else runAuthenticatedAction(() => startGame(cfg));
       },
       onChange: (cfg) => {
@@ -1071,12 +1215,14 @@ function draw() {
         runAuthenticatedAction(() => {
           isGuestSession = false;
           refreshUserHomeDataAndRedraw();
+          resetRematchSessionStats();
           screen = "USER_HOME";
           draw();
         });
       },
       onGoTitle: () => {
         isGuestSession = false;
+        resetRematchSessionStats();
         screen = "TITLE";
         draw();
       },
@@ -1099,6 +1245,7 @@ function draw() {
         difficulty = p.npcDifficulty;
 
         resetRenderTransientState();
+        resetRematchSessionStats();
 
         state = rotateToMe(initial, p.seatIndex);
         matchTelemetry = createMatchTelemetry(state);
@@ -1147,7 +1294,7 @@ function draw() {
     },
     onRestart: () => {
       if (!mp) {
-        if (isGuestSession) restartGame();
+        if (isGuestSession) void restartGame();
         else runAuthenticatedAction(restartGame);
         return;
       }
@@ -1165,6 +1312,7 @@ function draw() {
       }
 
       const currentMp = mp;
+      recordAndSaveCurrentPlayerLoseCertainExitIfPlaying();
       if (currentMp.isHost) {
         mpPendingHostDisbandNotice = true;
         uiLocked = true;

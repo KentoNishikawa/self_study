@@ -176,7 +176,18 @@ async function ownsIcon(env: Env, userId: string, iconId: string): Promise<boole
 }
 
 async function ownsTitle(env: Env, userId: string, titleId: string): Promise<boolean> {
-  const row = await env.DB.prepare("SELECT title_id FROM user_titles WHERE user_id = ? AND title_id = ? LIMIT 1")
+  const row = await env.DB.prepare(
+    `
+    SELECT user_titles.title_id
+    FROM user_titles
+    INNER JOIN titles
+      ON titles.title_id = user_titles.title_id
+      AND titles.deleted_at IS NULL
+    WHERE user_titles.user_id = ?
+      AND user_titles.title_id = ?
+    LIMIT 1
+    `,
+  )
     .bind(userId, titleId)
     .first<{ title_id: string }>();
   return Boolean(row);

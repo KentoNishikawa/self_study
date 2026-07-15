@@ -79,6 +79,7 @@ const fallbackPlayerPreset: IconPreset = {
 export const PLAYER_ICON_PRESETS: IconPreset[] =
   selectablePlayerPresets.length > 0 ? selectablePlayerPresets : [fallbackPlayerPreset];
 export const DEFAULT_PLAYER_ICON_ID = PLAYER_ICON_PRESETS[0]?.id ?? fallbackPlayerPreset.id;
+export const NPC_ICON_ID = "npc_default";
 
 export const SYSTEM_ICON_PRESETS: IconPreset[] = [
   npcImagePreset
@@ -101,7 +102,7 @@ export function resolveIconId(iconId: unknown, fallbackId: string = DEFAULT_PLAY
   const key = typeof iconId === "string" ? iconId : "";
   if (key && ICON_BY_ID.has(key)) return key;
   if (key && LEGACY_ICON_ALIAS[key] && ICON_BY_ID.has(LEGACY_ICON_ALIAS[key])) return LEGACY_ICON_ALIAS[key];
-  if (key === "npc_default") return "npc_default";
+  if (key === NPC_ICON_ID) return NPC_ICON_ID;
   return ICON_BY_ID.has(fallbackId) ? fallbackId : DEFAULT_PLAYER_ICON_ID;
 }
 

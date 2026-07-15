@@ -1,4 +1,4 @@
-import { DEFAULT_PLAYER_ICON_ID, resolveIconId } from "../icons/iconPresets";
+import { NPC_ICON_ID, resolveIconId } from "../icons/iconPresets";
 import { activateAuthenticatedSoundScope, setAuthenticatedSoundVolumeLevel } from "./sound";
 export const DEFAULT_USER_PLAYER_NAME = "プレイヤー";
 export const MAX_PLAYER_NAME_LENGTH = 15;
@@ -128,11 +128,11 @@ export function getUserIconId(): string {
   const legacyIconId = readLocalStorage(LEGACY_USER_ICON_ID_KEY);
   if (legacyIconId) return resolveIconId(legacyIconId);
 
-  return DEFAULT_PLAYER_ICON_ID;
+  return NPC_ICON_ID;
 }
 
 export function setUserIconId(nextIconId: string): string {
-  const normalized = String(nextIconId || DEFAULT_PLAYER_ICON_ID).trim() || DEFAULT_PLAYER_ICON_ID;
+  const normalized = String(nextIconId || NPC_ICON_ID).trim() || NPC_ICON_ID;
   writeLocalStorage(USER_ICON_ID_KEY, normalized);
   return normalized;
 }
@@ -194,14 +194,15 @@ function applyUserSettingsSnapshot(settings: Partial<UserSettingsSnapshot>): Use
 
   const displayName = normalizePlayerName(settings.displayName) ?? DEFAULT_USER_PLAYER_NAME;
   const previousDisplayName = normalizePlayerName(settings.previousDisplayName);
-  const currentIconId = settings.currentIconId ? String(settings.currentIconId).trim() || DEFAULT_PLAYER_ICON_ID : DEFAULT_PLAYER_ICON_ID;
+  const currentIconId = settings.currentIconId ? String(settings.currentIconId).trim() || null : null;
   const currentTitleId = settings.currentTitleId || DEFAULT_USER_TITLE_ID;
   const soundVolumeLevel = normalizeSoundVolumeLevel(settings.soundVolumeLevel);
 
   writeLocalStorage(USER_PLAYER_NAME_KEY, displayName);
   if (previousDisplayName) writeLocalStorage(PREVIOUS_USER_PLAYER_NAME_KEY, previousDisplayName);
   else removeLocalStorage(PREVIOUS_USER_PLAYER_NAME_KEY);
-  writeLocalStorage(USER_ICON_ID_KEY, currentIconId);
+  if (currentIconId) writeLocalStorage(USER_ICON_ID_KEY, currentIconId);
+  else removeLocalStorage(USER_ICON_ID_KEY);
   writeLocalStorage(USER_TITLE_ID_KEY, currentTitleId);
   writeLocalStorage(SOUND_VOLUME_LEVEL_KEY, String(soundVolumeLevel));
   activateAuthenticatedSoundScope(soundVolumeLevel);

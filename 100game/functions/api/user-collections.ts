@@ -69,6 +69,11 @@ type IconCollectionRow = {
   acquired_at: string | null;
 };
 
+type IconTypeLinkRow = {
+  icon_id: string;
+  icon_type_id: string;
+};
+
 type IllustrationCollectionRow = {
   illustration_id: string;
   illustration_name: string;
@@ -85,7 +90,7 @@ type IllustrationCollectionRow = {
 };
 
 const DEFAULT_TITLE_ID = "title-initial-001";
-const DEFAULT_ICON_ID = "img_01_u7537_u306e_u5b50";
+const DEFAULT_ICON_SETTING_KEY = "default_icon_id";
 
 const TITLE_SEEDS: TitleMasterSeed[] = [
   createInitialTitleSeed("title-initial-001", "initial_first_step", "はじめの一歩", "まずはここから！", 1),
@@ -100,14 +105,7 @@ const TITLE_SEEDS: TitleMasterSeed[] = [
   createInitialTitleSeed("title-initial-010", "initial_one_game_please", "一戦お願いします", "なんたる礼儀の良さ！", 10),
 ];
 
-const ICON_SEEDS: IconMasterSeed[] = [
-  createIconSeed("img_01_u7537_u306e_u5b50", "icon_player_001", "男の子", 1, "/assets/icons/01_boy.png"),
-  createIconSeed("img_02_u5973_u306e_u5b50_u59b9", "icon_player_002", "女の子 妹", 2, "/assets/icons/02_girl_sister.png"),
-  createIconSeed("img_03_u7537_u6027", "icon_player_003", "男性", 3, "/assets/icons/03_man.png"),
-  createIconSeed("img_04_u5973_u6027", "icon_player_004", "女性", 4, "/assets/icons/04_woman.png"),
-  createIconSeed("img_05_u30a4_u30cc", "icon_player_005", "イヌ", 5, "/assets/icons/05_dog.png"),
-  createIconSeed("img_06_u30cd_u30b3", "icon_player_006", "ネコ", 6, "/assets/icons/06_cat.png"),
-];
+const ICON_SEEDS: IconMasterSeed[] = [];
 
 const ILLUSTRATION_SEEDS: IllustrationMasterSeed[] = [
   {
@@ -152,18 +150,21 @@ export async function onRequestGet({ request, env }: PagesContext): Promise<Resp
 
   await ensureCollectionSeed(env, session.user_id);
 
-  const [titles, icons, loadingIllustrations] = await Promise.all([
+  const [titles, icons, loadingIllustrations, defaultIconId] = await Promise.all([
     readTitleCollection(env, session.user_id),
     readIconCollection(env, session.user_id),
     readIllustrationCollection(env, session.user_id),
+    readDefaultIconId(env),
   ]);
+  const iconTypeLinks = await readIconTypeLinks(env, icons.map((icon) => icon.icon_id));
 
   return json({
     ok: true,
     collection: {
       titles: titles.map(toTitleResponse),
-      icons: icons.map(toIconResponse),
+      icons: icons.map((icon) => toIconResponse(icon, iconTypeLinks.get(icon.icon_id) ?? [])),
       loadingIllustrations: loadingIllustrations.map(toIllustrationResponse),
+      defaultIconId,
     },
   });
 }
@@ -292,13 +293,12 @@ export async function ensureCollectionSeed(env: Env, userId: string) {
     `
     UPDATE user_settings
     SET
-      current_icon_id = COALESCE(current_icon_id, ?),
       current_title_id = COALESCE(current_title_id, ?),
       updated_at = ?
     WHERE user_id = ?
     `,
   )
-    .bind(DEFAULT_ICON_ID, DEFAULT_TITLE_ID, now, userId)
+    .bind(DEFAULT_TITLE_ID, now, userId)
     .run();
 }
 
@@ -310,6 +310,7 @@ async function grantInitialTitlesFromDb(env: Env, userId: string, now: string) {
     FROM titles
     WHERE is_initial = 1
       AND is_active = 1
+      AND deleted_at IS NULL
     `,
   )
     .bind(userId, now, now)
@@ -324,6 +325,7 @@ async function grantInitialIconsFromDb(env: Env, userId: string, now: string) {
     FROM icons
     WHERE is_initial = 1
       AND is_active = 1
+      AND deleted_at IS NULL
     `,
   )
     .bind(userId, now, now)
@@ -346,6 +348,7 @@ async function readTitleCollection(env: Env, userId: string) {
       ON user_titles.title_id = titles.title_id
       AND user_titles.user_id = ?
     WHERE titles.is_active = 1
+      AND titles.deleted_at IS NULL
     ORDER BY titles.sort_order ASC, titles.title_id ASC
     `,
   )
@@ -382,6 +385,50 @@ async function readIconCollection(env: Env, userId: string) {
     .all<IconCollectionRow>();
 
   return result.results ?? [];
+}
+
+async function readIconTypeLinks(env: Env, iconIds: string[]) {
+  if (iconIds.length === 0) return new Map<string, string[]>();
+
+  const placeholders = iconIds.map(() => "?").join(", ");
+  const result = await env.DB.prepare(
+    `
+    SELECT icon_type_links.icon_id, icon_type_links.icon_type_id
+    FROM icon_type_links
+    INNER JOIN icon_types
+      ON icon_types.icon_type_id = icon_type_links.icon_type_id
+      AND icon_types.is_active = 1
+    WHERE icon_type_links.icon_id IN (${placeholders})
+    ORDER BY icon_type_links.icon_id ASC, icon_type_links.sort_order ASC, icon_type_links.icon_type_id ASC
+    `,
+  )
+    .bind(...iconIds)
+    .all<IconTypeLinkRow>();
+
+  const linkMap = new Map<string, string[]>();
+  for (const row of result.results ?? []) {
+    const ids = linkMap.get(row.icon_id) ?? [];
+    ids.push(row.icon_type_id);
+    linkMap.set(row.icon_id, ids);
+  }
+
+  return linkMap;
+}
+
+async function readDefaultIconId(env: Env) {
+  const row = await env.DB.prepare(
+    `
+    SELECT setting_value
+    FROM app_settings
+    WHERE setting_key = ?
+    LIMIT 1
+    `,
+  )
+    .bind(DEFAULT_ICON_SETTING_KEY)
+    .first<{ setting_value: string | null }>();
+
+  const value = typeof row?.setting_value === "string" ? row.setting_value.trim() : "";
+  return value || null;
 }
 
 async function readIllustrationCollection(env: Env, userId: string) {
@@ -431,7 +478,7 @@ function toTitleResponse(row: TitleCollectionRow) {
   };
 }
 
-function toIconResponse(row: IconCollectionRow) {
+function toIconResponse(row: IconCollectionRow, iconTypeIds: string[]) {
   const owned = Boolean(row.acquired_at);
   const imagePath = row.storage_provider === "r2" ? `/api/assets/icons/${encodeURIComponent(row.icon_id)}` : row.image_path;
   return {
@@ -441,6 +488,7 @@ function toIconResponse(row: IconCollectionRow) {
     imagePath,
     owned,
     sortOrder: row.sort_order,
+    iconTypeIds,
   };
 }
 

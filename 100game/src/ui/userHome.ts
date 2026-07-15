@@ -2,8 +2,9 @@ import { isSoundEnabled, playButtonSe, toggleSound } from "../core/sound";
 import { validatePlayerName } from "../core/nameValidation";
 import { countPlayerNameChars, getPreviousUserPlayerName, getSoundVolumeLevel, getUserIconId, getUserPlayerName, getUserTitleId, hasChangedUserPlayerName, MAX_PLAYER_NAME_LENGTH, setSoundVolumeLevel, setUserIconId, setUserTitleId, updateUserSettingsOnApi } from "../core/userSettings";
 import { DEFAULT_USER_TITLE_ID, LOADING_ILLUSTRATION_DEFINITIONS, USER_ICON_DEFINITIONS, USER_TITLE_DEFINITIONS, type LoadingIllustrationDefinition, type UserIconDefinition, type UserTitleDefinition } from "../core/userCollections";
-import { DEFAULT_PLAYER_ICON_ID, iconContentHtml, resolveIconId } from "../icons/iconPresets";
+import { NPC_ICON_ID, iconContentHtml, resolveIconId } from "../icons/iconPresets";
 import { loadUserRecordsFromApi, type UserRecordMatch, type UserRecordModeStats, type UserRecordsSnapshot } from "../core/userRecords";
+import { getFirstSelectableUserIconId } from "../icons/userIconContent";
 
 type HomeModalKey = "privacy" | "terms" | "credits" | "contact";
 
@@ -48,6 +49,15 @@ export type IconAwardNotificationItem = {
 
 export type IconAwardNotification = {
   items: IconAwardNotificationItem[];
+};
+
+const FALLBACK_DISPLAY_ICON: UserIconDefinition = {
+  id: NPC_ICON_ID,
+  name: "NPCアイコン",
+  comment: "利用可能なアイコンがないため、表示用のNPCアイコンを使用しています。",
+  imagePath: NPC_ICON_ID,
+  owned: false,
+  sortOrder: 0,
 };
 
 type TitleLibraryItem =
@@ -204,7 +214,7 @@ function findIcon(iconId: string | null | undefined): UserIconDefinition | undef
   const directMatch = USER_ICON_DEFINITIONS.find((icon) => icon.id === rawIconId);
   if (directMatch) return directMatch;
 
-  const resolvedIconId = resolveIconId(rawIconId, DEFAULT_PLAYER_ICON_ID);
+  const resolvedIconId = resolveIconId(rawIconId, NPC_ICON_ID);
   return USER_ICON_DEFINITIONS.find((icon) => icon.id === resolvedIconId);
 }
 
@@ -265,12 +275,19 @@ function formatRecordReason(reason: string): string {
   if (reason === "deck_end") return "山札終了";
   if (reason === "host_disband") return "部屋解散";
   if (reason === "player_left") return "途中離脱";
+  if (reason === "void") return "無効試合";
   return reason || "-";
 }
 
 function getSelectedUserIcon(): UserIconDefinition {
   const selectedIconId = getUserIconId();
-  return findIcon(selectedIconId) ?? USER_ICON_DEFINITIONS.find((icon) => icon.owned) ?? USER_ICON_DEFINITIONS[0];
+  const selectedIcon = findIcon(selectedIconId);
+  if (selectedIcon?.owned) return selectedIcon;
+
+  const firstIcon = findIcon(getFirstSelectableUserIconId());
+  if (firstIcon?.owned) return firstIcon;
+
+  return USER_ICON_DEFINITIONS.find((icon) => icon.owned) ?? FALLBACK_DISPLAY_ICON;
 }
 
 export function getSelectedUserIconId(): string {
@@ -1458,10 +1475,14 @@ export function renderUserHome(
     }).join("");
   };
 
-  const getIconLibraryItems = (): IconLibraryItem[] => [
-    ...USER_ICON_DEFINITIONS.filter((icon) => icon.owned).map((icon) => ({ kind: "icon" as const, icon })),
-    { kind: "locked" },
-  ];
+  const getIconLibraryItems = (): IconLibraryItem[] => {
+    const ownedIcons = USER_ICON_DEFINITIONS.filter((icon) => icon.owned);
+    if (ownedIcons.length === 0 && USER_ICON_DEFINITIONS.length === 0) return [];
+    return [
+      ...ownedIcons.map((icon) => ({ kind: "icon" as const, icon })),
+      { kind: "locked" },
+    ];
+  };
 
   const getLoadingIllustrationLibraryItems = (): LoadingIllustrationLibraryItem[] => [
     ...LOADING_ILLUSTRATION_DEFINITIONS.filter((illustration) => illustration.owned).map((illustration) => ({ kind: "illustration" as const, illustration })),
@@ -1472,6 +1493,11 @@ export function renderUserHome(
     const icons = getIconLibraryItems();
     const ownedCount = USER_ICON_DEFINITIONS.filter((icon) => icon.owned).length;
     iconOwnedCount.textContent = `取得済み ${ownedCount}`;
+
+    if (icons.length === 0) {
+      iconList.innerHTML = `<div class="userHomeTitleListEmpty">利用可能なアイコンがありません。</div>`;
+      return;
+    }
 
     iconList.innerHTML = icons.map((item) => {
       if (item.kind === "locked") {
@@ -1539,15 +1565,17 @@ export function renderUserHome(
 
     iconSelectBody.innerHTML = `
       <div class="userHomeIconSelectLead">所持中のアイコンを選択すると、ホームの表示アイコンに反映されます。</div>
-      <div class="userHomeIconSelectList" aria-label="所持中アイコン一覧">
-        ${ownedIcons.map((icon) => `
-          <button class="userHomeIconSelectItem ${icon.id === selectedId ? "is-selected" : ""}" type="button" data-select-icon-id="${escapeHtml(icon.id)}">
-            <span class="userHomeIconSelectImage" aria-hidden="true">${iconDefinitionContentHtml(icon, 58)}</span>
-            <span class="userHomeIconSelectName">${escapeHtml(icon.name)}</span>
-            ${icon.id === selectedId ? `<span class="userHomeIconSelectMeta">設定中</span>` : ""}
-          </button>
-        `).join("")}
-      </div>
+      ${ownedIcons.length === 0 ? `<div class="userHomeTitleListEmpty">利用可能なアイコンがありません。</div>` : `
+        <div class="userHomeIconSelectList" aria-label="所持中アイコン一覧">
+          ${ownedIcons.map((icon) => `
+            <button class="userHomeIconSelectItem ${icon.id === selectedId ? "is-selected" : ""}" type="button" data-select-icon-id="${escapeHtml(icon.id)}">
+              <span class="userHomeIconSelectImage" aria-hidden="true">${iconDefinitionContentHtml(icon, 58)}</span>
+              <span class="userHomeIconSelectName">${escapeHtml(icon.name)}</span>
+              ${icon.id === selectedId ? `<span class="userHomeIconSelectMeta">設定中</span>` : ""}
+            </button>
+          `).join("")}
+        </div>
+      `}
     `;
   };
 

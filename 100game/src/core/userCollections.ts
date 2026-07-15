@@ -1,5 +1,3 @@
-import { PLAYER_ICON_PRESETS } from "../icons/iconPresets";
-
 export const DEFAULT_USER_TITLE_ID = "title-start-001";
 
 export type UserTitleDefinition = {
@@ -21,6 +19,7 @@ export type UserIconDefinition = {
   imagePath?: string;
   owned: boolean;
   sortOrder?: number;
+  iconTypeIds?: string[];
 };
 
 export type LoadingIllustrationDefinition = {
@@ -54,6 +53,7 @@ type UserCollectionsApiResponse = {
     titles?: UserCollectionsApiTitle[];
     icons?: UserCollectionsApiIcon[];
     loadingIllustrations?: UserCollectionsApiIllustration[];
+    defaultIconId?: string | null;
   };
 };
 
@@ -148,14 +148,7 @@ const FALLBACK_TITLE_DEFINITIONS: UserTitleDefinition[] = [
   },
 ];
 
-const FALLBACK_ICON_DEFINITIONS: UserIconDefinition[] = PLAYER_ICON_PRESETS.map((preset, index) => ({
-  id: preset.id,
-  name: preset.label,
-  comment: `${preset.label}のプレイヤーアイコンです。ゲーム内で選択できるようになります。`,
-  imagePath: preset.src ?? preset.id,
-  owned: true,
-  sortOrder: index + 1,
-}));
+const FALLBACK_ICON_DEFINITIONS: UserIconDefinition[] = [];
 
 const FALLBACK_LOADING_ILLUSTRATION_DEFINITIONS: LoadingIllustrationDefinition[] = [
   {
@@ -179,6 +172,8 @@ const FALLBACK_LOADING_ILLUSTRATION_DEFINITIONS: LoadingIllustrationDefinition[]
 export const USER_TITLE_DEFINITIONS: UserTitleDefinition[] = cloneTitles(FALLBACK_TITLE_DEFINITIONS);
 export const USER_ICON_DEFINITIONS: UserIconDefinition[] = cloneIcons(FALLBACK_ICON_DEFINITIONS);
 export const LOADING_ILLUSTRATION_DEFINITIONS: LoadingIllustrationDefinition[] = cloneIllustrations(FALLBACK_LOADING_ILLUSTRATION_DEFINITIONS);
+
+let defaultUserIconId: string | null = null;
 
 export async function loadUserCollectionsFromApi(): Promise<boolean> {
   let response: Response;
@@ -206,13 +201,47 @@ export async function loadUserCollectionsFromApi(): Promise<boolean> {
   return true;
 }
 
+
+export async function loadGuestIconsFromApi(): Promise<boolean> {
+  let response: Response;
+
+  try {
+    response = await fetch("/api/guest-icons", {
+      method: "GET",
+      credentials: "include",
+    });
+  } catch {
+    return false;
+  }
+
+  let result: UserCollectionsApiResponse = {};
+  try {
+    const parsed: unknown = await response.json();
+    if (typeof parsed === "object" && parsed !== null) result = parsed as UserCollectionsApiResponse;
+  } catch {
+    // no-op
+  }
+
+  if (!response.ok || result.ok === false || !result.collection) return false;
+
+  applyCollectionsSnapshot(result.collection);
+  return true;
+}
+
+export function getDefaultUserIconId(): string | null {
+  return defaultUserIconId;
+}
+
 export function resetUserCollectionsCache() {
   replaceArray(USER_TITLE_DEFINITIONS, cloneTitles(FALLBACK_TITLE_DEFINITIONS));
   replaceArray(USER_ICON_DEFINITIONS, cloneIcons(FALLBACK_ICON_DEFINITIONS));
   replaceArray(LOADING_ILLUSTRATION_DEFINITIONS, cloneIllustrations(FALLBACK_LOADING_ILLUSTRATION_DEFINITIONS));
+  defaultUserIconId = null;
 }
 
 function applyCollectionsSnapshot(collection: NonNullable<UserCollectionsApiResponse["collection"]>) {
+  defaultUserIconId = normalizeText(collection.defaultIconId) ?? null;
+
   if (Array.isArray(collection.titles)) {
     replaceArray(USER_TITLE_DEFINITIONS, normalizeTitles(collection.titles));
   }
@@ -267,6 +296,7 @@ function normalizeIcons(values: UserCollectionsApiIcon[]) {
         imagePath: normalizeText(value.imagePath) ?? fallback?.imagePath ?? id,
         owned,
         sortOrder: normalizeSortOrder(value.sortOrder, fallback?.sortOrder ?? index + 1),
+        iconTypeIds: normalizeStringList((value as { iconTypeIds?: unknown }).iconTypeIds),
       };
     })
     .filter((value): value is UserIconDefinition => value !== null)
@@ -293,6 +323,11 @@ function normalizeIllustrations(values: UserCollectionsApiIllustration[]) {
     })
     .filter((value): value is LoadingIllustrationDefinition => value !== null)
     .sort(compareSortOrder);
+}
+
+function normalizeStringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.map((item) => normalizeText(item)).filter((item): item is string => Boolean(item)))];
 }
 
 function normalizeText(value: unknown): string | undefined {

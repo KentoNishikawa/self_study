@@ -4,6 +4,7 @@ type IconAssetRow = {
   icon_id: string;
   image_path: string;
   is_initial: number;
+  is_guest_available: number;
   is_active: number;
   storage_provider: string;
   storage_key: string | null;
@@ -20,6 +21,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       icon_id,
       image_path,
       is_initial,
+      is_guest_available,
       is_active,
       storage_provider,
       storage_key,
@@ -38,13 +40,14 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
   const session = await findActiveSession(context.env, context.request);
   const admin = isAdminSession(session);
   const active = Number(row.is_active) === 1;
+  const guestAvailable = active && Number(row.is_guest_available) === 1;
 
   if (row.storage_provider !== "r2") {
-    if (!admin && (!active || Number(row.is_initial) !== 1)) return notFound();
+    if (!admin && !guestAvailable && (!active || Number(row.is_initial) !== 1)) return notFound();
     return redirectLocalAsset(context.request, row.image_path);
   }
 
-  if (!admin) {
+  if (!admin && !guestAvailable) {
     if (!session || !active) return notFound();
     const owned = await userOwnsIcon(context.env.DB, session.user_id, row.icon_id);
     const notified = owned ? false : await userHasUnreadIconNotification(context.env.DB, context.request, session.user_id, row.icon_id);

@@ -1,5 +1,6 @@
 import { findActiveSession, json, nowIso, type Env, type PagesContext } from "./auth/_shared";
 import { ensureCollectionSeed } from "./user-collections";
+import { grantAutomaticAcquisitions } from "./_auto-acquisition";
 
 type AppearanceMode = "auto" | "manual";
 
@@ -48,7 +49,8 @@ export async function onRequestGet({ request, env }: PagesContext): Promise<Resp
     return json({ ok: true, imagePath: FALLBACK_AUTH_LOADING_IMAGE });
   }
 
-  await recordLoadingIllustrationView(env, session.user_id, illustration.illustration_id);
+  const viewedAt = await recordLoadingIllustrationView(env, session.user_id, illustration.illustration_id);
+  await grantAutomaticAcquisitions(env, session.user_id, { acquiredAt: viewedAt });
 
   return json({
     ok: true,
@@ -124,6 +126,7 @@ async function readUserTitles(env: Env, userId: string) {
       ON titles.title_id = user_titles.title_id
     WHERE user_titles.user_id = ?
       AND titles.is_active = 1
+      AND titles.deleted_at IS NULL
     `,
   )
     .bind(userId)
@@ -274,6 +277,7 @@ function readAppearanceMode(item: LoadingIllustrationRow): AppearanceMode {
 
 async function recordLoadingIllustrationView(env: Env, userId: string, illustrationId: string) {
   const now = nowIso();
+  await ensureUserStatsRows(env, userId, now);
 
   await env.DB.prepare(
     `
@@ -291,4 +295,56 @@ async function recordLoadingIllustrationView(env: Env, userId: string, illustrat
   )
     .bind(userId, illustrationId, now, now, now, now, now)
     .run();
+
+  await updateLoadingIllustrationStats(env, userId, illustrationId, now);
+  return now;
+}
+
+async function ensureUserStatsRows(env: Env, userId: string, now: string) {
+  await env.DB.prepare("INSERT OR IGNORE INTO user_stats_solo (user_id, created_at, updated_at) VALUES (?, ?, ?)")
+    .bind(userId, now, now)
+    .run();
+  await env.DB.prepare("INSERT OR IGNORE INTO user_stats_multi (user_id, created_at, updated_at) VALUES (?, ?, ?)")
+    .bind(userId, now, now)
+    .run();
+  await env.DB.prepare("INSERT OR IGNORE INTO user_stats_global (user_id, created_at, updated_at) VALUES (?, ?, ?)")
+    .bind(userId, now, now)
+    .run();
+}
+
+async function updateLoadingIllustrationStats(env: Env, userId: string, illustrationId: string, now: string) {
+  const row = await env.DB.prepare("SELECT loading_illustration_display_counts_json FROM user_stats_global WHERE user_id = ? LIMIT 1")
+    .bind(userId)
+    .first<{ loading_illustration_display_counts_json: string | null }>();
+  const counts = readJsonNumberMap(row?.loading_illustration_display_counts_json);
+  counts[illustrationId] = (counts[illustrationId] ?? 0) + 1;
+
+  await env.DB.prepare(`
+    UPDATE user_stats_global
+    SET
+      loading_illustration_display_count = COALESCE(loading_illustration_display_count, 0) + 1,
+      loading_illustration_display_counts_json = ?,
+      updated_at = ?
+    WHERE user_id = ?
+  `)
+    .bind(JSON.stringify(counts), now, userId)
+    .run();
+}
+
+function readJsonNumberMap(value: string | null | undefined): Record<string, number> {
+  if (!value) return {};
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const result: Record<string, number> = {};
+    for (const [key, rawValue] of Object.entries(parsed)) {
+      const normalizedKey = key.trim();
+      const numberValue = Number(rawValue);
+      if (!normalizedKey || !Number.isFinite(numberValue) || numberValue <= 0) continue;
+      result[normalizedKey] = Math.floor(numberValue);
+    }
+    return result;
+  } catch {
+    return {};
+  }
 }

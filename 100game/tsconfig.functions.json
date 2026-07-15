@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "types": ["vite/client"]
+  },
+  "include": ["functions/**/*.ts", "src/shared/**/*.ts", "src/core/nameNgWords.ts"]
+}

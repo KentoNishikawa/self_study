@@ -21,7 +21,7 @@ type PlayerUserRow = {
   multi_lose_count: number | null;
 };
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 10;
 
 export async function onRequestGet(context: PagesContext): Promise<Response> {
   const session = await requireAdminSession(context);
@@ -108,9 +108,12 @@ async function readPlayerUsers(env: Env, query: string, searchPattern: string, l
     FROM users
     LEFT JOIN user_settings ON user_settings.user_id = users.user_id
     LEFT JOIN (
-      SELECT user_id, COUNT(*) AS title_count
+      SELECT user_titles.user_id, COUNT(*) AS title_count
       FROM user_titles
-      GROUP BY user_id
+      INNER JOIN titles
+        ON titles.title_id = user_titles.title_id
+        AND titles.deleted_at IS NULL
+      GROUP BY user_titles.user_id
     ) title_counts ON title_counts.user_id = users.user_id
     LEFT JOIN (
       SELECT user_id, COUNT(*) AS icon_count

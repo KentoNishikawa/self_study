@@ -46,7 +46,8 @@ export function applyCardEffects(
   seatIndex: number,
   card: Card,
   origin: PlayOrigin,
-  jokerValue?: number
+  jokerValue?: number,
+  trigger?: "TIMEOUT",
 ): ResolvePlayOutput {
   const beforeTotal = state.total;
   const beforeMode = state.mode;
@@ -78,6 +79,7 @@ export function applyCardEffects(
       seat: seatIndex,
       origin,
       card,
+      trigger,
       value: 0,
       delta: -prev.value,
       beforeTotal: prev.afterTotal,
@@ -111,6 +113,7 @@ export function applyCardEffects(
       seat: seatIndex,
       origin,
       card,
+      trigger,
       value: 10,
       delta,
       beforeTotal,
@@ -137,6 +140,7 @@ export function applyCardEffects(
     seat: seatIndex,
     origin,
     card,
+    trigger,
     value,
     delta,
     beforeTotal,

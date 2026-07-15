@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "typecheck:functions": "tsc -p tsconfig.functions.json --noEmit",
+    "typecheck:mp": "npm --prefix cf-mp/100game-mp run typecheck"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",

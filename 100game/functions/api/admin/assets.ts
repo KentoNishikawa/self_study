@@ -152,6 +152,8 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
   const arrayBuffer = await fileValue.arrayBuffer();
 
   if (assetType === "icon") {
+    const iconTypeIds = readIconTypeIds(form);
+    if (!await validateIconTypeIds(context.env, iconTypeIds)) return json({ ok: false, message: "アイコン種別を確認してください。" }, { status: 400 });
     const iconId = createId("icon");
     const storageKey = `icons/${iconId}.${fileInfo.ext}`;
     await context.env.ASSETS_BUCKET.put(storageKey, arrayBuffer, { httpMetadata: { contentType: fileInfo.mimeType } });
@@ -164,6 +166,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       uploadedAt: now,
       assetName: readAssetName(form, fileValue.name, "追加アイコン"),
       description: readAssetDescription(form, "追加アイコン素材です。称号報酬として紐づけるまで通常ユーザーには公開されません。"),
+      iconTypeIds,
     });
     return json({ ok: true, message: "アイコン素材をアップロードしました。", id: iconId });
   }
@@ -511,6 +514,24 @@ function readAssetDescription(form: FormData, fallback: string) {
   return description || fallback;
 }
 
+function readIconTypeIds(form: FormData) {
+  const ids = form.getAll("iconTypeIds")
+    .map((value) => getString(value).trim())
+    .filter(Boolean);
+  return [...new Set(ids)].slice(0, 3);
+}
+
+async function validateIconTypeIds(env: Env, iconTypeIds: string[]) {
+  if (iconTypeIds.length === 0) return true;
+  const placeholders = iconTypeIds.map(() => "?").join(", ");
+  const row = await env.DB.prepare(
+    `SELECT COUNT(*) AS count FROM icon_types WHERE icon_type_id IN (${placeholders}) AND is_active = 1`,
+  )
+    .bind(...iconTypeIds)
+    .first<{ count: number }>();
+  return Number(row?.count ?? 0) === iconTypeIds.length;
+}
+
 async function insertIconAsset(
   env: Env,
   input: {
@@ -522,6 +543,7 @@ async function insertIconAsset(
     uploadedAt: string;
     assetName: string;
     description: string;
+    iconTypeIds: string[];
   },
 ) {
   const sortOrder = await nextSortOrder(env, "icons");
@@ -553,6 +575,17 @@ async function insertIconAsset(
       input.uploadedAt,
     )
     .run();
+
+  for (const [index, iconTypeId] of input.iconTypeIds.entries()) {
+    await env.DB.prepare(
+      `
+      INSERT INTO icon_type_links (icon_id, icon_type_id, sort_order, created_at)
+      VALUES (?, ?, ?, ?)
+      `,
+    )
+      .bind(input.iconId, iconTypeId, index + 1, input.uploadedAt)
+      .run();
+  }
 }
 
 async function insertLoadingIllustrationAsset(

@@ -25,12 +25,22 @@ export function rotateToView(server: GameState, seatIndex: number): GameState {
             ? { ...server.result, loserSeat: mapIndex(server.result.loserSeat) }
             : server.result;
 
+    const initialSeatSnapshots = server.initialSeatSnapshots
+        ? [
+            server.initialSeatSnapshots[unmapIndex(0)],
+            server.initialSeatSnapshots[unmapIndex(1)],
+            server.initialSeatSnapshots[unmapIndex(2)],
+            server.initialSeatSnapshots[unmapIndex(3)],
+        ] as GameState["initialSeatSnapshots"]
+        : undefined;
+
     return {
         ...server,
         seats,
         turn: mapIndex(server.turn),
         history,
         result,
+        initialSeatSnapshots,
     };
 }
 

@@ -32,6 +32,12 @@ export type Card = {
 
 export type SeatKind = "HUMAN" | "NPC";
 
+export type InitialSeatSnapshot = {
+  seatKind: SeatKind;
+  iconId: string;
+  iconTypeIds: string[];
+};
+
 export type Seat = {
   kind: SeatKind;
   name: string;
@@ -64,6 +70,7 @@ export type PlayLog = {
   afterMode: Mode;
 
   note?: string;
+  trigger?: "TIMEOUT";
 };
 
 export type SystemLog = {
@@ -94,4 +101,5 @@ export type GameState = {
 
   matchId?: string;
   startedAt?: string;
+  initialSeatSnapshots?: [InitialSeatSnapshot, InitialSeatSnapshot, InitialSeatSnapshot, InitialSeatSnapshot];
 };

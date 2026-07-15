@@ -1,5 +1,5 @@
-import { USER_ICON_DEFINITIONS, type UserIconDefinition } from "../core/userCollections";
-import { DEFAULT_PLAYER_ICON_ID, PLAYER_ICON_PRESETS, iconContentHtml, resolveIconId } from "./iconPresets";
+import { USER_ICON_DEFINITIONS, getDefaultUserIconId, type UserIconDefinition } from "../core/userCollections";
+import { NPC_ICON_ID, iconContentHtml, resolveIconId } from "./iconPresets";
 
 function escapeHtml(value: string): string {
   return value
@@ -19,14 +19,36 @@ export function findUserIconDefinition(iconId: unknown): UserIconDefinition | un
   const directMatch = USER_ICON_DEFINITIONS.find((icon) => icon.id === rawIconId);
   if (directMatch) return directMatch;
 
-  const resolvedIconId = resolveIconId(rawIconId, DEFAULT_PLAYER_ICON_ID);
+  const resolvedIconId = resolveIconId(rawIconId, NPC_ICON_ID);
   return USER_ICON_DEFINITIONS.find((icon) => icon.id === resolvedIconId);
 }
 
-export function resolveUserIconId(iconId: unknown, fallbackId: string = DEFAULT_PLAYER_ICON_ID): string {
+export function resolveUserIconId(iconId: unknown): string {
   const rawIconId = typeof iconId === "string" ? iconId.trim() : "";
   if (rawIconId && USER_ICON_DEFINITIONS.some((icon) => icon.id === rawIconId)) return rawIconId;
-  return resolveIconId(rawIconId || fallbackId, fallbackId);
+  return NPC_ICON_ID;
+}
+
+export function getFirstSelectableUserIconId(): string {
+  return USER_ICON_DEFINITIONS.find((icon) => icon.owned)?.id ?? NPC_ICON_ID;
+}
+
+export function getGuestDefaultUserIconId(): string {
+  const defaultIconId = getDefaultUserIconId();
+  if (defaultIconId && USER_ICON_DEFINITIONS.some((icon) => icon.id === defaultIconId && icon.owned)) return defaultIconId;
+  return NPC_ICON_ID;
+}
+
+export function getDefaultSelectableUserIconId(): string {
+  const defaultIconId = getDefaultUserIconId();
+  if (defaultIconId && USER_ICON_DEFINITIONS.some((icon) => icon.id === defaultIconId && icon.owned)) return defaultIconId;
+  return getFirstSelectableUserIconId();
+}
+
+export function resolveSelectableUserIconId(iconId: unknown): string {
+  const rawIconId = typeof iconId === "string" ? iconId.trim() : "";
+  if (rawIconId && USER_ICON_DEFINITIONS.some((icon) => icon.id === rawIconId && icon.owned)) return rawIconId;
+  return getFirstSelectableUserIconId();
 }
 
 export function userIconContentHtml(iconId: unknown, sizePx: number, fallbackId?: string): string {
@@ -38,16 +60,9 @@ export function userIconContentHtml(iconId: unknown, sizePx: number, fallbackId?
     return `<img src="${escapeHtml(imagePath)}" alt="${escapeHtml(alt)}" style="width:${sizePx}px;height:${sizePx}px;object-fit:contain;display:block;" />`;
   }
 
-  return iconContentHtml(imagePath || iconId, sizePx, fallbackId);
+  return iconContentHtml(imagePath || icon?.id || fallbackId || NPC_ICON_ID, sizePx, fallbackId ?? NPC_ICON_ID);
 }
 
 export function getSelectableUserIconDefinitions(): Array<Pick<UserIconDefinition, "id" | "name" | "imagePath">> {
-  const ownedIcons = USER_ICON_DEFINITIONS.filter((icon) => icon.owned);
-  if (ownedIcons.length > 0) return ownedIcons;
-
-  return PLAYER_ICON_PRESETS.map((preset) => ({
-    id: preset.id,
-    name: preset.label,
-    imagePath: preset.src ?? preset.id,
-  }));
+  return USER_ICON_DEFINITIONS.filter((icon) => icon.owned);
 }

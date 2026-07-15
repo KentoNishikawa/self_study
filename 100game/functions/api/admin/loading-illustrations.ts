@@ -97,7 +97,7 @@ async function existsById(env: Env, tableName: "title_illustrations" | "titles",
 }
 
 async function readTitleName(env: Env, titleId: string) {
-  const row = await env.DB.prepare("SELECT title_name FROM titles WHERE title_id = ? LIMIT 1").bind(titleId).first<{ title_name: string }>();
+  const row = await env.DB.prepare("SELECT title_name FROM titles WHERE title_id = ? AND deleted_at IS NULL LIMIT 1").bind(titleId).first<{ title_name: string }>();
   return row?.title_name ?? null;
 }
 
