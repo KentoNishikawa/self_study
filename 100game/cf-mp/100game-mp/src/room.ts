@@ -228,12 +228,10 @@ export class RoomDO {
     }
 
     private async resolveNpcIconSnapshot(): Promise<InitialSeatSnapshot> {
-        const iconId = await this.readActiveIconId("npc_default");
-        if (!iconId) throw new Error("active npc icon not found");
         return {
             seatKind: "NPC",
-            iconId,
-            iconTypeIds: await this.readActiveIconTypeIds(iconId),
+            iconId: "npc_default",
+            iconTypeIds: [],
         };
     }
 

@@ -16,22 +16,14 @@ export async function onRequestPost({ request, env }: PagesContext): Promise<Res
       return json({ ok: false, message: "開始時アイコン情報を取得できませんでした。" }, { status: 503 });
     }
 
-    const npcIcon = await readActiveIcon(env, NPC_ICON_ID);
-    if (!npcIcon) {
-      return json({ ok: false, message: "開始時アイコン情報を取得できませんでした。" }, { status: 503 });
-    }
-
-    const [iconTypeIds, npcIconTypeIds] = await Promise.all([
-      readActiveIconTypeIds(env, iconId),
-      readActiveIconTypeIds(env, npcIcon.icon_id),
-    ]);
+    const iconTypeIds = await readActiveIconTypeIds(env, iconId);
     return json({
       ok: true,
       snapshot: {
         iconId,
         iconTypeIds,
-        npcIconId: npcIcon.icon_id,
-        npcIconTypeIds,
+        npcIconId: NPC_ICON_ID,
+        npcIconTypeIds: [],
       },
     });
   } catch {
