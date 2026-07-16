@@ -1,4 +1,4 @@
-name: 100game Source Export
+name: 100game Validation
 
 on:
   pull_request:
@@ -8,16 +8,49 @@ permissions:
   contents: read
 
 jobs:
-  export:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Archive source
-        run: tar -czf 100game-source.tar.gz 100game
-      - name: Upload source
+      - name: Apply requested changes
+        run: |
+          cat .github/phase16.patch.part.* > /tmp/phase16.patch
+          cd 100game
+          git apply /tmp/phase16.patch
+      - name: Update lockfiles
+        run: |
+          cd 100game
+          npm install --package-lock-only --ignore-scripts
+          npm --prefix cf-mp/100game-mp install --package-lock-only --ignore-scripts
+      - name: Install dependencies
+        run: |
+          cd 100game
+          npm ci
+          npm --prefix cf-mp/100game-mp ci
+      - name: Validate
+        run: |
+          cd 100game
+          set -o pipefail
+          {
+            npm run typecheck
+            npm run typecheck:functions
+            npm run typecheck:mp
+            npm run build
+          } 2>&1 | tee ../100game-validation.log
+      - name: Archive changed files
+        if: always()
+        run: |
+          cd 100game
+          git add -N .
+          git diff --name-only > ../changed-files-relative.txt
+          sed 's#^#100game/#' ../changed-files-relative.txt > ../changed-files.txt
+          cd ..
+          tar -czf 100game-phase16-validation.tar.gz -T changed-files.txt 100game-validation.log changed-files.txt
+      - name: Upload validation result
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: 100game-source
-          path: 100game-source.tar.gz
+          name: 100game-phase16-validation
+          path: 100game-phase16-validation.tar.gz
           retention-days: 1
