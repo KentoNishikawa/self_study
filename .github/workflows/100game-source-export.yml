@@ -1,0 +1,23 @@
+name: 100game Source Export
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Archive source
+        run: tar -czf 100game-source.tar.gz 100game
+      - name: Upload source
+        uses: actions/upload-artifact@v4
+        with:
+          name: 100game-source
+          path: 100game-source.tar.gz
+          retention-days: 1
